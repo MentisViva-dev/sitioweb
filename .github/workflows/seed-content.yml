@@ -1,0 +1,42 @@
+name: Seed initial content.json
+
+# Importa el data/content.json existente del proyecto V2Networks
+# como version 1 publicada en mv_content.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Install wrangler
+        run: npm install -g wrangler@latest
+
+      - name: Read content.json
+        id: read
+        run: |
+          if [ -f scripts/initial_content.json ]; then
+            CONTENT=$(cat scripts/initial_content.json | jq -c .)
+            ESCAPED=$(printf '%s' "$CONTENT" | sed "s/'/''/g")
+            echo "ESCAPED<<EOF" >> $GITHUB_OUTPUT
+            echo "$ESCAPED" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "scripts/initial_content.json no existe — saltando"
+            exit 0
+          fi
+
+      - name: Insert into D1
+        if: steps.read.outputs.ESCAPED != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler d1 execute mentisviva --remote --command "UPDATE mv_content SET content = '${{ steps.read.outputs.ESCAPED }}', published = 1, published_at = datetime('now') WHERE id = 1"

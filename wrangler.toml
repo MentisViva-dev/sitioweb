@@ -1,0 +1,158 @@
+# =============================================================================
+# wrangler.toml — MentisViva Cloudflare Workers
+# =============================================================================
+# Este archivo configura el entrypoint principal (router) y todos los bindings.
+# Cada Worker individual se referencia vía service bindings (no entries separados).
+#
+# Comandos importantes:
+#   wrangler dev              → ejecuta local (puerto 8787)
+#   wrangler deploy           → deploy a Cloudflare
+#   wrangler tail             → live logs producción
+#   wrangler secret put NAME  → agregar secret
+#   wrangler d1 execute mentisviva --file=migrations/0000_schema_d1.sql
+#
+# Antes del primer deploy, reemplazar TODOS los "REEMPLAZAR_" con IDs reales
+# obtenidos al crear los recursos:
+#   wrangler d1 create mentisviva
+#   wrangler kv namespace create MV_KV
+#   wrangler r2 bucket create mentisviva-uploads
+#   wrangler queues create q-charges
+#   wrangler queues create q-emails
+#   wrangler queues create q-webhooks
+# =============================================================================
+
+name = "mentisviva-api"
+main = "src/workers/router.ts"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers Paid plan necesario para Queues + Durable Objects + 30s CPU
+workers_dev = false
+preview_urls = false
+
+# -----------------------------------------------------------------------------
+# Routes — se configurarán después con Custom Domain en el dashboard CF
+# -----------------------------------------------------------------------------
+# routes = [
+#   { pattern = "api.mentisviva.cl/*", custom_domain = true }
+# ]
+
+# -----------------------------------------------------------------------------
+# Variables públicas (no son secretos)
+# -----------------------------------------------------------------------------
+[vars]
+ENVIRONMENT = "production"
+SITE_URL = "https://mentisviva.cl"
+API_URL = "https://api.mentisviva.cl"
+ADMIN_NOTIFY_EMAIL = "contacto@mentisviva.cl"
+EMAIL_FROM = "no-reply@mentisviva.cl"
+EMAIL_REPLY_TO = "contacto@mentisviva.cl"
+FLOW_API_URL = "https://www.flow.cl/api"
+SHIPIT_API_URL = "https://api.shipit.cl/v"
+RECAPTCHA_SITE_KEY = "6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0"
+TERMS_VERSION = "1.0"
+PRIVACY_VERSION = "1.0"
+
+# -----------------------------------------------------------------------------
+# D1 Database — base de datos principal
+# -----------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "mentisviva"
+database_id = "a93215e2-64ad-42f1-8629-d9a6e173c615"
+
+# -----------------------------------------------------------------------------
+# KV — sesiones, rate limiting, cache
+# -----------------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "KV"
+id = "5e7c1e001cd84248bf31323afd65118b"
+
+[[kv_namespaces]]
+binding = "KV_RATE_LIMIT"
+id = "164ce74e094e41e98904c9e9315580fa"
+
+[[kv_namespaces]]
+binding = "KV_CACHE"
+id = "1b4d6c74c32a4dd98e57709ede9cb9d5"
+
+# -----------------------------------------------------------------------------
+# R2 — almacenamiento de uploads (portadas, imágenes CMS)
+# -----------------------------------------------------------------------------
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "mentisviva-uploads"
+
+# -----------------------------------------------------------------------------
+# Queues — colas async para cron + webhooks
+# -----------------------------------------------------------------------------
+[[queues.producers]]
+binding = "Q_CHARGES"
+queue = "q-charges"
+
+[[queues.producers]]
+binding = "Q_EMAILS"
+queue = "q-emails"
+
+[[queues.producers]]
+binding = "Q_WEBHOOKS"
+queue = "q-webhooks"
+
+[[queues.consumers]]
+queue = "q-charges"
+max_batch_size = 10
+max_batch_timeout = 30
+max_concurrency = 5
+max_retries = 3
+dead_letter_queue = "q-charges-dlq"
+
+[[queues.consumers]]
+queue = "q-emails"
+max_batch_size = 10
+max_batch_timeout = 60
+max_concurrency = 3
+max_retries = 5
+dead_letter_queue = "q-emails-dlq"
+
+[[queues.consumers]]
+queue = "q-webhooks"
+max_batch_size = 5
+max_batch_timeout = 60
+max_concurrency = 2
+max_retries = 8
+dead_letter_queue = "q-webhooks-dlq"
+
+# -----------------------------------------------------------------------------
+# Cron Triggers — tareas programadas
+# -----------------------------------------------------------------------------
+[triggers]
+crons = [
+  "*/5 * * * *",      # Process email queue cada 5 min (fallback además de Q_EMAILS)
+  "0 * * * *",        # Sync Flow subscriptions cada hora
+  "0 */6 * * *",      # Cleanup (sesiones expiradas, tokens) cada 6h
+  "0 3 * * *",        # Daily tasks (lock shipping, despertar pausados, cancel pending) 03:00 UTC
+  "0 3 * * 7",        # Weekly tasks (rotar logs, archivar) domingo 03:00 UTC
+  # Monthly cutoff lo dispara dailyTasks() automáticamente cuando today === cutoff_date
+]
+
+# -----------------------------------------------------------------------------
+# (Service bindings eliminados: todos los workers están en el mismo bundle.
+#  El router.ts importa los módulos directamente con import * as workerName.)
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Observabilidad
+# -----------------------------------------------------------------------------
+[observability]
+enabled = true
+head_sampling_rate = 1.0
+
+# =============================================================================
+# Environments — staging vs production
+# =============================================================================
+
+# Staging (para testing antes de cutover) — configurar después
+# [env.staging]
+# name = "mentisviva-api-staging"
+
+# Producción (default — se queda con el nombre raíz "mentisviva-api")

@@ -1,0 +1,83 @@
+name: Setup Cloudflare Resources
+
+# Workflow MANUAL para crear los recursos Cloudflare iniciales
+# (D1, KV, R2, Queues). Solo correr UNA VEZ. Después editar wrangler.toml
+# con los IDs que devuelve este workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "YES_CREATE" to confirm'
+        required: true
+
+jobs:
+  setup:
+    if: github.event.inputs.confirm == 'YES_CREATE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install wrangler
+        run: npm install -g wrangler@latest
+
+      - name: Create D1 database
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "Creating D1 database..."
+          wrangler d1 create mentisviva || echo "(may already exist)"
+          echo "---"
+          echo "Listing D1 databases:"
+          wrangler d1 list
+
+      - name: Create KV namespaces
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler kv namespace create MV_KV || echo "(may already exist)"
+          wrangler kv namespace create MV_KV_RATE_LIMIT || echo "(may already exist)"
+          wrangler kv namespace create MV_KV_CACHE || echo "(may already exist)"
+          echo "---"
+          echo "Listing KV namespaces:"
+          wrangler kv namespace list
+
+      - name: Create R2 bucket
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler r2 bucket create mentisviva-uploads || echo "(may already exist)"
+
+      - name: Create Queues
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler queues create q-charges || echo "(may already exist)"
+          wrangler queues create q-emails || echo "(may already exist)"
+          wrangler queues create q-webhooks || echo "(may already exist)"
+          wrangler queues create q-charges-dlq || echo "(may already exist)"
+          wrangler queues create q-emails-dlq || echo "(may already exist)"
+          wrangler queues create q-webhooks-dlq || echo "(may already exist)"
+
+      - name: Show next steps
+        run: |
+          echo ""
+          echo "✅ Resources created (or already existed)"
+          echo ""
+          echo "📋 NEXT STEPS:"
+          echo "1. Copy each ID printed above into wrangler.toml"
+          echo "2. Replace placeholders 'REEMPLAZAR_*' with real IDs"
+          echo "3. Commit wrangler.toml to git"
+          echo "4. Push to main → deploy.yml will run automatically"

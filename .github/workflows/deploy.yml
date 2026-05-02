@@ -1,0 +1,73 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'wrangler.toml'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'migrations/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    name: Deploy Workers + apply migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Apply D1 migrations (if any new)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute mentisviva --file=./migrations/0000_schema_d1.sql --remote
+        continue-on-error: true # idempotent: re-aplicar el schema no daña
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy ${{ github.event.inputs.env == 'staging' && '--env staging' || '' }}
+
+      - name: Notify deploy success
+        if: success()
+        run: echo "✅ Deploy successful to ${{ github.event.inputs.env || 'production' }}"
+
+      - name: Notify deploy failure
+        if: failure()
+        run: echo "❌ Deploy failed"

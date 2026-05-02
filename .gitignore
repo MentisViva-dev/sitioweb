@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.local
+*.log
+coverage/
+.DS_Store
+.vscode/
+.idea/
+backups/
+scripts/initial_content.json
+*.tsbuildinfo
