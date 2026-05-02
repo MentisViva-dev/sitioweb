@@ -1,126 +1,172 @@
-# 🎉 Estado del Deploy — MentisViva en Cloudflare
+# 🎉 MentisViva — Deploy Completado
 
 **Fecha:** 2026-05-02
 **Status:** ✅ EN PRODUCCIÓN
 
-## URL actual del API
+---
 
-**`https://mentisviva-api.mentisviva-api.workers.dev`**
+## URLs ACTIVAS AHORA MISMO
 
-Endpoints verificados:
-- ✅ `GET /api/health` → `{"ok":true, "db":true}`
-- ✅ `GET /api/auth/check` → `{"logged_in":false}`
-- ✅ `GET /api/shipping/comunas` → 38 comunas chilenas
-- ✅ `GET /api/shipping/cutoff-info` → cálculo dinámico cutoff funcionando
+| Servicio | URL Cloudflare | URL Final (cuando DNS propague) |
+|---|---|---|
+| **API Backend** | https://mentisviva-api.mentisviva-api.workers.dev | https://api.mentisviva.cl |
+| **Frontend** | https://mentisviva-web.pages.dev | https://mentisviva.cl |
+| **Frontend WWW** | https://mentisviva-web.pages.dev | https://www.mentisviva.cl |
 
-## Recursos creados
+---
+
+## Recursos creados en Cloudflare
 
 | Recurso | ID / Nombre |
 |---|---|
-| Worker | `mentisviva-api` |
-| D1 Database | `mentisviva` (`a93215e2-64ad-42f1-8629-d9a6e173c615`) |
-| KV `MV_KV` | `5e7c1e001cd84248bf31323afd65118b` |
-| KV `MV_KV_RATE_LIMIT` | `164ce74e094e41e98904c9e9315580fa` |
-| KV `MV_KV_CACHE` | `1b4d6c74c32a4dd98e57709ede9cb9d5` |
-| R2 Bucket | `mentisviva-uploads` |
-| Queues | `q-charges`, `q-emails`, `q-webhooks` (+ DLQs) |
-| Cron Triggers | 5 schedules activos |
-| Secrets | 9 secrets cargados |
+| **Account ID** | `181a71f5927b646cd246af58a129a953` |
+| **Worker** | `mentisviva-api` |
+| **Pages Project** | `mentisviva-web` |
+| **D1 Database** | `mentisviva` (`a93215e2-64ad-42f1-8629-d9a6e173c615`) |
+| **KV `MV_KV`** | `5e7c1e001cd84248bf31323afd65118b` |
+| **KV `MV_KV_RATE_LIMIT`** | `164ce74e094e41e98904c9e9315580fa` |
+| **KV `MV_KV_CACHE`** | `1b4d6c74c32a4dd98e57709ede9cb9d5` |
+| **R2 Bucket** | `mentisviva-uploads` |
+| **Queues** | `q-charges`, `q-emails`, `q-webhooks` (+ DLQs) |
+| **Cron Triggers** | 5 schedules activos |
+| **Secrets Worker** | 9 secrets |
+| **Zone** | `mentisviva.cl` (id: `6fe336b5c5f7a6b73caeb636f28f86fa`) |
+| **Custom Domain Worker** | `api.mentisviva.cl` |
+| **Custom Domains Pages** | `mentisviva.cl`, `www.mentisviva.cl` |
+| **GitHub Secrets** | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
 
-## Repositorio Git
+---
 
-**`https://github.com/MentisViva-dev/sitioweb`**
+## CI/CD activado
 
-Branch: `main` — último commit con todo el código.
+✅ Cada `git push` a `main` desplegará automáticamente vía `.github/workflows/deploy.yml`.
 
-## Lo que falta hacer (opcional / futuro)
+---
 
-### 🟡 Fase 2 — Custom domain api.mentisviva.cl
+## Status de DNS
 
-Para tener tu propio dominio en lugar del `.workers.dev`:
+- **nic.cl:** ✅ nameservers configurados (`elle.ns.cloudflare.com`, `ethan.ns.cloudflare.com`)
+- **Cloudflare zone:** ⏳ `pending` (esperando propagación, 15min-24h)
 
-1. En tu registrador (donde compraste mentisviva.cl), cambia los nameservers a los que te dé Cloudflare.
-2. https://dash.cloudflare.com → "Add a Site" → `mentisviva.cl` → Free plan.
-3. Importar todos los registros DNS actuales (Cloudflare lo hace automático).
-4. Una vez activo, ve a tu Worker → Settings → Triggers → Custom Domains → "api.mentisviva.cl".
+Cuando termine la propagación:
+- Zone status → `active`
+- `mentisviva.cl` → Pages
+- `www.mentisviva.cl` → Pages
+- `api.mentisviva.cl` → Worker
+- SSL automático (emisión por Cloudflare)
+- `_acme-challenge`, DKIM Resend, SPF, DMARC → todos preservados
 
-**Tiempo:** 1-24h (propagación DNS) + 5 min de configuración.
+---
 
-### 🟡 Fase 3 — Frontend en Cloudflare Pages
+## ⚠️ ACCIONES TUYAS PENDIENTES
 
-1. dash.cloudflare.com → Workers & Pages → Create → Pages → Connect to Git.
-2. Conectar repo `MentisViva-dev/sitioweb`.
-3. Build: déjalo vacío (estático).
-4. Deploy.
+### 1. Rotar credenciales viejas (15 min)
 
-Esto te da `mentisviva.cl` servido desde edge global.
+Estos secrets vinieron del repo viejo (`api/config.php` de V2Networks). Están comprometidos. Rota cada uno:
 
-### 🟢 Fase 4 — GitHub Secrets para deploy automático
+| Secret | Dónde rotar | Comando para actualizar |
+|---|---|---|
+| Flow API Key | dashboard.flow.cl → API | `echo "NUEVO" \| npx wrangler secret put MV_FLOW_API_KEY` |
+| Flow Secret | dashboard.flow.cl → API | `echo "NUEVO" \| npx wrangler secret put MV_FLOW_SECRET` |
+| reCAPTCHA Secret | google.com/recaptcha/admin | `echo "NUEVO" \| npx wrangler secret put MV_RECAPTCHA_SECRET` |
+| Shipit Token | api.shipit.cl panel | `echo "NUEVO" \| npx wrangler secret put MV_SHIPIT_TOKEN` |
+| ADMIN_PASS_HASH | (regenerar con argon2) | `echo "NUEVO" \| npx wrangler secret put ADMIN_PASS_HASH` |
 
-Para que cada `git push` despliegue automático:
+### 2. Borrar V2Networks (cuando confirmes que todo funciona)
 
-1. Ve a: https://github.com/MentisViva-dev/sitioweb/settings/secrets/actions
-2. New repository secret:
-   - `CLOUDFLARE_API_TOKEN` → tu token Cloudflare
-   - `CLOUDFLARE_ACCOUNT_ID` → `181a71f5927b646cd246af58a129a953`
+⚠️ **NO ahora.** Espera 7-30 días con ambos sistemas en paralelo. Cuando estés seguro:
+- Cancela hosting en V2Networks.
+- Borra archivos del FTP.
 
-A partir de ese momento, cada commit a `main` deploya automático via `.github/workflows/deploy.yml`.
+### 3. Borrar tokens "temporales"
 
-## ⚠️ Acción urgente: rotar credenciales expuestas
+- **GitHub PAT** (`MentisViva Push Local`): https://github.com/settings/personal-access-tokens → delete después de 30 días.
+- **Cloudflare Token** (`MentisViva Full`): puede quedar activo, ya está en GitHub Secrets.
 
-Los secrets actuales (Flow API, reCAPTCHA, Shipit) estaban en el repo viejo y deben rotarse:
+---
 
-- [ ] **Flow.cl** → dashboard → Configuración API → regenerar API Key + Secret. Actualizar con `wrangler secret put MV_FLOW_API_KEY` y `wrangler secret put MV_FLOW_SECRET`.
-- [ ] **reCAPTCHA** → google.com/recaptcha/admin → reset secret. Actualizar con `wrangler secret put MV_RECAPTCHA_SECRET`.
-- [ ] **Shipit** → panel admin → regenerar token. Actualizar con `wrangler secret put MV_SHIPIT_TOKEN`.
+## Cómo probar el sitio
 
-## ⚠️ Acción urgente: borrar secrets-temporales.txt
+### API funcionando
 
-```powershell
-Remove-Item "$env:USERPROFILE\Desktop\secrets-temporales.txt"
+```bash
+curl https://mentisviva-api.mentisviva-api.workers.dev/api/health
+# → {"ok":true,"env":"production","db":true,...}
+
+curl https://mentisviva-api.mentisviva-api.workers.dev/api/shipping/comunas
+# → 38 comunas chilenas
+
+curl https://mentisviva-api.mentisviva-api.workers.dev/api/shipping/cutoff-info
+# → {"next_shipment_date":"2026-05-25","cutoff_date":"2026-05-08",...}
 ```
 
-O simplemente bórralo desde el explorador.
+### Frontend funcionando
 
-## ⚠️ Acción urgente: revocar tokens "temporales"
+Abre en el navegador:
+- https://mentisviva-web.pages.dev
+- https://mentisviva-web.pages.dev/editorial.html
+- https://mentisviva-web.pages.dev/content.json
 
-- **GitHub Token** (`MentisViva Push Local`): https://github.com/settings/tokens → delete.
-- **Cloudflare Token** (`MentisViva Full`): https://dash.cloudflare.com/profile/api-tokens → roll/delete.
+### Cuando DNS propague
 
-⚠️ **Si revocas el Cloudflare token AHORA**, no podrás hacer nuevos deploys hasta crear uno nuevo. Si planeas seguir trabajando con esto, mejor:
-- Mantenlo activo si vas a hacer cambios.
-- Cárgalo a GitHub Secrets (Fase 4) y borra el local.
-- Rota cuando ya no lo necesites.
+- https://mentisviva.cl
+- https://www.mentisviva.cl
+- https://api.mentisviva.cl/api/health
 
-## Comandos útiles para mantenimiento
+---
+
+## Comandos útiles
 
 ```bash
 cd "deploy/cloudflare-fullstack"
-export CLOUDFLARE_API_TOKEN="tu-token"
+export CLOUDFLARE_API_TOKEN="xxx"
 export CLOUDFLARE_ACCOUNT_ID="181a71f5927b646cd246af58a129a953"
 
-# Logs en vivo
+# Logs en vivo del Worker
 npx wrangler tail
 
-# Ver datos D1
+# Consultar D1
 npx wrangler d1 execute mentisviva --remote --command "SELECT COUNT(*) FROM mv_users"
 
-# Re-deploy
+# Re-deploy manual
 npx wrangler deploy
 
-# Cargar nuevo secret
-echo "valor" | npx wrangler secret put NOMBRE_SECRET
+# Frontend re-deploy (si cambias HTML)
+cd /tmp/mv-pages && npx wrangler pages deploy . --project-name=mentisviva-web --branch=main
 
-# Listar secrets actuales
+# Listar secrets
 npx wrangler secret list
+
+# Ver uso D1
+npx wrangler d1 info mentisviva
 ```
 
-## Costo mensual estimado
+---
 
-| Concepto | A 200 usuarios | A 5k usuarios | A 20k usuarios |
+## Costos mensuales estimados
+
+| Concepto | A 200 usuarios | A 5k | A 20k |
 |---|---|---|---|
 | Workers Paid | $5 | $5 | $8 |
-| D1 + KV + R2 + Queues | $0 | $0 | $5 |
-| Resend | $0 (free 3k/mes) | $20 | $20 |
-| Dominio | ~$1 | ~$1 | ~$1 |
+| D1 + KV + R2 + Queues + Pages | $0 | $0 | $5 |
+| Resend (email) | $0 | $20 | $20 |
+| Dominio mentisviva.cl | ~$1 | ~$1 | ~$1 |
 | **TOTAL** | **~$6/mes** | **~$26/mes** | **~$34/mes** |
+
+---
+
+## Resuelve los 95 hallazgos de la auditoría
+
+Por construcción:
+- ✅ Callback Flow firmado HMAC + idempotente con UNIQUE
+- ✅ Monto validado contra mv_orders.monto
+- ✅ Cancelación diferida en ventana cutoff→25
+- ✅ Eliminación de cuenta + export datos (Ley 21.719)
+- ✅ Audit log completo
+- ✅ Rate limiting por IP+email+user
+- ✅ Tokens HMAC con cookies HttpOnly
+- ✅ Timing-safe login con dummy hash
+- ✅ Refund admin (Ley 19.496)
+- ✅ Disputas (Ley 20.009)
+
+Detalle completo en `docs/09_CORRELACION_AUDITORIA.md`.
