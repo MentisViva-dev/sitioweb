@@ -76,7 +76,6 @@ export async function handle(req: Request, env: Env, ctx: ExecutionContext): Pro
 // =====================================================================
 
 async function handleRegister(req: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
-  const rl = await rateLimitByIp(req, ).catch(() => null);
   // Rate limit por IP: 3 / 15min
   const rateIp = await rateLimitByIp(env, req, 'register', RATE_LIMITS.REGISTER.max, RATE_LIMITS.REGISTER.window);
   if (!rateIp.allowed) return Errors.rateLimited(Math.ceil((rateIp.resetAt - Date.now() / 1000)));
@@ -391,7 +390,6 @@ async function handleForgotPassword(req: Request, env: Env, _ctx: ExecutionConte
 
   if (user) {
     const token = randomToken(32);
-    const expires = addDays(new Date(), 0).toISOString().slice(0, 19); // 4 horas a continuación
     const expires4h = new Date(Date.now() + 4 * 3600 * 1000).toISOString();
     await dbExec(
       env.DB,

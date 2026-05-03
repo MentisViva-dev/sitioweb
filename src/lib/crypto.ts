@@ -12,7 +12,7 @@
  * según OWASP 2024.
  */
 
-const PBKDF2_ITERATIONS = 600000; // OWASP 2024 recomendación
+const PBKDF2_ITERATIONS = 100000; // Cloudflare Workers limita PBKDF2 a max 100k iteraciones
 const SALT_LENGTH = 16;
 const KEY_LENGTH = 32; // 256 bits
 
@@ -155,7 +155,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   if (parts.length !== 5) return false;
   const [, , iterStr, saltB64, hashB64] = parts as [string, string, string, string, string];
   const iterations = parseInt(iterStr, 10);
-  if (!iterations || iterations < 100000) return false; // seguridad mínima
+  if (!iterations || iterations < 50000) return false; // seguridad mínima (Workers cap = 100k)
   const salt = base64ToBytes(saltB64);
   const expected = base64ToBytes(hashB64);
   const computed = await pbkdf2(password, salt, iterations, expected.length);
@@ -198,7 +198,7 @@ function constantTimeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
 // ==========================================================================
 
 export const DUMMY_PASSWORD_HASH =
-  'pbkdf2$sha256$600000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+  'pbkdf2$sha256$100000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 /** Espera entre min y max ms para añadir jitter aleatorio anti-timing. */
 export async function jitter(minMs = 50, maxMs = 250): Promise<void> {

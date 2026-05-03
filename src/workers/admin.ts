@@ -22,7 +22,7 @@ import type { DbAdmin, DbUser, DbForm } from '../types/db';
 import { jsonOk, jsonError, Errors, readBody } from '../lib/responses';
 import { dbFetch, dbFetchAll, dbInsert, dbExec } from '../lib/db';
 import { getSession, issueAdminToken, makeAuthCookie, makeLogoutCookie, getClientIp } from '../lib/auth';
-import { hashPassword, verifyPassword, randomToken, jitter } from '../lib/crypto';
+import { hashPassword, verifyPassword, randomToken, jitter, DUMMY_PASSWORD_HASH } from '../lib/crypto';
 import { rateLimitByEmail, RATE_LIMITS, rateLimitLogin } from '../lib/rate-limit';
 import { auditLog, AuditEvents } from '../lib/audit';
 import { validateEmail } from '../lib/validators';
@@ -80,7 +80,7 @@ async function handleLogin(req: Request, env: Env): Promise<Response> {
   );
 
   // Timing safe
-  const hashToCheck = admin?.password_hash ?? 'pbkdf2$sha256$600000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+  const hashToCheck = admin?.password_hash ?? DUMMY_PASSWORD_HASH;
   const ok = await verifyPassword(password, hashToCheck);
   if (!admin || !ok) {
     await jitter();
