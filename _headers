@@ -17,17 +17,18 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # --- CSS files ---
-# Tienen el mismo nombre fijo (styles.css, etc.) — usamos un cache largo
-# pero NO immutable, para permitir invalidación por purge en CF cuando
-# se haga deploy de cambios visuales.
+# Cache corto + revalidación obligatoria. Antes era 30 días pero eso causaba
+# que cambios de diseño no llegaran al usuario hasta semanas después
+# (Safari iOS y Chrome cachean agresivo). Ahora cada hora el navegador
+# valida con ETag → si no cambió, 304 (no descarga). Si cambió, descarga.
 /css/*
-  Cache-Control: public, max-age=2592000, must-revalidate
+  Cache-Control: public, max-age=3600, must-revalidate
 
 # --- JavaScript ---
-# 1 día — cambia con frecuencia (CMS, lógica) pero el navegador puede
-# revalidar contra ETag de Pages.
+# 1 hora — mismo razonamiento. ETag-based revalidation evita downloads
+# innecesarios pero garantiza propagación rápida de fixes.
 /js/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=3600, must-revalidate
 
 # --- HTML pages ---
 # Cache corto: el contenido se renderiza vía CMS (D1+KV), así que
