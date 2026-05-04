@@ -6,7 +6,7 @@
  */
 
 import type { Env, ExecutionContext, ChargeJobPayload, EmailJobPayload, WebhookJobPayload } from '../types/env';
-import { jsonOk, jsonError, withCors, corsPreflightResponse, Errors } from '../lib/responses';
+import { jsonOk, withCors, corsPreflightResponse, Errors } from '../lib/responses';
 import { dbHealthCheck } from '../lib/db';
 import * as authWorker from './auth';
 import * as payWorker from './pay';

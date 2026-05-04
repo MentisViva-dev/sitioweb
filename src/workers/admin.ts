@@ -22,10 +22,9 @@ import type { DbAdmin, DbUser, DbForm } from '../types/db';
 import { jsonOk, jsonError, Errors, readBody } from '../lib/responses';
 import { dbFetch, dbFetchAll, dbInsert, dbExec } from '../lib/db';
 import { getSession, issueAdminToken, makeAuthCookie, makeLogoutCookie, getClientIp } from '../lib/auth';
-import { hashPassword, verifyPassword, randomToken, jitter, DUMMY_PASSWORD_HASH } from '../lib/crypto';
-import { rateLimitByEmail, RATE_LIMITS, rateLimitLogin } from '../lib/rate-limit';
+import { verifyPassword, randomToken, jitter, DUMMY_PASSWORD_HASH } from '../lib/crypto';
+import { rateLimitLogin } from '../lib/rate-limit';
 import { auditLog, AuditEvents } from '../lib/audit';
-import { validateEmail } from '../lib/validators';
 import { nowISO } from '../lib/dates';
 
 export async function handle(req: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
@@ -208,7 +207,7 @@ async function handleExportCsv(env: Env): Promise<Response> {
   const headers = Object.keys(subs[0] ?? { id: 0 });
   const csvLines: string[] = [headers.join(',')];
   for (const row of subs) {
-    csvLines.push(headers.map(h => `"${String((row as Record<string, unknown>)[h] ?? '').replace(/"/g, '""')}"`).join(','));
+    csvLines.push(headers.map(h => `"${String((row as unknown as Record<string, unknown>)[h] ?? '').replace(/"/g, '""')}"`).join(','));
   }
   return new Response(csvLines.join('\n'), {
     status: 200,
@@ -306,5 +305,5 @@ async function handleRefund(req: Request, env: Env): Promise<Response> {
     headers: req.headers,
     body: await req.text(),
   });
-  return env.PAY_WORKER.fetch(newReq);
+  return env.PAY_WORKER.fetch(newReq as unknown as Parameters<typeof env.PAY_WORKER.fetch>[0]) as unknown as Response;
 }

@@ -8,7 +8,7 @@
  */
 
 import type { Env, ExecutionContext } from '../types/env';
-import { jsonOk, jsonError, Errors, readBody } from '../lib/responses';
+import { jsonOk, Errors, readBody } from '../lib/responses';
 import { dbInsert } from '../lib/db';
 import { rateLimitByIp, rateLimitByEmail, RATE_LIMITS } from '../lib/rate-limit';
 import { auditLog } from '../lib/audit';

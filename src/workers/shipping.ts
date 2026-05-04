@@ -20,7 +20,7 @@ import { auditLog, AuditEvents } from '../lib/audit';
 import { shipitQuote, shipitTrack, externalTrackingUrl } from '../lib/shipit';
 import {
   determineNextShipmentDate, calculateCutoffDate, isInLockedWindow,
-  formatDateCL, formatISODate, shipmentMonthStr, firstDayOfNextMonth,
+  formatDateCL, formatISODate, firstDayOfNextMonth,
 } from '../lib/dates';
 import { validateShippingMethod, validateAmountCLP, validateTrackingCode } from '../lib/validators';
 

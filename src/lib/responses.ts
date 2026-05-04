@@ -162,7 +162,8 @@ export async function readBody(
   if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
     const form = await req.formData();
     const result: Record<string, string | File | null> = {};
-    for (const [k, v] of form.entries()) {
+    const entries = (form as unknown as { entries(): IterableIterator<[string, FormDataEntryValue]> }).entries();
+    for (const [k, v] of entries) {
       result[k] = v as string | File;
     }
     return result;

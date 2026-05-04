@@ -13,8 +13,8 @@
 
 import type { Env, AuthSession } from '../types/env';
 import type { DbUser, DbAdmin } from '../types/db';
-import { hmacSha256, verifyHmacSha256, randomToken, sha256, bytesToHex } from './crypto';
-import { dbFetch, dbExec } from './db';
+import { hmacSha256, verifyHmacSha256, randomToken, sha256 } from './crypto';
+import { dbFetch } from './db';
 
 // Token format: base64(payload) . hex(hmac_signature)
 // payload = JSON { user_id, type, created_at, jti }

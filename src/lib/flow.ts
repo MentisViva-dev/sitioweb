@@ -103,7 +103,7 @@ export async function flowApiCall(
   const timeoutMs = options.timeoutMs ?? 15000;
 
   // Agregar apiKey + firma
-  const fullParams = { ...params, apiKey: env.MV_FLOW_API_KEY };
+  const fullParams: Record<string, string | number> = { ...params, apiKey: env.MV_FLOW_API_KEY };
   const sig = await signParams(fullParams, env.MV_FLOW_SECRET);
   const signedParams: Record<string, string> = {};
   for (const k of Object.keys(fullParams)) {
@@ -188,7 +188,8 @@ export async function verifyCallbackSignature(
   secret: string,
 ): Promise<boolean> {
   const obj: Record<string, string> = {};
-  for (const [k, v] of formData.entries()) {
+  const entries = (formData as unknown as { entries(): IterableIterator<[string, FormDataEntryValue]> }).entries();
+  for (const [k, v] of entries) {
     obj[k] = String(v);
   }
   return verifyResponseSignature(obj, secret);

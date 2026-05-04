@@ -76,10 +76,7 @@ export function validateRUT(input: unknown): ValidationResult<string> {
   const r = 11 - (sum % 11);
   const expected = r === 11 ? '0' : r === 10 ? 'K' : String(r);
   if (dv !== expected) return err('RUT inválido (dígito verificador no coincide)');
-  // Formato canónico: XX.XXX.XXX-X
-  const formatted = body.slice(0, -3).replace(/\B(?=(\d{3})+(?!\d))/g, '.') +
-    '.' + body.slice(-6, -3) + '.' + body.slice(-3) + '-' + dv;
-  // Para evitar duplicar puntos, reformateamos limpio:
+  // Formato canónico: XX.XXX.XXX-X (formateamos limpio):
   return ok(formatRut(body, dv));
 }
 

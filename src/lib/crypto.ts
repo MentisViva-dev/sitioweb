@@ -17,7 +17,6 @@ const SALT_LENGTH = 16;
 const KEY_LENGTH = 32; // 256 bits
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 // ==========================================================================
 // Random

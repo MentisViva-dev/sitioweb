@@ -20,9 +20,9 @@
  */
 
 import type { Env, ExecutionContext } from '../types/env';
-import type { DbUser, DbOrder, DbAdmin } from '../types/db';
+import type { DbUser, DbOrder } from '../types/db';
 import { jsonOk, jsonError, Errors, readBody } from '../lib/responses';
-import { dbFetch, dbInsert, dbExec, dbBatch, dbInsertIfNotExists, getConfig, getConfigInt } from '../lib/db';
+import { dbFetch, dbInsert, dbExec, dbBatch, dbInsertIfNotExists } from '../lib/db';
 import { getSession } from '../lib/auth';
 import { rateLimitByUser, RATE_LIMITS } from '../lib/rate-limit';
 import { auditLog, AuditEvents } from '../lib/audit';
@@ -36,9 +36,9 @@ import {
 } from '../lib/flow';
 import { sendAdminNotification, queueEmail, buildEmailLayout } from '../lib/email';
 import {
-  determineNextShipmentDate, calculateCutoffDate, calculateTrialDays,
+  determineNextShipmentDate, calculateTrialDays,
   isInLockedWindow, firstDayOfNextMonth, formatDateCL, formatISODate,
-  shipmentMonthStr, addDays, nowISO,
+  shipmentMonthStr, nowISO,
 } from '../lib/dates';
 import { validatePlanName, validateAmountCLP } from '../lib/validators';
 
@@ -476,7 +476,7 @@ async function handleRefund(req: Request, env: Env, _ctx: ExecutionContext): Pro
   await auditLog(env, {
     event_type: AuditEvents.PAYMENT_REFUNDED,
     actor_type: 'admin',
-    actor_id: session.admin_id,
+    actor_id: session.admin_id ?? null,
     target_user_id: order.user_id,
     request: req,
     details: { order_id: orderId, amount: order.monto, reason },
@@ -678,7 +678,8 @@ async function handleCallback(req: Request, env: Env, _ctx: ExecutionContext): P
   // 7. Forward async a contable.mentisviva.cl (idempotente con webhook queue)
   try {
     const payload: Record<string, string> = {};
-    for (const [k, v] of formData.entries()) payload[k] = String(v);
+    const fdEntries = (formData as unknown as { entries(): IterableIterator<[string, FormDataEntryValue]> }).entries();
+    for (const [k, v] of fdEntries) payload[k] = String(v);
     await env.Q_WEBHOOKS.send({
       endpoint: 'contable',
       url: 'https://contable.mentisviva.cl/api/flow/webhook',

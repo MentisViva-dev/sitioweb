@@ -48,7 +48,7 @@ async function shipitFetch(
   }
   const url = `${env.SHIPIT_API_URL}${path}`;
   try {
-    const resp = await fetch(url, {
+    const init: RequestInit = {
       method,
       headers: {
         'X-Shipit-Email': env.MV_SHIPIT_EMAIL,
@@ -56,9 +56,12 @@ async function shipitFetch(
         'Accept': 'application/vnd.shipit.v4',
         'Content-Type': 'application/json',
       },
-      body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(10000),
-    });
+    };
+    if (body) {
+      init.body = JSON.stringify(body);
+    }
+    const resp = await fetch(url, init);
     if (!resp.ok) {
       console.error(`[shipit] http_${resp.status}`, await resp.text());
       return null;

@@ -19,7 +19,7 @@ import { rateLimitByUser, RATE_LIMITS } from '../lib/rate-limit';
 import { auditLog, AuditEvents } from '../lib/audit';
 import {
   validateName, validateRUT, validatePhoneCL, validateAddress,
-  validatePostalCode, validateLatLng, validateEmail,
+  validatePostalCode, validateLatLng,
 } from '../lib/validators';
 import { isInLockedWindow, addDays, nowISO, formatDateCL } from '../lib/dates';
 import { randomToken, verifyPassword } from '../lib/crypto';

@@ -31,7 +31,7 @@ import {
 } from '../lib/crypto';
 import {
   validateEmail, validatePassword, validateName, validateRUT,
-  validatePhoneCL, validateAddress, validatePostalCode, validateLatLng,
+  validatePhoneCL, validateLatLng,
   validateSecurityQuestion, validateSecurityAnswer,
 } from '../lib/validators';
 import { rateLimitByIp, rateLimitByEmail, rateLimitLogin, RATE_LIMITS, rateLimitByUser } from '../lib/rate-limit';

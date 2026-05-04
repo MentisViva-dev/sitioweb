@@ -6,24 +6,24 @@
  */
 
 import type { Env, ExecutionContext, ChargeJobPayload, EmailJobPayload, WebhookJobPayload } from '../types/env';
-import { dbFetch, dbFetchAll, dbInsert, dbExec, dbBatch } from '../lib/db';
+import { dbFetch, dbFetchAll, dbInsert, dbExec } from '../lib/db';
 import { auditLog, AuditEvents } from '../lib/audit';
 import { sendEmail, sendAdminNotification, queueEmail } from '../lib/email';
 import {
-  flowGetPaymentStatus, flowListSubscriptions, flowCancelSubscription,
-  flowDeleteCustomer, FLOW_STATUS, buildCommerceOrder,
+  flowGetPaymentStatus, flowCancelSubscription,
+  flowDeleteCustomer, FLOW_STATUS,
 } from '../lib/flow';
 import { hmacSha256 } from '../lib/crypto';
 import {
-  determineNextShipmentDate, calculateCutoffDate, isInLockedWindow,
-  shipmentMonthStr, formatISODate, nowISO, formatDateCL,
+  determineNextShipmentDate, calculateCutoffDate,
+  shipmentMonthStr, formatISODate, nowISO,
 } from '../lib/dates';
 
 // =====================================================================
 // SCHEDULED — entrypoint para cron triggers
 // =====================================================================
 
-export async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+export async function scheduled(event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
   const cronExpr = event.cron;
   const now = new Date(event.scheduledTime);
 
@@ -159,7 +159,7 @@ async function buildRoster(env: Env, shipmentMonth: string): Promise<void> {
 // =====================================================================
 
 async function processChargeJob(env: Env, payload: ChargeJobPayload): Promise<void> {
-  const { user_id, shipment_month, attempt } = payload;
+  const { user_id, shipment_month, attempt: _attempt } = payload;
   const user = await dbFetch<{
     flow_subscription_id: string | null; email: string; nombre: string;
     plan_nombre: string | null; shipping_cost: number; shipping_method: string | null;
