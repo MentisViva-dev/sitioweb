@@ -156,11 +156,69 @@ async function handlePublish(req: Request, env: Env, adminId: number): Promise<R
   const result = await dbExec(env.DB, 'UPDATE mv_content SET published = 1, published_at = ? WHERE version = ?', [nowISO(), version]);
   if (result === 0) return Errors.notFound('Versión');
 
-  // Limpiar cache KV de content
-  await env.KV_CACHE.delete('content:current');
+  // ESCRIBIR el contenido publicado a KV para que el endpoint público lo lea
+  // sin tocar la D1 en cada request. Sin esto, /api/content no vería los cambios
+  // y el sitio público mostraría el contenido viejo para siempre.
+  const publishedRow = await dbFetch<{ content: string }>(
+    env.DB,
+    'SELECT content FROM mv_content WHERE version = ? LIMIT 1',
+    [version],
+  );
+  if (publishedRow?.content) {
+    await env.KV_CACHE.put('content:current', publishedRow.content, {
+      // No expiration — sólo se sobrescribe en el próximo publish.
+      metadata: { version, published_at: nowISO() },
+    });
+  }
 
   await auditLog(env, { event_type: AuditEvents.ADMIN_CONTENT_PUB, actor_type: 'admin', actor_id: adminId, request: req, details: { version } });
   return jsonOk({ message: 'Contenido publicado', version });
+}
+
+// =====================================================================
+// PUBLIC CONTENT — lo que sirve el sitio público (mentisviva.cl)
+// =====================================================================
+// Endpoint sin auth: GET /api/content → devuelve el último contenido publicado.
+// Lo expone el router (router.ts) montado en /api/content (no en /api/admin/).
+
+export async function handleGetPublicContent(env: Env): Promise<Response> {
+  // 1) Intentar KV (rápido, edge-cached)
+  const cached = await env.KV_CACHE.get('content:current');
+  if (cached) {
+    return new Response(cached, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        // Cache corto en CDN para que cambios del CMS lleguen pronto pero no
+        // muramos la D1 con cada request.
+        'Cache-Control': 'public, max-age=60, s-maxage=60',
+      },
+    });
+  }
+
+  // 2) Fallback: leer último publicado de D1 y poblar KV
+  const row = await dbFetch<{ content: string; version: number }>(
+    env.DB,
+    'SELECT content, version FROM mv_content WHERE published = 1 ORDER BY version DESC LIMIT 1',
+  );
+  if (!row?.content) {
+    // No hay contenido publicado todavía: 404 (el frontend hará fallback a data/content.json)
+    return new Response(JSON.stringify({ ok: false, error: 'No content published yet' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+  // Repoblar KV para próximas requests
+  await env.KV_CACHE.put('content:current', row.content);
+  return new Response(row.content, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=60, s-maxage=60',
+    },
+  });
 }
 
 // =====================================================================

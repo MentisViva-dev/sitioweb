@@ -36,6 +36,13 @@ export default {
       );
     }
 
+    // Public content endpoint — sirve el último content.json publicado por el CMS.
+    // El sitio público (mentisviva.cl) hace fetch a esto en vez de al estático Pages,
+    // así los cambios desde /unidos llegan inmediatamente sin redeploy.
+    if (url.pathname === '/api/content' && request.method === 'GET') {
+      return withCors(await adminWorker.handleGetPublicContent(env), env, origin);
+    }
+
     // R2 static asset serving — sirve uploads del CMS desde el bucket R2
     // Patrón: GET /r2/<key> → env.R2.get(key) con cache-control inmutable.
     // Sólo GET/HEAD; resto retorna 405. Sin auth (uploads son públicos por diseño).
