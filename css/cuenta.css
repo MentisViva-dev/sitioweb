@@ -240,10 +240,13 @@
   .plan-selector { grid-template-columns: 1fr; }
   .auth-body .form-row { grid-template-columns: 1fr; }
 
-  /* Auth/Edit modal full-screen on mobile */
+  /* Auth/Edit modal full-screen on mobile.
+     Usamos 100dvh (dynamic viewport height) para que se ajuste a las
+     barras del navegador móvil. Fallback a 100vh para browsers sin dvh. */
   .auth-modal {
     max-width: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     height: 100%;
   }
@@ -253,8 +256,10 @@
   #shippingOverlay .auth-modal {
     max-width: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   /* Shipping option cards stack properly */
