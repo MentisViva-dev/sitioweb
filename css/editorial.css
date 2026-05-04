@@ -12,7 +12,7 @@
 
 /* Slogan Section */
 .slogan-section {
-  padding: 100px 0;
+  padding: 80px 0 40px;   /* menos espacio bajo la filosofía: el catálogo viene justo después */
   text-align: center;
 }
 

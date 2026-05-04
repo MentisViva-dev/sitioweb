@@ -10,14 +10,20 @@
    ============================================================================ */
 
 .catalogo-section {
-  padding: clamp(48px, 8vw, 96px) 0;
+  /* Menos padding-top porque la sección anterior (filosofía) ya tiene su propio padding-bottom */
+  padding: clamp(24px, 4vw, 48px) 0 clamp(48px, 8vw, 96px);
   background: linear-gradient(180deg, #fff 0%, var(--gray-50, #fafafa) 100%);
 }
 
 .catalogo-header {
   text-align: center;
   max-width: 720px;
-  margin: 0 auto 36px;
+  margin: 0 auto 28px;
+}
+
+/* El label "NUESTRO CATÁLOGO" duplica el H2 → ocultamos el eyebrow para limpiar visual */
+.catalogo-header .section-label {
+  display: none;
 }
 
 .catalogo-header h2 {
@@ -362,6 +368,8 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  /* Evita scroll-chaining: cuando llegues al fondo del modal, el body NO scrollea */
+  overscroll-behavior: contain;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
   transform: translateY(20px) scale(0.97);
   transition: transform 0.25s ease;
