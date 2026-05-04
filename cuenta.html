@@ -18,9 +18,11 @@
 </head>
 <body>
 
+  <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
+
   <header class="navbar" id="navbar"></header>
 
-  <main>
+  <main id="mainContent" tabindex="-1">
   <section class="cuenta-section">
     <div class="container cuenta-container">
       <!-- Loading state -->
@@ -121,7 +123,7 @@
   </main>
 
   <!-- Auth Modal -->
-  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+  <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-hidden="true" onclick="if(event.target===this)closeAuthModal()">
     <div class="auth-modal">
       <div class="auth-header" style="flex-direction:column;gap:0">
         <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
@@ -129,7 +131,7 @@
             <img src="assets/logos/isotipo-color-2.png" alt="Editorial psicol&oacute;gica Mentis Viva" style="height:28px" loading="lazy" decoding="async">
             <h2 id="authTitle" style="font-size:1.1rem;margin:0">Editorial Mentis Viva</h2>
           </div>
-          <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+          <button class="auth-close" type="button" onclick="closeAuthModal()" aria-label="Cerrar diálogo">&times;</button>
         </div>
         <div class="auth-tabs" style="margin:0;border:none;margin-top:12px">
           <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesi&oacute;n</button>
@@ -287,22 +289,22 @@
   </div>
 
   <!-- Edit Modal -->
-  <div class="auth-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="auth-overlay" id="editOverlay" role="dialog" aria-modal="true" aria-labelledby="editTitle" aria-hidden="true" onclick="if(event.target===this)closeEditModal()">
     <div class="auth-modal">
       <div class="auth-header">
         <h2 id="editTitle">Editar</h2>
-        <button class="auth-close" onclick="closeEditModal()">&times;</button>
+        <button class="auth-close" type="button" onclick="closeEditModal()" aria-label="Cerrar diálogo">&times;</button>
       </div>
       <div class="auth-body" id="editBody"></div>
     </div>
   </div>
 
   <!-- Shipping Selection Modal -->
-  <div class="auth-overlay" id="shippingOverlay">
+  <div class="auth-overlay" id="shippingOverlay" role="dialog" aria-modal="true" aria-labelledby="shippingModalTitle" aria-hidden="true" onclick="if(event.target===this)closeShippingModal()">
     <div class="auth-modal" style="max-width:520px">
       <div class="auth-header">
         <h2 id="shippingModalTitle">Selecciona tu m&eacute;todo de env&iacute;o</h2>
-        <button class="auth-close" onclick="closeShippingModal()">&times;</button>
+        <button class="auth-close" type="button" onclick="closeShippingModal()" aria-label="Cerrar diálogo">&times;</button>
       </div>
       <div class="auth-body" id="shippingModalBody">
         <div id="shippingLoading" style="text-align:center;padding:30px">
@@ -637,16 +639,31 @@
 
     // Auth modal
     function openAuthModal(tab) {
-      document.getElementById('authOverlay').classList.add('active');
+      const ov = document.getElementById('authOverlay');
+      ov.classList.add('active');
+      ov.setAttribute('aria-hidden', 'false');
       switchAuthTab(tab || 'login');
       if (tab === 'register') loadGoogleMaps();
     }
     function closeAuthModal() {
-      document.getElementById('authOverlay').classList.remove('active');
+      const ov = document.getElementById('authOverlay');
+      ov.classList.remove('active');
+      ov.setAttribute('aria-hidden', 'true');
       // Hide map when closing auth modal
       var mapDiv = document.getElementById('regMap');
       if (mapDiv) mapDiv.style.display = 'none';
     }
+
+    // Close any open modal on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const auth = document.getElementById('authOverlay');
+      const edit = document.getElementById('editOverlay');
+      const ship = document.getElementById('shippingOverlay');
+      if (auth && auth.classList.contains('active')) { closeAuthModal(); return; }
+      if (edit && edit.classList.contains('active')) { closeEditModal(); return; }
+      if (ship && ship.classList.contains('active')) { closeShippingModal(); return; }
+    });
 
     function switchAuthTab(tab) {
       document.getElementById('forgotForm').style.display = 'none';
@@ -927,6 +944,7 @@
         var ov = document.getElementById('shippingOverlay');
         ov.style.display = '';
         ov.classList.add('active');
+        ov.setAttribute('aria-hidden', 'false');
         document.getElementById('shippingLoading').style.display = 'block';
         document.getElementById('shippingOptions').style.display = 'none';
         document.getElementById('shippingError').style.display = 'none';
@@ -936,6 +954,7 @@
     function closeShippingModal() {
         var ov = document.getElementById('shippingOverlay');
         ov.classList.remove('active');
+        ov.setAttribute('aria-hidden', 'true');
     }
 
     async function fetchShippingQuotes() {
@@ -1475,6 +1494,7 @@
       }
 
       overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden', 'false');
     }
 
     function selectEditShipping(index) {
@@ -1521,7 +1541,11 @@
       }
     }
 
-    function closeEditModal() { document.getElementById('editOverlay').classList.remove('active'); }
+    function closeEditModal() {
+      const ov = document.getElementById('editOverlay');
+      ov.classList.remove('active');
+      ov.setAttribute('aria-hidden', 'true');
+    }
 
     // Google Maps Autocomplete
     let mapsLoaded = false;

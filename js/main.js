@@ -193,6 +193,10 @@ function showToast(message, type = '') {
 
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  // Live region: error toasts are assertive (interrupts), success/info polite.
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+  toast.setAttribute('aria-atomic', 'true');
   toast.textContent = message;
   document.body.appendChild(toast);
 

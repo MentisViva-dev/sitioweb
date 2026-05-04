@@ -35,9 +35,11 @@
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
+
     <header class="navbar" id="navbar"></header>
 
-    <main class="tracking-container">
+    <main class="tracking-container" id="mainContent" tabindex="-1">
         <div class="tracking-card">
             <div id="trackingLoading" class="tracking-loading">
                 <i class="fa-solid fa-spinner tracking-spinner"></i>
@@ -51,8 +53,8 @@
                 <div id="trackingStatusContainer"></div>
                 <div class="tracking-external" id="trackingExternal">
                     <p>Tambi&eacute;n puedes ver el seguimiento directamente en:</p>
-                    <a id="trackingExternalLink" href="#" target="_blank">
-                        <i class="fa-solid fa-external-link-alt"></i> Sitio del courier
+                    <a id="trackingExternalLink" href="#" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-solid fa-external-link-alt" aria-hidden="true"></i> Sitio del courier <span class="sr-only">(se abre en nueva pestaña)</span>
                     </a>
                 </div>
             </div>

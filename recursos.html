@@ -49,14 +49,16 @@
 </head>
 <body>
 
+  <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
+
   <!-- Navbar -->
   <header class="navbar" id="navbar"></header>
 
-  <main>
+  <main id="mainContent" tabindex="-1">
   <!-- Banner -->
   <section class="hero-banner subpage-banner" id="recursosBanner">
-    <div class="hero-decoration" style="width:300px;height:300px;top:-80px;right:-60px;"></div>
-    <div class="hero-decoration" style="width:200px;height:200px;bottom:-40px;left:-40px;"></div>
+    <div class="hero-decoration" style="width:300px;height:300px;top:-80px;right:-60px;" aria-hidden="true"></div>
+    <div class="hero-decoration" style="width:200px;height:200px;bottom:-40px;left:-40px;" aria-hidden="true"></div>
     <div class="hero-content">
       <h1 id="bannerTitle">Recursos</h1>
       <p id="bannerSubtitle">Investigaciones, art&iacute;culos y contenido para tu crecimiento</p>
@@ -71,8 +73,8 @@
         <h2>Explora nuestros recursos</h2>
         <p>Material seleccionado por nuestro equipo de profesionales para tu desarrollo.</p>
       </div>
-      <div class="recursos-filters" id="recursosFilters">
-        <button class="filter-btn active" data-filter="all">Todos</button>
+      <div class="recursos-filters" id="recursosFilters" role="group" aria-label="Filtrar recursos por categoría">
+        <button class="filter-btn active" type="button" data-filter="all" aria-pressed="true">Todos</button>
       </div>
       <div class="recursos-grid stagger-children" id="recursosGrid">
         <!-- Rendered by JS -->
@@ -121,8 +123,8 @@
         const categories = [...new Set(items.map(i => i.categoria).filter(Boolean))];
         const filtersEl = document.getElementById('recursosFilters');
         if (categories.length > 0) {
-          filtersEl.innerHTML = '<button class="filter-btn active" data-filter="all">Todos</button>' +
-            categories.map(c => `<button class="filter-btn" data-filter="${c}">${c}</button>`).join('');
+          filtersEl.innerHTML = '<button class="filter-btn active" type="button" data-filter="all" aria-pressed="true">Todos</button>' +
+            categories.map(c => `<button class="filter-btn" type="button" data-filter="${c}" aria-pressed="false">${c}</button>`).join('');
         }
 
         // Render items
@@ -141,7 +143,7 @@
                 <h3>${item.titulo}</h3>
                 <div class="recurso-desc">${(item.descripcion || '').replace(/\n/g, '<br>')}</div>
                 ${item.fecha ? `<span class="recurso-date"><i class="fa-solid fa-calendar"></i> ${new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'})}</span>` : ''}
-                ${item.url ? `<a href="${item.url}" target="_blank" class="recurso-link">Descubrir <i class="fa-solid fa-arrow-right"></i></a>` : ''}
+                ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="recurso-link">Descubrir <i class="fa-solid fa-arrow-right" aria-hidden="true"></i><span class="sr-only"> (se abre en nueva pestaña)</span></a>` : ''}
               </div>
             </article>
           `).join('');
@@ -150,8 +152,12 @@
         // Filter logic
         filtersEl.addEventListener('click', (e) => {
           if (!e.target.classList.contains('filter-btn')) return;
-          filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          filtersEl.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+          });
           e.target.classList.add('active');
+          e.target.setAttribute('aria-pressed', 'true');
           const filter = e.target.dataset.filter;
           grid.querySelectorAll('.recurso-card').forEach(card => {
             card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';

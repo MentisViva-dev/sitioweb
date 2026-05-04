@@ -249,22 +249,50 @@ const ContentManager = {
 
     nav.innerHTML = `
       <div class="container">
-        <a href="index.html" class="navbar-brand">
+        <a href="index.html" class="navbar-brand" aria-label="${global.siteName} - Inicio">
           <img src="${isotipo}" alt="${global.siteName} - Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n" class="navbar-logo" loading="eager" fetchpriority="high" decoding="sync">
           <span class="navbar-brand-text">${brandText}</span>
         </a>
-        <nav class="navbar-links" id="navLinks">
+        <nav class="navbar-links" id="navLinks" aria-label="Navegaci\u00f3n principal">
           ${linksHtml}
         </nav>
-        <button class="navbar-toggle" id="navToggle" aria-label="Menu">
-          <span></span><span></span><span></span>
+        <button class="navbar-toggle" id="navToggle" type="button" aria-label="Abrir men\u00fa" aria-expanded="false" aria-controls="navLinks">
+          <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
         </button>
       </div>
     `;
 
-    document.getElementById('navToggle')?.addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle && navLinks) {
+      const setMenuState = (open) => {
+        navLinks.classList.toggle('open', open);
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        navToggle.setAttribute('aria-label', open ? 'Cerrar men\u00fa' : 'Abrir men\u00fa');
+      };
+      navToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setMenuState(!navLinks.classList.contains('open'));
+      });
+      // Close on link click (mobile UX)
+      navLinks.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A') setMenuState(false);
+      });
+      // Close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navLinks.classList.contains('open')) {
+          setMenuState(false);
+          navToggle.focus();
+        }
+      });
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!navLinks.classList.contains('open')) return;
+        if (!navLinks.contains(e.target) && !navToggle.contains(e.target)) {
+          setMenuState(false);
+        }
+      });
+    }
   },
 
   renderFooter() {
