@@ -338,12 +338,18 @@ const ContentManager = {
     return val !== false;
   },
 
-  // Hide a section element if its module is not visible
+  // Hide a section element if its module is not visible.
+  // Si está visible, también remueve un display:none inline (anti-FOUC) que
+  // hayamos puesto en el HTML para evitar el flash al cargar la página.
   toggleSection(sectionEl, visibilityPath) {
     if (!sectionEl) return false;
     if (!this.isVisible(visibilityPath)) {
       sectionEl.style.display = 'none';
       return false;
+    }
+    // Si tenía display:none por anti-FOUC, devolver al default del CSS
+    if (sectionEl.style.display === 'none') {
+      sectionEl.style.display = '';
     }
     return true;
   },
