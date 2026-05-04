@@ -13,11 +13,6 @@ let lockoutUntil = parseInt(sessionStorage.getItem('mv_lockout') || '0');
 // Cloudflare Workers API base for the admin endpoints
 const API_BASE = 'https://api.mentisviva.cl/api/admin';
 
-// Stub for shipping endpoints (no Worker equivalent yet)
-function shippingNotImplemented() {
-  showAdminToast('Esta funcionalidad de envíos requiere endpoints adicionales en el backend Worker. Pendiente de implementación.');
-}
-
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', async () => {
   // Check session by hitting /content; cookie is sent via credentials: 'include'.
@@ -1629,65 +1624,280 @@ function exportSubscribers() {
 }
 
 // ---- Shipping/Roster Management ----
-// NOTE: The Cloudflare Worker backend does not yet expose shipping endpoints.
-// Every operation below stubs out with a "pending implementation" toast until
-// /api/admin/shipping/* (or equivalent) is added on the Worker.
+// Backed by /api/admin/shipping/* on the Cloudflare Workers backend.
+
+function rosterCurrentMonth() {
+  const el = document.getElementById('rosterMonth');
+  if (el && el.value) return el.value;
+  const now = new Date();
+  return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+}
+
+const ROSTER_STATUS_LABEL = {
+  queued: 'En cola',
+  notified: 'Notificado',
+  confirmed: 'Confirmado',
+  shipped: 'Despachado',
+  delivered: 'Entregado',
+  skipped: 'Omitido',
+  cancelled: 'Cancelado',
+};
+const ROSTER_STATUS_COLOR = {
+  queued: '#F4B942',
+  notified: '#9C7BC9',
+  confirmed: '#2196F3',
+  shipped: '#2196F3',
+  delivered: 'var(--admin-green)',
+  skipped: 'var(--admin-muted)',
+  cancelled: 'var(--admin-danger)',
+};
 
 async function loadRoster() {
-  // No backend endpoint yet - clear the table and inform the user.
+  const month = rosterCurrentMonth();
   const tbody = document.getElementById('rosterTableBody');
   if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">Funcionalidad pendiente de implementación en backend.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--text-muted)">Cargando…</td></tr>';
   }
-  ['rosterTotal', 'rosterQueued', 'rosterShipped', 'rosterDelivered'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '-';
-  });
+  try {
+    const res = await fetch(`${API_BASE}/shipping/roster?month=${encodeURIComponent(month)}`, { credentials: 'include' });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      renderRoster(data.roster || [], data.counts || {});
+    } else {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--admin-danger)">Error: ${esc(data.error || 'no se pudo cargar la nómina')}</td></tr>`;
+    }
+  } catch (e) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--admin-danger)">Error de conexión</td></tr>';
+    showAdminToast('Error cargando nómina');
+  }
 }
 
 function renderRoster(roster, counts) {
-  // Kept for compatibility; not invoked while the backend is missing.
   const tbody = document.getElementById('rosterTableBody');
-  if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">Funcionalidad pendiente de implementación en backend.</td></tr>';
+  const total = counts.total ?? 0;
+  document.getElementById('rosterTotal').textContent = total;
+  document.getElementById('rosterQueued').textContent = (counts.queued ?? 0) + (counts.notified ?? 0) + (counts.confirmed ?? 0);
+  document.getElementById('rosterShipped').textContent = counts.shipped ?? 0;
+  document.getElementById('rosterDelivered').textContent = counts.delivered ?? 0;
+
+  if (!roster.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--text-muted)">Sin envíos para este mes. Genera la nómina para incluir suscriptores activos.</td></tr>';
+    return;
   }
+
+  let html = '';
+  roster.forEach(r => {
+    const fullName = [r.nombre, r.apellido].filter(Boolean).join(' ') || '-';
+    const fullAddr = [r.direccion, r.numero].filter(Boolean).join(' ') + (r.depto ? ', Depto ' + r.depto : '');
+    const statusLabel = ROSTER_STATUS_LABEL[r.status] || r.status;
+    const statusColor = ROSTER_STATUS_COLOR[r.status] || 'var(--admin-muted)';
+    const cost = Number(r.shipping_cost || 0);
+    const costFmt = cost > 0 ? '$' + cost.toLocaleString('es-CL') : '-';
+    const tracking = r.tracking_code
+      ? `<a href="https://mentisviva.cl/tracking.html?code=${encodeURIComponent(r.tracking_code)}&courier=${encodeURIComponent(r.shipping_method || '')}" target="_blank" rel="noopener" style="color:var(--teal);font-family:monospace;font-size:0.85rem">${esc(r.tracking_code)}</a>`
+      : '<span style="color:var(--admin-muted)">-</span>';
+    const canDelete = r.status !== 'shipped' && r.status !== 'delivered';
+    const deleteBtn = canDelete
+      ? `<button class="btn-admin" style="padding:4px 8px;font-size:0.8rem;background:transparent;color:var(--admin-danger);border:1px solid var(--admin-danger)" onclick="deleteRosterEntry(${r.id})" title="Eliminar entrada"><i class="fa-solid fa-trash"></i></button>`
+      : '';
+    html += `<tr style="border-bottom:1px solid var(--gray-200)">
+      <td style="padding:10px 8px;font-weight:500">${esc(fullName)}</td>
+      <td style="padding:10px 8px;font-size:0.85rem">${esc(fullAddr || '-')}</td>
+      <td style="padding:10px 8px">${esc(r.comuna || '-')}</td>
+      <td style="padding:10px 8px">${esc(r.plan_nombre || '-')}</td>
+      <td style="padding:10px 8px;font-size:0.85rem">${esc(r.shipping_method || '-')}</td>
+      <td style="padding:10px 8px">${costFmt}</td>
+      <td style="padding:10px 8px"><span style="background:${statusColor};color:white;padding:3px 8px;border-radius:12px;font-size:0.75rem;font-weight:600">${statusLabel}</span></td>
+      <td style="padding:10px 8px">${tracking}</td>
+      <td style="padding:10px 8px;text-align:right">${deleteBtn}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
 }
 
 async function generateRoster() {
-  shippingNotImplemented();
+  const month = rosterCurrentMonth();
+  if (!confirm(`Generar nómina para ${month}? Se incluirán todos los suscriptores activos con pago verificado.`)) return;
+  showAdminToast('Generando nómina…');
+  try {
+    const res = await fetch(`${API_BASE}/shipping/roster/generate`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      showAdminToast(`Nómina actualizada: ${data.inserted} nuevos, ${data.skipped} ya existían (${data.eligible} elegibles)`);
+      loadRoster();
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudo generar la nómina'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión generando nómina');
+  }
 }
 
 async function createShipitShipments() {
-  shippingNotImplemented();
+  const month = rosterCurrentMonth();
+  if (!confirm(`Crear envíos en Shipit para todos los pendientes de ${month}? Esto generará etiquetas reales.`)) return;
+  showAdminToast('Creando envíos en Shipit…');
+  try {
+    const res = await fetch(`${API_BASE}/shipping/shipit/create`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month }),
+    });
+    const data = await res.json();
+    if (data.ok === false && data.error) {
+      showAdminToast('Shipit: ' + data.error);
+    } else if (res.ok && data.ok) {
+      const errMsg = (data.errors && data.errors.length) ? ` — Errores: ${data.errors.length}` : '';
+      showAdminToast(`Envíos creados: ${data.created}/${data.total} (${data.failed} fallidos)${errMsg}`);
+      if (data.errors && data.errors.length) console.warn('[shipit/create] errors:', data.errors);
+      loadRoster();
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudieron crear los envíos'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión creando envíos');
+  }
 }
 
 async function updateShipitTracking() {
-  shippingNotImplemented();
+  const month = rosterCurrentMonth();
+  showAdminToast('Sincronizando tracking con Shipit…');
+  try {
+    const res = await fetch(`${API_BASE}/shipping/shipit/sync-tracking`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month }),
+    });
+    const data = await res.json();
+    if (data.ok === false && data.error) {
+      showAdminToast('Shipit: ' + data.error);
+    } else if (res.ok && data.ok) {
+      showAdminToast(`Tracking actualizado: ${data.updated} cambios (${data.delivered} entregados de ${data.checked} revisados)`);
+      loadRoster();
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudo sincronizar'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión sincronizando tracking');
+  }
 }
 
 function exportRoster() {
-  shippingNotImplemented();
+  const month = rosterCurrentMonth();
+  // CSV stream — la cookie HttpOnly viaja porque el subdominio api.* comparte .mentisviva.cl
+  window.open(`${API_BASE}/shipping/roster.csv?month=${encodeURIComponent(month)}`, '_blank');
 }
 
 async function deleteRosterEntry(id) {
-  shippingNotImplemented();
+  if (!confirm('Eliminar esta entrada de la nómina?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/shipping/roster/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      showAdminToast('Entrada eliminada');
+      loadRoster();
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudo eliminar'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión eliminando entrada');
+  }
 }
 
 async function clearRoster() {
-  shippingNotImplemented();
+  const month = rosterCurrentMonth();
+  if (!confirm(`Limpiar TODA la nómina pendiente de ${month}? Solo se eliminarán entradas en estado 'En cola' o 'Notificado'. Acción irreversible.`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/shipping/roster/clear`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      showAdminToast(`Nómina limpiada: ${data.deleted} entradas eliminadas`);
+      loadRoster();
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudo limpiar'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión limpiando nómina');
+  }
 }
 
 async function loadShippingConfig() {
-  // Silent stub: clear any pre-existing form values without shouting at the user
-  // every time they navigate to the shipping page.
-  ['cfgWidth','cfgHeight','cfgLength','cfgWeight','cfgOrigin','cfgShipDay','cfgCutoffDays','cfgNotifyDays','cfgMinShipping'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  const fields = ['cfgWidth','cfgHeight','cfgLength','cfgWeight','cfgOrigin','cfgShipDay','cfgCutoffDays','cfgNotifyDays','cfgMinShipping'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  try {
+    const res = await fetch(`${API_BASE}/shipping/config`, { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok || !data.ok) return;
+    const cfg = data.config || {};
+    const setField = (id, key) => { const el = document.getElementById(id); if (el && cfg[key] != null) el.value = cfg[key]; };
+    setField('cfgWidth',       'package_width');
+    setField('cfgHeight',      'package_height');
+    setField('cfgLength',      'package_length');
+    setField('cfgWeight',      'package_weight');
+    setField('cfgOrigin',      'origin_commune');
+    setField('cfgShipDay',     'shipping_day');
+    setField('cfgCutoffDays',  'cutoff_business_days');
+    setField('cfgNotifyDays',  'notification_days_before');
+    setField('cfgMinShipping', 'min_shipping_display');
+  } catch (e) {
+    showAdminToast('Error cargando configuración de envíos');
+  }
 }
 
 async function saveShippingConfig() {
-  shippingNotImplemented();
+  const val = id => {
+    const el = document.getElementById(id);
+    return el && el.value !== '' ? el.value : undefined;
+  };
+  const payload = {};
+  const map = {
+    package_width:            val('cfgWidth'),
+    package_height:           val('cfgHeight'),
+    package_length:           val('cfgLength'),
+    package_weight:           val('cfgWeight'),
+    origin_commune:           val('cfgOrigin'),
+    shipping_day:             val('cfgShipDay'),
+    cutoff_business_days:     val('cfgCutoffDays'),
+    notification_days_before: val('cfgNotifyDays'),
+    min_shipping_display:     val('cfgMinShipping'),
+  };
+  Object.entries(map).forEach(([k, v]) => { if (v !== undefined) payload[k] = v; });
+
+  if (!Object.keys(payload).length) {
+    showAdminToast('No hay valores para guardar');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/shipping/config`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      showAdminToast(`Configuración guardada (${data.saved} campos)`);
+    } else {
+      showAdminToast('Error: ' + (data.error || 'no se pudo guardar'));
+    }
+  } catch (e) {
+    showAdminToast('Error de conexión guardando configuración');
+  }
 }
 
 // ---- Survey/CSAT Management ----
