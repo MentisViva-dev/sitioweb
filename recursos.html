@@ -99,6 +99,13 @@
         document.getElementById('bannerSubtitle').textContent = recursos.banner?.subtitulo || '';
         const bannerEl = document.getElementById('recursosBanner');
         if (recursos.banner?.backgroundImage) {
+          // Preload el banner para que el navegador lo descargue ASAP (above-the-fold)
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = recursos.banner.backgroundImage;
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
           bannerEl.style.backgroundImage = `url('${recursos.banner.backgroundImage}')`;
         }
         if (recursos.banner?.overlayOpacity != null) {
@@ -123,7 +130,7 @@
           grid.innerHTML = items.map(item => `
             <article class="recurso-card fade-in" data-cat="${item.categoria || ''}">
               <div class="recurso-image">
-                ${item.imagen ? `<img src="${item.imagen}" alt="${item.titulo}">` : '<i class="fa-solid fa-file-lines recurso-placeholder"></i>'}
+                ${item.imagen ? `<img src="${item.imagen}" alt="${item.titulo}" loading="lazy" decoding="async">` : '<i class="fa-solid fa-file-lines recurso-placeholder"></i>'}
               </div>
               <div class="recurso-body">
                 <span class="recurso-cat">${item.categoria || 'General'}</span>

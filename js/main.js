@@ -11,12 +11,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Called after dynamic content renders
 function initMobileCarousels() {
-  if (window.innerWidth > 768) return;
-  document.querySelectorAll('.mobile-carousel').forEach(carousel => {
-    if (carousel.nextElementSibling?.classList.contains('carousel-progress')) return;
+  // Mobile: progress bar para feedback de scroll horizontal
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('.mobile-carousel').forEach(carousel => {
+      if (carousel.nextElementSibling?.classList.contains('carousel-progress')) return;
+      if (carousel.children.length <= 1) return;
+      addProgressBar(carousel);
+    });
+  }
+  // Desktop + mobile: flechas de navegación universales (replican el estilo del catálogo).
+  // En móvil están ocultas vía CSS; en desktop solo aparecen si hay overflow.
+  initDesktopCarouselArrows();
+}
+
+/**
+ * Envuelve carruseles horizontales con dos flechas chevron (estilo catálogo)
+ * para navegar en desktop. NO toca el catálogo (.catalogo-carrusel) — ese
+ * tiene su propia implementación y queda intacto.
+ *
+ * Selectores cubiertos:
+ *   - .mobile-carousel  (testimonios, calugas, charlas, galería, pilares, landing-cards)
+ *   - .servicios-grid   (centro.html, ya scrollable en desktop)
+ *
+ * Las flechas se ocultan automáticamente cuando no hay nada más que scrollear
+ * en esa dirección (se desactivan con [disabled], que vía CSS las hace
+ * invisibles + no clickeables).
+ */
+function initDesktopCarouselArrows() {
+  const selectors = ['.mobile-carousel', '.servicios-grid'];
+  document.querySelectorAll(selectors.join(',')).forEach(carousel => {
+    // No tocar el catálogo (tiene su propia implementación)
+    if (carousel.classList.contains('catalogo-carrusel')) return;
+    // Idempotente: si ya está envuelto, salir
+    if (carousel.parentElement?.classList.contains('carousel-arrow-wrapper')) return;
+    // Necesitamos al menos 2 hijos para que tenga sentido
     if (carousel.children.length <= 1) return;
-    addProgressBar(carousel);
+
+    attachCarouselArrows(carousel);
   });
+}
+
+function attachCarouselArrows(carousel) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'carousel-arrow-wrapper';
+  carousel.parentNode.insertBefore(wrapper, carousel);
+  wrapper.appendChild(carousel);
+
+  const prev = document.createElement('button');
+  prev.type = 'button';
+  prev.className = 'carousel-arrow carousel-arrow-prev';
+  prev.setAttribute('aria-label', 'Anterior');
+  prev.innerHTML = '<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>';
+
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'carousel-arrow carousel-arrow-next';
+  next.setAttribute('aria-label', 'Siguiente');
+  next.innerHTML = '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
+
+  wrapper.appendChild(prev);
+  wrapper.appendChild(next);
+
+  function scrollByAmount(dir) {
+    const step = Math.max(200, Math.round(carousel.clientWidth * 0.8));
+    carousel.scrollBy({ left: dir * step, behavior: 'smooth' });
+  }
+
+  function updateArrows() {
+    const max = carousel.scrollWidth - carousel.clientWidth;
+    if (max <= 4) {
+      // Sin overflow — ocultar ambas flechas
+      prev.disabled = true;
+      next.disabled = true;
+      return;
+    }
+    prev.disabled = carousel.scrollLeft <= 4;
+    next.disabled = carousel.scrollLeft >= max - 4;
+  }
+
+  prev.addEventListener('click', () => scrollByAmount(-1));
+  next.addEventListener('click', () => scrollByAmount(1));
+  carousel.addEventListener('scroll', updateArrows, { passive: true });
+  window.addEventListener('resize', updateArrows);
+  // Re-evaluar al cargar imágenes (cambian scrollWidth)
+  carousel.querySelectorAll('img').forEach(img => {
+    if (!img.complete) img.addEventListener('load', updateArrows, { once: true });
+  });
+
+  // Estado inicial — esperar al próximo frame para que el layout esté listo
+  requestAnimationFrame(updateArrows);
+  setTimeout(updateArrows, 300);
 }
 
 function addProgressBar(container) {

@@ -250,7 +250,7 @@ const ContentManager = {
     nav.innerHTML = `
       <div class="container">
         <a href="index.html" class="navbar-brand">
-          <img src="${isotipo}" alt="${global.siteName} - Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n" class="navbar-logo">
+          <img src="${isotipo}" alt="${global.siteName} - Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n" class="navbar-logo" loading="eager" fetchpriority="high" decoding="sync">
           <span class="navbar-brand-text">${brandText}</span>
         </a>
         <nav class="navbar-links" id="navLinks">
@@ -279,7 +279,7 @@ const ContentManager = {
       <div class="container">
         <div class="footer-grid">
           <div class="footer-brand">
-            <img src="assets/logos/isotipo-blanco.png" alt="${global.siteName} - Bienestar emocional y salud mental Chile">
+            <img src="assets/logos/isotipo-blanco.png" alt="${global.siteName} - Bienestar emocional y salud mental Chile" loading="lazy" decoding="async">
             <p>${f.descripcion}</p>
           </div>
           <div>

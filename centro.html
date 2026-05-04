@@ -253,6 +253,13 @@
         document.getElementById('bannerSubtitle').textContent = clinica.banner.subtitulo;
         const bannerEl = document.getElementById('clinicaBanner');
         if (clinica.banner.backgroundImage) {
+          // Preload el banner para que el navegador lo descargue ASAP (above-the-fold)
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = clinica.banner.backgroundImage;
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
           bannerEl.style.backgroundImage = `url('${clinica.banner.backgroundImage}')`;
         }
         if (clinica.banner.overlayOpacity != null) {
@@ -267,7 +274,7 @@
         // Enfoque image
         const enfoqueImageEl = document.getElementById('enfoqueImage');
         if (clinica.enfoque.imagen) {
-          enfoqueImageEl.innerHTML = `<img src="${clinica.enfoque.imagen}" alt="Enfoque terap\u00e9utico del centro psicol\u00f3gico Mentis Viva - Terapia ACT y DBT">`;
+          enfoqueImageEl.innerHTML = `<img src="${clinica.enfoque.imagen}" alt="Enfoque terap\u00e9utico del centro psicol\u00f3gico Mentis Viva - Terapia ACT y DBT" loading="lazy" decoding="async">`;
         }
 
         // Pilares

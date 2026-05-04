@@ -207,6 +207,13 @@
         document.getElementById('bannerSubtitle').textContent = fundacion.banner.subtitulo;
         const bannerEl = document.querySelector('.fundacion-banner');
         if (fundacion.banner.backgroundImage) {
+          // Preload el banner para que el navegador lo descargue ASAP (above-the-fold)
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = fundacion.banner.backgroundImage;
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
           bannerEl.style.backgroundImage = `url('${fundacion.banner.backgroundImage}')`;
         }
         if (fundacion.banner.overlayOpacity != null) {
@@ -233,7 +240,7 @@
         document.getElementById('queHacemosTitle').textContent = fundacion.queHacemos.titulo;
         document.getElementById('queHacemosText').textContent = fundacion.queHacemos.texto;
         if (fundacion.queHacemos.imagen) {
-          document.getElementById('queHacemosImage').innerHTML = `<img src="${fundacion.queHacemos.imagen}" alt="Talleres y charlas psicol\u00f3gicas de la Fundaci\u00f3n Mentis Viva" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)">`;
+          document.getElementById('queHacemosImage').innerHTML = `<img src="${fundacion.queHacemos.imagen}" alt="Talleres y charlas psicol\u00f3gicas de la Fundaci\u00f3n Mentis Viva" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)">`;
         }
 
         const temasList = document.getElementById('temasList');
@@ -257,7 +264,7 @@
           return `
             <div class="charla-card">
               <div class="charla-image">
-                ${c.imagen ? `<img src="${c.imagen}" alt="${c.titulo}">` : '<i class="fa-solid fa-chalkboard-user charla-placeholder"></i>'}
+                ${c.imagen ? `<img src="${c.imagen}" alt="${c.titulo}" loading="lazy" decoding="async">` : '<i class="fa-solid fa-chalkboard-user charla-placeholder"></i>'}
               </div>
               <div class="charla-body">
                 <div class="charla-meta">
@@ -276,7 +283,7 @@
         if (fundacion.galeria && fundacion.galeria.length > 0) {
           galeriaGrid.innerHTML = fundacion.galeria.map(img => `
             <div class="galeria-item">
-              <img src="${img}" alt="Galer&iacute;a fundaci&oacute;n psicol&oacute;gica Mentis Viva - Charlas y talleres">
+              <img src="${img}" alt="Galer&iacute;a fundaci&oacute;n psicol&oacute;gica Mentis Viva - Charlas y talleres" loading="lazy" decoding="async">
             </div>
           `).join('');
         } else {
@@ -292,7 +299,7 @@
         document.getElementById('ctaTitle').textContent = fundacion.cta.titulo;
         document.getElementById('ctaText').textContent = fundacion.cta.texto;
         if (fundacion.cta.imagen) {
-          document.getElementById('ctaImage').innerHTML = `<img src="${fundacion.cta.imagen}" alt="Charlas psicol\u00f3gicas de la Fundaci\u00f3n Mentis Viva en colegios de Chile">`;
+          document.getElementById('ctaImage').innerHTML = `<img src="${fundacion.cta.imagen}" alt="Charlas psicol\u00f3gicas de la Fundaci\u00f3n Mentis Viva en colegios de Chile" loading="lazy" decoding="async">`;
         }
       }
 
