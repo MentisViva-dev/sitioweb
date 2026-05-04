@@ -187,7 +187,6 @@ p {
 
 .navbar-brand-text .brand-line-2 {
   font-size: 1.05rem;        /* "Mentis Viva" */
-  font-style: italic;        /* matiz tipográfico para diferenciar las líneas */
   color: var(--text-secondary, #555);
 }
 
