@@ -81,7 +81,7 @@
   <section class="catalogo-section" id="catalogoSection" aria-labelledby="catalogoTitulo">
     <div class="container">
       <div class="catalogo-header fade-in">
-        <span class="section-label">Nuestro Catálogo</span>
+        <span class="section-label">Editorial Mentis Viva</span>
         <h2 id="catalogoTitulo">Cargando…</h2>
         <p id="catalogoSubtitulo" class="catalogo-subtitulo"></p>
       </div>
@@ -259,6 +259,13 @@
         document.getElementById('bannerSubtitle').textContent = editorial.banner.subtitulo;
         const bannerEl = document.getElementById('editorialBanner');
         if (editorial.banner.backgroundImage) {
+          // Preload el banner para que el navegador lo descargue ASAP (above-the-fold)
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = editorial.banner.backgroundImage;
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
           bannerEl.style.backgroundImage = `url('${editorial.banner.backgroundImage}')`;
         }
         if (editorial.banner.overlayOpacity != null) {

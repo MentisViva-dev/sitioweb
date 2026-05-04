@@ -112,21 +112,35 @@ async function showAdmin() {
 }
 
 async function loadData() {
-  const stored = localStorage.getItem('mentisviva_content');
-  if (stored) {
-    siteData = JSON.parse(stored);
-  } else {
-    try {
-      // Prefer the authoritative copy from the Worker; fall back to static JSON
-      const res = await fetch(`${API_BASE}/content`, { credentials: 'include' });
-      if (res.ok) {
-        siteData = await res.json();
-      } else {
-        const staticRes = await fetch('data/content.json');
-        siteData = await staticRes.json();
-      }
-    } catch (e) {
-      console.error('Error loading data:', e);
+  // SIEMPRE traer fresh desde el Worker (la D1 es la fuente de verdad).
+  // localStorage solo se usa como FALLBACK offline si la red falla.
+  // Sin esto, cualquier cambio publicado por otro admin (o mismo admin
+  // en otro browser) no se vería hasta limpiar localStorage manualmente.
+  try {
+    const res = await fetch(`${API_BASE}/content`, {
+      credentials: 'include',
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const payload = await res.json();
+      // El endpoint devuelve { ok, content, version, published }.
+      // El siteData que esperan los editores es el OBJETO content directo.
+      siteData = payload.content || payload;
+      // Refrescamos localStorage para tener un fallback offline coherente
+      try { localStorage.setItem('mentisviva_content', JSON.stringify(siteData)); } catch(_){}
+      return;
+    }
+    // Si /content devolvió !ok, intentamos el static del repo
+    const staticRes = await fetch('data/content.json', { cache: 'no-store' });
+    siteData = await staticRes.json();
+  } catch (e) {
+    console.warn('loadData fetch failed, falling back to localStorage cache:', e);
+    const stored = localStorage.getItem('mentisviva_content');
+    if (stored) {
+      try { siteData = JSON.parse(stored); }
+      catch(_) { siteData = null; }
+    }
+    if (!siteData) {
       siteData = { global: {}, landing: {}, clinica: {}, editorial: {}, fundacion: {} };
     }
   }
@@ -591,7 +605,7 @@ function buildImageUploadHTML(targetId, currentVal) {
       </div>
     </div>
     <div class="image-upload-preview ${hasImage ? '' : 'empty'}" data-preview-for="${targetId}">
-      ${hasImage ? `<img src="${esc(currentVal)}">` : 'Sin imagen'}
+      ${hasImage ? `<img src="${esc(currentVal)}" loading="lazy" decoding="async">` : 'Sin imagen'}
     </div>
   `;
 }
@@ -718,7 +732,7 @@ function updateImagePreview(targetId, src) {
   if (!preview) return;
   if (src) {
     preview.className = 'image-upload-preview';
-    preview.innerHTML = `<img src="${esc(src)}">`;
+    preview.innerHTML = `<img src="${esc(src)}" loading="lazy" decoding="async">`;
   } else {
     preview.className = 'image-upload-preview empty';
     preview.innerHTML = 'Sin imagen';
@@ -1094,7 +1108,7 @@ function renderRecurso(r, i) {
         </label>
       </div>
       <div id="${previewId}" style="margin-top:8px">
-        ${r.imagen ? `<img src="${esc(r.imagen)}" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">` : ''}
+        ${r.imagen ? `<img src="${esc(r.imagen)}" loading="lazy" decoding="async" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">` : ''}
       </div>
     </div>
   </div>`;
@@ -1132,7 +1146,7 @@ async function uploadRecursoImage(input, imgFieldId, previewId) {
         const url = data.url || data.location;
         if ((data.ok || url) && url) {
           document.getElementById(imgFieldId).value = url;
-          document.getElementById(previewId).innerHTML = '<img src="' + url + '" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">';
+          document.getElementById(previewId).innerHTML = '<img src="' + url + '" loading="lazy" decoding="async" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">';
           showAdminToast('Imagen subida');
         } else {
           showAdminToast('Error: ' + (data.error || 'No se pudo subir'));
@@ -1150,7 +1164,7 @@ function renderGaleriaItem(url, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field"><label>URL de Imagen</label><input value="${esc(src)}" data-key="value" placeholder="https://ejemplo.com/foto.jpg"></div>
-    ${src ? `<div style="margin-top:8px;max-height:80px;overflow:hidden;border-radius:6px"><img src="${esc(src)}" style="max-width:100%;max-height:80px;object-fit:cover"></div>` : ''}
+    ${src ? `<div style="margin-top:8px;max-height:80px;overflow:hidden;border-radius:6px"><img src="${esc(src)}" loading="lazy" decoding="async" style="max-width:100%;max-height:80px;object-fit:cover"></div>` : ''}
   </div>`;
 }
 
@@ -2055,7 +2069,7 @@ function renderCatalogoLibros() {
   grid.innerHTML = libros.map((l, idx) => {
     const oculto = !!l.oculto;
     const destacado = !!l.destacado;
-    const portada = l.portada ? `<img src="${esc(l.portada)}" alt="${esc(l.titulo)}" onerror="this.style.display='none'">` : '<i class="fa-solid fa-book" style="font-size:2rem"></i>';
+    const portada = l.portada ? `<img src="${esc(l.portada)}" alt="${esc(l.titulo)}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '<i class="fa-solid fa-book" style="font-size:2rem"></i>';
     const catNombre = catMap[l.categoriaId] || l.categoriaId || '';
     return `<div class="libro-admin-card${oculto ? ' is-oculto' : ''}" data-libro-id="${esc(l.id)}">
       <div class="libro-admin-thumb">
@@ -2173,7 +2187,7 @@ function updateLibroPortadaPreview(src) {
   const prev = document.getElementById('libroPortadaPreview');
   if (!prev) return;
   if (src) {
-    prev.innerHTML = `<img src="${esc(src)}" alt="Vista previa" onerror="this.parentElement.innerHTML='<span style=&quot;color:var(--admin-danger)&quot;>No se pudo cargar la imagen</span>'">`;
+    prev.innerHTML = `<img src="${esc(src)}" alt="Vista previa" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML='<span style=&quot;color:var(--admin-danger)&quot;>No se pudo cargar la imagen</span>'">`;
   } else {
     prev.innerHTML = 'Sin portada';
   }

@@ -21,10 +21,8 @@
   margin: 0 auto 28px;
 }
 
-/* El label "NUESTRO CATÁLOGO" duplica el H2 → ocultamos el eyebrow para limpiar visual */
-.catalogo-header .section-label {
-  display: none;
-}
+/* El eyebrow .section-label se mantiene visible (texto distinto al H2: ej. "Editorial Mentis Viva")
+   para conservar el patrón de las demás secciones (eyebrow + título grande). */
 
 .catalogo-header h2 {
   font-family: 'Cardo', serif;
