@@ -1386,11 +1386,12 @@ async function publishContent() {
 
   try {
     // 1. Save the full content payload
+    //    Worker espera: { content: "<JSON-stringified content>" }
     const saveRes = await fetch(`${API_BASE}/save`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: json
+      body: JSON.stringify({ content: json })
     });
 
     let saveResult = {};
@@ -1401,16 +1402,24 @@ async function publishContent() {
     }
 
     // 2. Trigger publish to KV / Pages
+    //    Worker espera: { version: <int> } — capturado del save anterior
+    const version = saveResult.version || saveResult.data?.version;
+    if (!version) {
+      showAdminToast('No se obtuvo version del save - no se puede publicar');
+      return;
+    }
     const pubRes = await fetch(`${API_BASE}/publish`, {
       method: 'POST',
-      credentials: 'include'
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version })
     });
 
     let pubResult = {};
     try { pubResult = await pubRes.json(); } catch(_) {}
 
     if (pubRes.ok && pubResult.ok !== false && pubResult.success !== false) {
-      showAdminToast('Publicado en mentisviva.cl (' + sizeMB + 'MB)');
+      showAdminToast('Publicado en mentisviva.cl v' + version + ' (' + sizeMB + 'MB)');
     } else {
       showAdminToast('Error al publicar: ' + (pubResult.error || pubRes.status) + '. Descargando archivo...');
       downloadContentJson(json);
@@ -1428,14 +1437,21 @@ async function publishContent() {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: json
+          body: JSON.stringify({ content: json })
         });
+        const saveResult2 = await saveRes2.json().catch(() => ({}));
+        const v2 = saveResult2.version || saveResult2.data?.version;
+        if (!saveRes2.ok || !v2) {
+          throw new Error('save failed');
+        }
         const pubRes2 = await fetch(`${API_BASE}/publish`, {
           method: 'POST',
-          credentials: 'include'
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version: v2 })
         });
         if (saveRes2.ok && pubRes2.ok) {
-          showAdminToast('Publicado en mentisviva.cl (' + sizeMB + 'MB)');
+          showAdminToast('Publicado en mentisviva.cl v' + v2 + ' (' + sizeMB + 'MB)');
         } else {
           showAdminToast('Error al publicar tras reintento');
           downloadContentJson(json);
