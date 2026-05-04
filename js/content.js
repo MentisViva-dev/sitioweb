@@ -166,29 +166,48 @@ const ContentManager = {
   },
 
   async init() {
-    // ALWAYS prefer fresh network content (con cache-buster) — localStorage es
-    // SOLO fallback offline. Si confiáramos en localStorage cualquier cambio
-    // que hagamos en data/content.json no llegaría a usuarios que ya hayan
-    // visitado el sitio (lo guardado se mostraría para siempre).
-    try {
-      const response = await fetch('data/content.json?v=' + Date.now(), { cache: 'no-store' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      this.data = await response.json();
-      // Guardamos como respaldo offline (no como fuente de verdad)
-      try { localStorage.setItem('mentisviva_content', JSON.stringify(this.data)); } catch(_){}
-    } catch (e) {
-      console.warn('content.json fetch failed, using cache or fallback:', e);
-      const stored = localStorage.getItem('mentisviva_content');
-      if (stored) {
-        try { this.data = JSON.parse(stored); }
-        catch(_) { this.data = null; }
+    // Si ya inicializamos antes en esta página, retornar la promesa cacheada.
+    // Esto permite que múltiples consumidores llamen init() sin duplicar el fetch.
+    if (this._initPromise) return this._initPromise;
+
+    this._initPromise = (async () => {
+      // Estrategia: primero intentamos /api/content (Worker, leído del CMS).
+      // Si falla (404 = no hay contenido publicado todavía, o red caída) usamos
+      // el static data/content.json del repo (snapshot inicial). localStorage
+      // es SOLO último recurso offline.
+      const cb = '?v=' + Date.now();
+      try {
+        // 1) API del CMS publicado (refleja cambios del admin inmediatamente)
+        let response = await fetch('https://api.mentisviva.cl/api/content' + cb, { cache: 'no-store' });
+        if (!response.ok) {
+          // 2) Static file del repo (Pages) — fallback si el CMS no tiene nada publicado
+          response = await fetch('data/content.json' + cb, { cache: 'no-store' });
+        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        this.data = await response.json();
+        // Guardamos como respaldo offline (no como fuente de verdad)
+        try { localStorage.setItem('mentisviva_content', JSON.stringify(this.data)); } catch(_){}
+      } catch (e) {
+        console.warn('content.json fetch failed, using cache or fallback:', e);
+        const stored = localStorage.getItem('mentisviva_content');
+        if (stored) {
+          try { this.data = JSON.parse(stored); }
+          catch(_) { this.data = null; }
+        }
+        if (!this.data) {
+          // Fallback final (file:// o sin red ni cache)
+          this.data = { global: this.fallbackGlobal, landing: this.fallbackLanding, clinica: this.fallbackClinica, editorial: this.fallbackEditorial, fundacion: this.fallbackFundacion };
+        }
       }
-      if (!this.data) {
-        // Fallback final (file:// o sin red ni cache)
-        this.data = { global: this.fallbackGlobal, landing: this.fallbackLanding, clinica: this.fallbackClinica, editorial: this.fallbackEditorial, fundacion: this.fallbackFundacion };
-      }
-    }
-    return this.data;
+      // Notificar a los listeners que se montaron antes que terminara init()
+      // (catalogo.js usa este evento — sin él, defer-scripts ven this.data=null
+      // y abortan en silencio, ocultando su sección).
+      try {
+        document.dispatchEvent(new CustomEvent('contentmanager:ready', { detail: this.data }));
+      } catch(_) {}
+      return this.data;
+    })();
+    return this._initPromise;
   },
 
   get(path) {

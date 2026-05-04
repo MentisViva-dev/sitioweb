@@ -29,11 +29,17 @@
   let _ultimoFocus = null;        // Para devolver el focus al cerrar el modal
 
   // -------------------- Inicialización --------------------
-  function init() {
+  async function init() {
     if (typeof ContentManager === 'undefined' || !ContentManager.get) {
-      // Si ContentManager aún no está, reintentar cuando esté listo
+      // Si ContentManager aún ni siquiera se cargó, esperar al evento
       document.addEventListener('contentmanager:ready', init, { once: true });
       return;
+    }
+
+    // Si ContentManager existe pero todavía no terminó el fetch async, esperar.
+    // (Antes este script se ejecutaba con this.data=null y abortaba en silencio.)
+    if (!ContentManager.data && typeof ContentManager.init === 'function') {
+      try { await ContentManager.init(); } catch(_) {}
     }
 
     const cat = ContentManager.get('editorial.catalogo');
