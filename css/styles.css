@@ -170,35 +170,33 @@ p {
 
 .navbar-brand-text {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 400;          /* sin bold, más elegante con la serif */
   color: var(--text-primary);
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
-  line-height: 1.05;         /* las 2 líneas hacen ~42px (= altura del isotipo) */
+  line-height: 1.05;         /* 2 líneas × ~20px ≈ 42px (= altura del isotipo) */
   letter-spacing: 0.005em;
   white-space: nowrap;
 }
 
 .navbar-brand-text .brand-line-1 {
-  font-size: 1.05rem;        /* "Centro" / "Editorial" / "Fundación" */
+  font-size: 1.2rem;         /* "Centro" / "Editorial" / "Fundación" */
 }
 
 .navbar-brand-text .brand-line-2 {
-  font-size: 1.05rem;        /* "Mentis Viva" */
+  font-size: 1.2rem;         /* "Mentis Viva" */
   color: var(--text-secondary, #555);
 }
 
 /* En mobile el navbar es más estrecho — reducimos un toque para que quepa
    junto al isotipo + el botón hamburguesa sin saltos de línea raros. */
 @media (max-width: 480px) {
-  .navbar-brand-text {
-    font-size: 0.92rem;
-  }
+  .navbar-brand-text,
   .navbar-brand-text .brand-line-1,
   .navbar-brand-text .brand-line-2 {
-    font-size: 0.92rem;
+    font-size: 1.02rem;
   }
 }
 
