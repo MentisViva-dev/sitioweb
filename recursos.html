@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursos - Mentis Viva</title>
+  <meta name="description" content="Recursos sobre ansiedad, depresi&oacute;n, estr&eacute;s y terapia online. Art&iacute;culos de salud mental, terapia ACT y DBT por psic&oacute;logos de Mentis Viva en Chile.">
+  <meta name="keywords" content="depresi&oacute;n, ansiedad, estr&eacute;s, terapia online, psic&oacute;logo online, autoestima, TDAH, crisis de p&aacute;nico, terapia para ansiedad, terapia de pareja, salud mental santiago, consulta psicol&oacute;gica online, recursos psicolog&iacute;a, art&iacute;culos salud mental, bienestar emocional, terapia ACT, terapia DBT, salud mental chile, centro psicol&oacute;gico, psic&oacute;logo, psic&oacute;loga, blog psicol&oacute;gico, Mentis Viva">
+  <meta name="author" content="Mentis Viva">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://mentisviva.cl/recursos.html">
+  <meta property="og:title" content="Recursos - Mentis Viva">
+  <meta property="og:description" content="Recursos sobre ansiedad, depresi&oacute;n, estr&eacute;s y terapia online. Art&iacute;culos de salud mental y bienestar emocional por psic&oacute;logos de Mentis Viva, Chile.">
+  <meta property="og:image" content="https://mentisviva.cl/assets/logos/isotipo-color.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mentisviva.cl/recursos.html">
+  <meta property="og:locale" content="es_CL">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Recursos - Mentis Viva">
+  <meta name="twitter:description" content="Recursos sobre ansiedad, depresi&oacute;n, estr&eacute;s y terapia online por psic&oacute;logos de Mentis Viva en Chile.">
+  <meta name="twitter:image" content="https://mentisviva.cl/assets/logos/isotipo-color.png">
+  <link rel="icon" href="assets/logos/isotipo-color.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/logos/isotipo-color.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2B8A9E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/recursos.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recursos de Psicolog\u00eda y Salud Mental - Mentis Viva",
+    "description": "Art\u00edculos, investigaciones y recursos sobre bienestar emocional, terapia ACT, terapia DBT y salud mental en Chile por psic\u00f3logos de Mentis Viva.",
+    "url": "https://mentisviva.cl/recursos.html",
+    "isPartOf": {"@type": "WebSite", "name": "Mentis Viva", "url": "https://mentisviva.cl"},
+    "about": ["Psicolog\u00eda", "Bienestar emocional", "Salud mental", "Terapia ACT", "Terapia DBT", "Ansiedad", "Depresi\u00f3n", "Estr\u00e9s", "Terapia online", "Autoestima", "TDAH", "Crisis de p\u00e1nico"]
+  }
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LW9MH65Z3N"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LW9MH65Z3N');</script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar"></header>
+
+  <main>
+  <!-- Banner -->
+  <section class="hero-banner subpage-banner" id="recursosBanner">
+    <div class="hero-decoration" style="width:300px;height:300px;top:-80px;right:-60px;"></div>
+    <div class="hero-decoration" style="width:200px;height:200px;bottom:-40px;left:-40px;"></div>
+    <div class="hero-content">
+      <h1 id="bannerTitle">Recursos</h1>
+      <p id="bannerSubtitle">Investigaciones, art&iacute;culos y contenido para tu crecimiento</p>
+    </div>
+  </section>
+
+  <!-- Resources Grid -->
+  <section class="recursos-section">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Contenido</span>
+        <h2>Explora nuestros recursos</h2>
+        <p>Material seleccionado por nuestro equipo de profesionales para tu desarrollo.</p>
+      </div>
+      <div class="recursos-filters" id="recursosFilters">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+      </div>
+      <div class="recursos-grid stagger-children" id="recursosGrid">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="no-recursos" id="noRecursos" style="display:none">
+        <i class="fa-solid fa-book-open"></i>
+        <p>Pronto publicaremos contenido aqu&iacute;.</p>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" id="footer"></footer>
+
+  <script src="js/content.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ContentManager.init();
+      ContentManager.renderNavbar('recursos.html');
+      ContentManager.renderFooter();
+
+      const recursos = ContentManager.get('recursos');
+      if (recursos) {
+        // Banner
+        document.getElementById('bannerTitle').textContent = recursos.banner?.titulo || 'Recursos';
+        document.getElementById('bannerSubtitle').textContent = recursos.banner?.subtitulo || '';
+        const bannerEl = document.getElementById('recursosBanner');
+        if (recursos.banner?.backgroundImage) {
+          bannerEl.style.backgroundImage = `url('${recursos.banner.backgroundImage}')`;
+        }
+        if (recursos.banner?.overlayOpacity != null) {
+          bannerEl.style.setProperty('--overlay-opacity', recursos.banner.overlayOpacity / 100);
+        }
+
+        // Build category filters
+        const items = recursos.items || [];
+        const categories = [...new Set(items.map(i => i.categoria).filter(Boolean))];
+        const filtersEl = document.getElementById('recursosFilters');
+        if (categories.length > 0) {
+          filtersEl.innerHTML = '<button class="filter-btn active" data-filter="all">Todos</button>' +
+            categories.map(c => `<button class="filter-btn" data-filter="${c}">${c}</button>`).join('');
+        }
+
+        // Render items
+        const grid = document.getElementById('recursosGrid');
+        if (items.length === 0) {
+          grid.style.display = 'none';
+          document.getElementById('noRecursos').style.display = '';
+        } else {
+          grid.innerHTML = items.map(item => `
+            <article class="recurso-card fade-in" data-cat="${item.categoria || ''}">
+              <div class="recurso-image">
+                ${item.imagen ? `<img src="${item.imagen}" alt="${item.titulo}">` : '<i class="fa-solid fa-file-lines recurso-placeholder"></i>'}
+              </div>
+              <div class="recurso-body">
+                <span class="recurso-cat">${item.categoria || 'General'}</span>
+                <h3>${item.titulo}</h3>
+                <div class="recurso-desc">${(item.descripcion || '').replace(/\n/g, '<br>')}</div>
+                ${item.fecha ? `<span class="recurso-date"><i class="fa-solid fa-calendar"></i> ${new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'})}</span>` : ''}
+                ${item.url ? `<a href="${item.url}" target="_blank" class="recurso-link">Descubrir <i class="fa-solid fa-arrow-right"></i></a>` : ''}
+              </div>
+            </article>
+          `).join('');
+        }
+
+        // Filter logic
+        filtersEl.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('filter-btn')) return;
+          filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          const filter = e.target.dataset.filter;
+          grid.querySelectorAll('.recurso-card').forEach(card => {
+            card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
+          });
+        });
+      } else {
+        document.getElementById('recursosGrid').style.display = 'none';
+        document.getElementById('noRecursos').style.display = '';
+      }
+
+      initScrollAnimations();
+    });
+  </script>
+
+</body>
+</html>

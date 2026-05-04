@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS - Mentis Viva</title>
+  <link rel="icon" href="assets/logos/isotipo-color.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Login -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <img src="assets/logos/isotipo-color.png" alt="Mentis Viva">
+      <h1>Panel de Administraci&oacute;n</h1>
+      <p>Ingresa tus credenciales para acceder al CMS</p>
+      <p class="login-error" id="loginError">Credenciales incorrectas</p>
+      <input type="text" id="loginUser" placeholder="Usuario" onkeydown="if(event.key==='Enter')login()">
+      <input type="password" id="loginPass" placeholder="Contrase&ntilde;a" onkeydown="if(event.key==='Enter')login()">
+      <button onclick="login()">Iniciar Sesi&oacute;n</button>
+    </div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div class="admin-layout" id="adminLayout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <img src="assets/logos/logo-blanco.png" alt="Mentis Viva">
+        <span>Panel CMS</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" data-page="dashboard" class="active" onclick="showPage('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <div class="sidebar-divider"></div>
+        <a href="#" data-page="landing" onclick="showPage('landing')"><i class="fa-solid fa-home"></i> P&aacute;gina Principal</a>
+        <a href="#" data-page="clinica" onclick="showPage('clinica')"><i class="fa-solid fa-brain"></i> Centro</a>
+        <a href="#" data-page="editorial" onclick="showPage('editorial')"><i class="fa-solid fa-book-open"></i> Editorial</a>
+        <a href="#" data-page="fundacion" onclick="showPage('fundacion')"><i class="fa-solid fa-heart"></i> Fundaci&oacute;n</a>
+        <a href="#" data-page="recursos" onclick="showPage('recursos')"><i class="fa-solid fa-file-lines"></i> Recursos</a>
+        <div class="sidebar-divider"></div>
+        <a href="#" data-page="subscribers" onclick="showPage('subscribers')"><i class="fa-solid fa-users"></i> Suscriptores</a>
+        <a href="#" data-page="shipping" onclick="showPage('shipping')"><i class="fa-solid fa-truck"></i> N&oacute;mina de Env&iacute;o</a>
+        <a href="#" data-page="surveys" onclick="showPage('surveys')"><i class="fa-solid fa-star"></i> Encuestas</a>
+        <a href="#" data-page="form-centro" onclick="showPage('form-centro')" style="position:relative"><i class="fa-solid fa-envelope"></i> Formularios Centro <span class="sidebar-badge" id="badge-centro"></span></a>
+        <a href="#" data-page="form-editorial" onclick="showPage('form-editorial')" style="position:relative"><i class="fa-solid fa-envelope"></i> Formularios Editorial <span class="sidebar-badge" id="badge-editorial"></span></a>
+        <a href="#" data-page="form-fundacion" onclick="showPage('form-fundacion')" style="position:relative"><i class="fa-solid fa-envelope"></i> Formularios Fundaci&oacute;n <span class="sidebar-badge" id="badge-fundacion"></span></a>
+        <div class="sidebar-divider"></div>
+        <a href="#" data-page="terminos" onclick="showPage('terminos')"><i class="fa-solid fa-file-contract"></i> T&eacute;rminos y Condiciones</a>
+        <a href="#" data-page="global" onclick="showPage('global')"><i class="fa-solid fa-gear"></i> Configuraci&oacute;n Global</a>
+        <div class="sidebar-divider"></div>
+        <a href="#" onclick="exportData()"><i class="fa-solid fa-download"></i> Exportar</a>
+        <a href="#" onclick="document.getElementById('importFile').click()"><i class="fa-solid fa-upload"></i> Importar</a>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <a href="#" onclick="if(confirm('&iquest;Resetear todo?'))resetData()"><i class="fa-solid fa-rotate-left"></i> Resetear</a>
+        <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesi&oacute;n</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <h2 id="pageTitle">P&aacute;gina Principal</h2>
+        <div class="topbar-actions">
+          <button class="btn-admin btn-admin-green" id="topbarSaveBtn" onclick="saveCurrentPage()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+          <button class="btn-admin btn-admin-primary" onclick="publishContent()" title="Descargar content.json para subir al hosting"><i class="fa-solid fa-rocket"></i> Publicar</button>
+          <a href="index.html" target="_blank" class="btn-admin btn-admin-outline"><i class="fa-solid fa-eye"></i> Ver Sitio</a>
+        </div>
+      </div>
+
+      <div class="admin-content">
+
+        <!-- ===== DASHBOARD ===== -->
+        <div class="admin-page active" id="page-dashboard">
+
+          <!-- Page visibility controls -->
+          <div class="admin-card" style="margin-bottom:24px;border:2px solid var(--admin-primary);background:linear-gradient(135deg,#f8fcfd,#f5faf0)">
+            <h3 style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(43,138,158,0.2)"><i class="fa-solid fa-eye"></i> P&aacute;ginas visibles en el sitio</h3>
+            <p style="font-size:0.85rem;color:var(--admin-muted);margin-bottom:16px">Activa o desactiva p&aacute;ginas. Al ocultar una p&aacute;gina se quita del men&uacute;, del footer y de los botones del inicio.</p>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="dash-page-toggles">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.92rem;font-weight:500;background:white;padding:12px 16px;border-radius:8px;border:1px solid var(--admin-border);cursor:pointer">
+                <input type="checkbox" checked data-page-visibility="centro.html" onchange="savePageVisibility()"> Centro
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.92rem;font-weight:500;background:white;padding:12px 16px;border-radius:8px;border:1px solid var(--admin-border);cursor:pointer">
+                <input type="checkbox" checked data-page-visibility="editorial.html" onchange="savePageVisibility()"> Editorial
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.92rem;font-weight:500;background:white;padding:12px 16px;border-radius:8px;border:1px solid var(--admin-border);cursor:pointer">
+                <input type="checkbox" checked data-page-visibility="fundacion.html" onchange="savePageVisibility()"> Fundaci&oacute;n
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.92rem;font-weight:500;background:white;padding:12px 16px;border-radius:8px;border:1px solid var(--admin-border);cursor:pointer">
+                <input type="checkbox" checked data-page-visibility="recursos.html" onchange="savePageVisibility()"> Recursos
+              </label>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px">
+            <div class="admin-card" style="margin:0;text-align:center;padding:24px">
+              <div style="font-size:2.2rem;font-weight:700;color:var(--admin-primary)" id="dash-unread-centro">0</div>
+              <div style="font-size:0.85rem;color:var(--admin-muted);margin-top:4px">Mensajes Centro</div>
+              <div style="font-size:0.72rem;color:var(--admin-danger);margin-top:2px" id="dash-unread-centro-label">sin leer</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:24px">
+              <div style="font-size:2.2rem;font-weight:700;color:var(--admin-green)" id="dash-unread-editorial">0</div>
+              <div style="font-size:0.85rem;color:var(--admin-muted);margin-top:4px">Mensajes Editorial</div>
+              <div style="font-size:0.72rem;color:var(--admin-danger);margin-top:2px" id="dash-unread-editorial-label">sin leer</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:24px">
+              <div style="font-size:2.2rem;font-weight:700;color:#E6A817" id="dash-unread-fundacion">0</div>
+              <div style="font-size:0.85rem;color:var(--admin-muted);margin-top:4px">Mensajes Fundaci&oacute;n</div>
+              <div style="font-size:0.72rem;color:var(--admin-danger);margin-top:2px" id="dash-unread-fundacion-label">sin leer</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px">
+            <div class="admin-card" style="margin:0;text-align:center;padding:20px">
+              <div style="font-size:1.8rem;font-weight:700" id="dash-views-today">0</div>
+              <div style="font-size:0.82rem;color:var(--admin-muted)">Visitas hoy</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:20px">
+              <div style="font-size:1.8rem;font-weight:700" id="dash-views-week">0</div>
+              <div style="font-size:0.82rem;color:var(--admin-muted)">Visitas semana</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:20px">
+              <div style="font-size:1.8rem;font-weight:700" id="dash-views-month">0</div>
+              <div style="font-size:0.82rem;color:var(--admin-muted)">Visitas mes</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:20px">
+              <div style="font-size:1.8rem;font-weight:700" id="dash-views-total">0</div>
+              <div style="font-size:0.82rem;color:var(--admin-muted)">Visitas totales</div>
+            </div>
+          </div>
+
+          <!-- Plan Consistency Checker -->
+          <div class="admin-card" style="margin-bottom:24px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)">
+              <h3 style="margin:0"><i class="fa-solid fa-shield-halved"></i> Verificar Planes</h3>
+              <button class="btn-admin btn-admin-primary btn-admin-sm" onclick="checkPlanConsistency()"><i class="fa-solid fa-rotate"></i> Verificar ahora</button>
+            </div>
+            <div id="planConsistencyResult" style="font-size:0.9rem;color:var(--admin-muted);text-align:center;padding:12px">Haz clic en "Verificar ahora" para comprobar que los planes est&eacute;n correctos</div>
+          </div>
+
+          <div class="admin-card">
+            <h3 style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)"><i class="fa-solid fa-chart-bar"></i> Visitas por p&aacute;gina (local)</h3>
+            <div id="dash-page-breakdown" style="font-size:0.9rem"></div>
+            <p style="font-size:0.78rem;color:var(--admin-muted);margin-top:16px"><i class="fa-solid fa-info-circle"></i> Datos locales del navegador. Para analytics reales, configura Google Analytics en Configuraci&oacute;n Global.</p>
+          </div>
+
+          <div class="admin-card" style="background:linear-gradient(135deg,#E8F4F7,#EFF8E8);border-color:#2B8A9E">
+            <h3 style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(43,138,158,0.2)"><i class="fa-solid fa-rocket"></i> Publicar Cambios</h3>
+            <p style="font-size:0.92rem;margin-bottom:6px"><strong>Guardar</strong> = guardas los cambios para ti (en tu navegador).</p>
+            <p style="font-size:0.92rem;margin-bottom:16px"><strong>Publicar</strong> = los cambios se ven en <strong>mentisviva.cl</strong> para todos.</p>
+            <button class="btn-admin btn-admin-primary" onclick="publishContent()" style="width:100%"><i class="fa-solid fa-rocket"></i> Publicar en mentisviva.cl</button>
+          </div>
+
+          <div class="admin-card">
+            <h3 style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)"><i class="fa-brands fa-google"></i> Google Analytics</h3>
+            <div id="dash-ga-status"></div>
+          </div>
+        </div>
+
+        <!-- ===== LANDING ===== -->
+        <div class="admin-page" id="page-landing">
+          <div class="admin-card" data-module="landing.hero">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-image"></i> Hero Principal <span class="module-badge">Inicio &gt; Hero</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="landing.hero._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo principal</label><input id="l-heroTitulo" placeholder="Mente, Cultura y Compromiso Social"></div>
+            <div class="admin-field"><label>Subt&iacute;tulo</label><textarea id="l-heroSubtitulo" rows="2" placeholder="Un ecosistema dedicado a transformar vidas..."></textarea></div>
+          </div>
+
+          <div class="admin-card" data-module="landing.secciones">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-layer-group"></i> Calugas de &Aacute;reas <span class="module-badge">Inicio &gt; Nuestras &Aacute;reas</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="landing.secciones._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="landing-secciones"></div>
+            <button class="add-item-btn" onclick="addLandingSeccion()"><i class="fa-solid fa-plus"></i> Agregar Secci&oacute;n</button>
+          </div>
+
+          <div class="admin-card" data-module="landing.about">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-info-circle"></i> Sobre Nosotros <span class="module-badge">Inicio &gt; Sobre Mentis Viva</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="landing.about._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="l-aboutTitulo" placeholder="Sobre Mentis Viva"></div>
+            <div class="admin-field"><label>Texto</label><textarea id="l-aboutTexto" rows="4" placeholder="Nacimos con la convicci&oacute;n de que..."></textarea></div>
+          </div>
+        </div>
+
+        <!-- ===== CENTRO ===== -->
+        <div class="admin-page" id="page-clinica">
+          <div class="admin-card" data-module="clinica.banner">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-image"></i> Banner <span class="module-badge">Centro &gt; Banner Superior</span></h3>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>T&iacute;tulo</label><input id="c-bannerTitulo" placeholder="Centro Psicol&oacute;gico Mentis Viva"></div>
+              <div class="admin-field"><label>Subt&iacute;tulo</label><input id="c-bannerSubtitulo" placeholder="Tu bienestar emocional es nuestra prioridad"></div>
+            </div>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="c-bannerImage"></div><input type="hidden" id="c-bannerImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="c-bannerOverlay" min="0" max="100" placeholder="85"></div>
+          </div>
+
+          <div class="admin-card" data-module="clinica.enfoque">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-compass"></i> Enfoque Terap&eacute;utico <span class="module-badge">Centro &gt; Nuestro Enfoque</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="clinica.enfoque._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>T&iacute;tulo</label><input id="c-enfoqueTitulo" placeholder="Nuestro Enfoque Terap&eacute;utico"></div>
+              <div class="admin-field"><label>Subt&iacute;tulo</label><input id="c-enfoqueSubtitulo" placeholder="ACT y Humanidad Compartida"></div>
+            </div>
+            <div class="admin-field"><label>Texto descriptivo</label><textarea id="c-enfoqueTexto" rows="4" placeholder="En Mentis Viva trabajamos desde la Terapia de Aceptaci&oacute;n..."></textarea></div>
+            <div class="admin-field"><label>Imagen del enfoque</label><div class="image-upload" data-target="c-enfoqueImagen"></div><input type="hidden" id="c-enfoqueImagen"></div>
+          </div>
+
+          <div class="admin-card" data-module="clinica.pilares">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-columns"></i> Pilares <span class="module-badge">Centro &gt; Pilares del Enfoque</span></h3>
+            </div>
+            <div id="clinica-pilares"></div>
+            <button class="add-item-btn" onclick="addPilar()"><i class="fa-solid fa-plus"></i> Agregar Pilar</button>
+          </div>
+
+          <div class="admin-card" data-module="clinica.servicios">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-hand-holding-medical"></i> Servicios <span class="module-badge">Centro &gt; Nuestros Servicios</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="clinica.servicios._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="clinica-servicios"></div>
+            <button class="add-item-btn" onclick="addServicio()"><i class="fa-solid fa-plus"></i> Agregar Servicio</button>
+          </div>
+
+          <div class="admin-card" data-module="clinica.testimonios">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-quote-left"></i> Testimonios <span class="module-badge">Centro &gt; Testimonios de Pacientes</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="clinica.testimonios._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="clinica-testimonios"></div>
+            <button class="add-item-btn" onclick="addTestimonio('clinica-testimonios')"><i class="fa-solid fa-plus"></i> Agregar Testimonio</button>
+          </div>
+
+          <div class="admin-card" data-module="clinica.fraseCompromiso">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-heart"></i> Frase de Compromiso <span class="module-badge">Centro &gt; Franja Celeste</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="clinica.fraseCompromiso._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>Frase</label><textarea id="c-fraseTexto" rows="3" placeholder="Porque cada mente merece ser escuchada..."></textarea></div>
+            <div class="admin-field"><label>Autor</label><input id="c-fraseAutor" placeholder="Equipo Mentis Viva"></div>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="c-fraseImage"></div><input type="hidden" id="c-fraseImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="c-fraseOverlay" min="0" max="100" placeholder="100"></div>
+          </div>
+        </div>
+
+        <!-- ===== EDITORIAL ===== -->
+        <div class="admin-page" id="page-editorial">
+          <div class="admin-card" data-module="editorial.banner">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-image"></i> Banner <span class="module-badge">Editorial &gt; Banner Superior</span></h3>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>T&iacute;tulo</label><input id="e-bannerTitulo" placeholder="Editorial Mentis Viva"></div>
+              <div class="admin-field"><label>Subt&iacute;tulo</label><input id="e-bannerSubtitulo" placeholder="Donde la psicolog&iacute;a y la literatura se encuentran"></div>
+            </div>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="e-bannerImage"></div><input type="hidden" id="e-bannerImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="e-bannerOverlay" min="0" max="100" placeholder="85"></div>
+          </div>
+
+          <div class="admin-card" data-module="editorial.slogan">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-quote-right"></i> Slogan <span class="module-badge">Editorial &gt; Filosof&iacute;a</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.slogan._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo del slogan</label><input id="e-sloganTitulo" placeholder="Lee, Crece y Vive"></div>
+            <div class="admin-field"><label>Texto explicativo</label><textarea id="e-sloganTexto" rows="4" placeholder="Creemos profundamente que la lectura..."></textarea></div>
+          </div>
+
+          <div class="admin-card" data-module="editorial.calugas">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-th-large"></i> Calugas <span class="module-badge">Editorial &gt; Caracter&iacute;sticas</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.calugas._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="editorial-calugas"></div>
+            <button class="add-item-btn" onclick="addCaluga()"><i class="fa-solid fa-plus"></i> Agregar Caluga</button>
+          </div>
+
+          <div class="admin-card" data-module="editorial.countdown">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-clock"></i> Cuenta Regresiva <span class="module-badge">Editorial &gt; Countdown</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.countdown._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="e-countdownTitulo" placeholder="Tu viaje literario contin&uacute;a en..."></div>
+            <div class="admin-field"><label>Texto del evento</label><input id="e-countdownEvento" placeholder="Pr&oacute;ximo lanzamiento editorial"></div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>D&iacute;a del mes (1-31)</label><input type="number" id="e-countdownDay" min="1" max="31" placeholder="20"></div>
+              <div class="admin-field"><label>Hora (0-23)</label><input type="number" id="e-countdownHour" min="0" max="23" placeholder="10"></div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--admin-muted);margin-top:-8px;margin-bottom:12px"><i class="fa-solid fa-info-circle"></i> El contador se reinicia autom&aacute;ticamente cada mes en el d&iacute;a y hora indicados.</p>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="e-countdownImage"></div><input type="hidden" id="e-countdownImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="e-countdownOverlay" min="0" max="100" placeholder="85"></div>
+          </div>
+
+          <div class="admin-card" data-module="editorial.planes">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-tags"></i> Planes <span class="module-badge">Editorial &gt; Nuestros Planes</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.planes._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="editorial-planes"></div>
+            <button class="add-item-btn" onclick="addPlan()"><i class="fa-solid fa-plus"></i> Agregar Plan</button>
+          </div>
+
+          <div class="admin-card" data-module="editorial.testimonios">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-quote-left"></i> Testimonios <span class="module-badge">Editorial &gt; Testimonios de Lectores</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.testimonios._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="editorial-testimonios"></div>
+            <button class="add-item-btn" onclick="addTestimonio('editorial-testimonios')"><i class="fa-solid fa-plus"></i> Agregar Testimonio</button>
+          </div>
+
+          <div class="admin-card" data-module="editorial.contacto">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-envelope"></i> Contacto <span class="module-badge">Editorial &gt; Formulario de Contacto</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.contacto._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="e-contactoTitulo" placeholder="Cont&aacute;ctanos"></div>
+            <div class="admin-field"><label>Subt&iacute;tulo</label><input id="e-contactoSubtitulo" placeholder="&iquest;Tienes dudas sobre nuestros planes?"></div>
+          </div>
+        </div>
+
+        <!-- ===== FUNDACI&Oacute;N ===== -->
+        <div class="admin-page" id="page-fundacion">
+          <div class="admin-card" data-module="fundacion.banner">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-image"></i> Banner <span class="module-badge">Fundaci&oacute;n &gt; Banner Superior</span></h3>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>T&iacute;tulo</label><input id="f-bannerTitulo" placeholder="Fundaci&oacute;n Mentis Viva"></div>
+              <div class="admin-field"><label>Subt&iacute;tulo</label><input id="f-bannerSubtitulo" placeholder="Educando mentes, transformando comunidades"></div>
+            </div>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="f-bannerImage"></div><input type="hidden" id="f-bannerImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="f-bannerOverlay" min="0" max="100" placeholder="85"></div>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.mision">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-bullseye"></i> Misi&oacute;n <span class="module-badge">Fundaci&oacute;n &gt; Nuestra Misi&oacute;n</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.mision._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="f-misionTitulo" placeholder="Nuestra Misi&oacute;n"></div>
+            <div class="admin-field"><label>Texto</label><textarea id="f-misionTexto" rows="4" placeholder="Creemos que la educaci&oacute;n psicol&oacute;gica..."></textarea></div>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.valores">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-star"></i> Valores <span class="module-badge">Fundaci&oacute;n &gt; Valores de la Misi&oacute;n</span></h3>
+            </div>
+            <div id="fundacion-valores"></div>
+            <button class="add-item-btn" onclick="addValor()"><i class="fa-solid fa-plus"></i> Agregar Valor</button>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.queHacemos">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-chalkboard-user"></i> Qu&eacute; Hacemos <span class="module-badge">Fundaci&oacute;n &gt; Nuestro Trabajo</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.queHacemos._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="f-queHacemosTitulo" placeholder="&iquest;Qu&eacute; Hacemos?"></div>
+            <div class="admin-field"><label>Texto</label><textarea id="f-queHacemosTexto" rows="3" placeholder="Realizamos charlas y talleres..."></textarea></div>
+            <div class="admin-field"><label>Imagen de la secci&oacute;n</label><div class="image-upload" data-target="f-queHacemosImage"></div><input type="hidden" id="f-queHacemosImage"></div>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.temas">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-list-check"></i> Temas <span class="module-badge">Fundaci&oacute;n &gt; Temas de Charlas</span></h3>
+            </div>
+            <div id="fundacion-temas"></div>
+            <button class="add-item-btn" onclick="addTema()"><i class="fa-solid fa-plus"></i> Agregar Tema</button>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.impacto">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-chart-bar"></i> Impacto <span class="module-badge">Fundaci&oacute;n &gt; Estad&iacute;sticas</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.impacto._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="fundacion-stats"></div>
+            <button class="add-item-btn" onclick="addStat()"><i class="fa-solid fa-plus"></i> Agregar Estad&iacute;stica</button>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.charlas">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-calendar-alt"></i> Charlas <span class="module-badge">Fundaci&oacute;n &gt; Actividades Realizadas</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.charlas._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="fundacion-charlas"></div>
+            <button class="add-item-btn" onclick="addCharla()"><i class="fa-solid fa-plus"></i> Agregar Charla</button>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.galeria">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-images"></i> Galer&iacute;a <span class="module-badge">Fundaci&oacute;n &gt; Momentos que Inspiran</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.galeria._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="fundacion-galeria"></div>
+            <button class="add-item-btn" onclick="addGaleriaItem()"><i class="fa-solid fa-plus"></i> Agregar Imagen</button>
+          </div>
+
+          <div class="admin-card" data-module="fundacion.cta">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-bullhorn"></i> Llamado a la Acci&oacute;n <span class="module-badge">Fundaci&oacute;n &gt; CTA Final</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="fundacion.cta._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="f-ctaTitulo" placeholder="&iquest;Quieres que visitemos tu centro?"></div>
+            <div class="admin-field"><label>Texto</label><textarea id="f-ctaTexto" rows="3" placeholder="Estamos comprometidos con llevar educaci&oacute;n..."></textarea></div>
+            <div class="admin-field"><label>Imagen del CTA</label><div class="image-upload" data-target="f-ctaImage"></div><input type="hidden" id="f-ctaImage"></div>
+          </div>
+        </div>
+
+        <!-- ===== RECURSOS ===== -->
+        <div class="admin-page" id="page-recursos">
+          <div class="admin-card" data-module="recursos.banner">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-image"></i> Banner <span class="module-badge">Recursos &gt; Banner Superior</span></h3>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>T&iacute;tulo</label><input id="r-bannerTitulo" placeholder="Recursos"></div>
+              <div class="admin-field"><label>Subt&iacute;tulo</label><input id="r-bannerSubtitulo" placeholder="Investigaciones, art&iacute;culos y contenido"></div>
+            </div>
+            <div class="admin-field"><label>Imagen de fondo</label><div class="image-upload" data-target="r-bannerImage"></div><input type="hidden" id="r-bannerImage"></div>
+            <div class="admin-field"><label>Opacidad del overlay (0-100)</label><input type="number" id="r-bannerOverlay" min="0" max="100" placeholder="85"></div>
+          </div>
+
+          <div class="admin-card" data-module="recursos.items">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-file-lines"></i> Publicaciones <span class="module-badge">Recursos &gt; Art&iacute;culos y Contenido</span></h3>
+            </div>
+            <div id="recursos-items"></div>
+            <button class="add-item-btn" onclick="addRecurso()"><i class="fa-solid fa-plus"></i> Agregar Recurso</button>
+          </div>
+        </div>
+
+        <!-- ===== SUSCRIPTORES ===== -->
+        <div class="admin-page" id="page-subscribers">
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+            <div class="admin-card" style="margin:0;text-align:center;padding:16px;cursor:pointer;border:2px solid var(--admin-primary)" onclick="loadSubscribers('all')" id="sub-filter-all">
+              <div style="font-size:1.5rem;font-weight:700" id="sub-count-total">0</div>
+              <div style="font-size:0.75rem;color:var(--admin-muted)">Total</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:16px;cursor:pointer" onclick="loadSubscribers('active')" id="sub-filter-active">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--admin-green)" id="sub-count-active">0</div>
+              <div style="font-size:0.75rem;color:var(--admin-muted)">Pago activo</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:16px;cursor:pointer" onclick="loadSubscribers('pending')" id="sub-filter-pending">
+              <div style="font-size:1.5rem;font-weight:700;color:#E6A817" id="sub-count-pending">0</div>
+              <div style="font-size:0.75rem;color:var(--admin-muted)">Pago pendiente</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:16px;cursor:pointer" onclick="loadSubscribers('cancelled')" id="sub-filter-cancelled">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--admin-danger)" id="sub-count-cancelled">0</div>
+              <div style="font-size:0.75rem;color:var(--admin-muted)">Cancelados</div>
+            </div>
+            <div class="admin-card" style="margin:0;text-align:center;padding:16px;cursor:pointer" onclick="loadSubscribers('none')" id="sub-filter-none">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--admin-muted)" id="sub-count-none">0</div>
+              <div style="font-size:0.75rem;color:var(--admin-muted)">Sin plan</div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <h3 style="margin:0;padding:0;border:0"><i class="fa-solid fa-users"></i> Suscriptores</h3>
+              <button class="btn-admin btn-admin-green btn-admin-sm" onclick="exportSubscribers()"><i class="fa-solid fa-file-excel"></i> Exportar Excel</button>
+            </div>
+            <div style="overflow-x:auto" id="subscribersTable">
+              <p style="color:var(--admin-muted);text-align:center;padding:40px">Cargando suscriptores...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== FORMULARIOS CENTRO ===== -->
+        <div class="admin-page" id="page-form-centro">
+          <div class="admin-card">
+            <h3 style="margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)"><i class="fa-solid fa-envelope"></i> Mensajes de Centro</h3>
+            <div class="filter-bar">
+              <input type="text" placeholder="Buscar por nombre o asunto..." id="filter-centro-search" oninput="filterSubmissions('centro')">
+              <select id="filter-centro-status" onchange="filterSubmissions('centro')">
+                <option value="all">Todos</option>
+                <option value="unread">No le&iacute;dos</option>
+                <option value="read">Le&iacute;dos</option>
+              </select>
+              <select id="filter-centro-sort" onchange="filterSubmissions('centro')">
+                <option value="newest">M&aacute;s recientes</option>
+                <option value="oldest">M&aacute;s antiguos</option>
+              </select>
+            </div>
+            <div id="submissions-centro"></div>
+          </div>
+        </div>
+
+        <!-- ===== FORMULARIOS EDITORIAL ===== -->
+        <div class="admin-page" id="page-form-editorial">
+          <div class="admin-card">
+            <h3 style="margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)"><i class="fa-solid fa-envelope"></i> Mensajes de Editorial</h3>
+            <div class="filter-bar">
+              <input type="text" placeholder="Buscar por nombre o asunto..." id="filter-editorial-search" oninput="filterSubmissions('editorial')">
+              <select id="filter-editorial-status" onchange="filterSubmissions('editorial')">
+                <option value="all">Todos</option>
+                <option value="unread">No le&iacute;dos</option>
+                <option value="read">Le&iacute;dos</option>
+              </select>
+              <select id="filter-editorial-sort" onchange="filterSubmissions('editorial')">
+                <option value="newest">M&aacute;s recientes</option>
+                <option value="oldest">M&aacute;s antiguos</option>
+              </select>
+            </div>
+            <div id="submissions-editorial"></div>
+          </div>
+        </div>
+
+        <!-- ===== FORMULARIOS FUNDACI&Oacute;N ===== -->
+        <div class="admin-page" id="page-form-fundacion">
+          <div class="admin-card">
+            <h3 style="margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--admin-border)"><i class="fa-solid fa-envelope"></i> Mensajes de Fundaci&oacute;n</h3>
+            <div class="filter-bar">
+              <input type="text" placeholder="Buscar por nombre o asunto..." id="filter-fundacion-search" oninput="filterSubmissions('fundacion')">
+              <select id="filter-fundacion-status" onchange="filterSubmissions('fundacion')">
+                <option value="all">Todos</option>
+                <option value="unread">No le&iacute;dos</option>
+                <option value="read">Le&iacute;dos</option>
+              </select>
+              <select id="filter-fundacion-sort" onchange="filterSubmissions('fundacion')">
+                <option value="newest">M&aacute;s recientes</option>
+                <option value="oldest">M&aacute;s antiguos</option>
+              </select>
+            </div>
+            <div id="submissions-fundacion"></div>
+          </div>
+        </div>
+
+        <!-- ===== T&Eacute;RMINOS ===== -->
+        <div class="admin-page" id="page-terminos">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-file-contract"></i> T&eacute;rminos y Condiciones <span class="module-badge">Legal</span></h3>
+            </div>
+            <div class="admin-field"><label>T&iacute;tulo</label><input id="t-titulo" placeholder="T&eacute;rminos y Condiciones"></div>
+            <div class="admin-field"><label>Fecha de actualizaci&oacute;n</label><input id="t-fecha" placeholder="Abril 2026"></div>
+            <div class="admin-field"><label>Contenido (HTML permitido: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;)</label><textarea id="t-contenido" rows="15" placeholder="Escribe los t&eacute;rminos y condiciones..."></textarea></div>
+            <p style="font-size:0.78rem;color:var(--admin-muted);margin-top:8px"><i class="fa-solid fa-info-circle"></i> Puedes usar HTML para dar formato: &lt;h2&gt;T&iacute;tulo&lt;/h2&gt; &lt;p&gt;P&aacute;rrafo&lt;/p&gt; &lt;ul&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ul&gt;</p>
+          </div>
+        </div>
+
+        <!-- ===== GLOBAL ===== -->
+        <div class="admin-page" id="page-global">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-globe"></i> Informaci&oacute;n General <span class="module-badge">Global</span></h3>
+            </div>
+            <div class="admin-field"><label>Nombre del sitio</label><input id="g-siteName" placeholder="Mentis Viva"></div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>Logo principal (URL)</label><input id="g-logo"></div>
+              <div class="admin-field"><label>Logo blanco (URL)</label><input id="g-logoBlanco"></div>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>Isotipo principal</label><input id="g-isotipo"></div>
+              <div class="admin-field"><label>Isotipo centro</label><input id="g-isotipoClinica"></div>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>Isotipo editorial</label><input id="g-isotipoEditorial"></div>
+              <div class="admin-field"><label>Isotipo fundaci&oacute;n</label><input id="g-isotipoFundacion"></div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-address-book"></i> Contacto y Footer <span class="module-badge">Global &gt; Footer</span></h3>
+            </div>
+            <div class="admin-field"><label>Descripci&oacute;n del footer</label><textarea id="g-footerDesc" rows="3" placeholder="Mentis Viva es un ecosistema..."></textarea></div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>Email</label><input id="g-email" placeholder="contacto@mentisviva.cl"></div>
+              <div class="admin-field"><label>Tel&eacute;fono</label><input id="g-telefono" placeholder="+56 9 1234 5678"></div>
+            </div>
+            <div class="admin-field"><label>Direcci&oacute;n</label><input id="g-direccion" placeholder="Santiago, Chile"></div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>Instagram URL</label><input id="g-instagram"></div>
+              <div class="admin-field"><label>Facebook URL</label><input id="g-facebook"></div>
+            </div>
+            <div class="admin-field-row">
+              <div class="admin-field"><label>TikTok URL</label><input id="g-tiktok"></div>
+              <div class="admin-field"><label>Copyright</label><input id="g-copyright"></div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fa-brands fa-google"></i> Google Analytics <span class="module-badge">Global &gt; Analytics</span></h3>
+            </div>
+            <div class="admin-field"><label>ID de Medici&oacute;n GA4 (ej: G-XXXXXXXXXX)</label><input id="g-gaId" placeholder="G-XXXXXXXXXX"></div>
+            <p style="font-size:0.82rem;color:var(--admin-muted);margin-top:8px"><i class="fa-solid fa-info-circle"></i> Obt&eacute;n tu ID en <a href="https://analytics.google.com" target="_blank" style="color:var(--admin-primary)">analytics.google.com</a>. D&eacute;jalo vac&iacute;o si no tienes cuenta a&uacute;n.</p>
+          </div>
+        </div>
+
+        <!-- ===== SHIPPING / ROSTER ===== -->
+        <div class="admin-page" id="page-shipping">
+          <div class="admin-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px">
+            <div class="admin-card" style="text-align:center;padding:20px">
+              <div style="font-size:2rem;font-weight:700;color:var(--teal)" id="rosterTotal">0</div>
+              <div style="font-size:0.85rem;color:var(--text-muted)">Total env&iacute;os</div>
+            </div>
+            <div class="admin-card" style="text-align:center;padding:20px">
+              <div style="font-size:2rem;font-weight:700;color:#F4B942" id="rosterQueued">0</div>
+              <div style="font-size:0.85rem;color:var(--text-muted)">Por despachar</div>
+            </div>
+            <div class="admin-card" style="text-align:center;padding:20px">
+              <div style="font-size:2rem;font-weight:700;color:#2196F3" id="rosterShipped">0</div>
+              <div style="font-size:0.85rem;color:var(--text-muted)">En tr&aacute;nsito</div>
+            </div>
+            <div class="admin-card" style="text-align:center;padding:20px">
+              <div style="font-size:2rem;font-weight:700;color:var(--green)" id="rosterDelivered">0</div>
+              <div style="font-size:0.85rem;color:var(--text-muted)">Entregados</div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <label style="font-weight:600">Mes:</label>
+                <input type="month" id="rosterMonth" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:0.95rem" onchange="loadRoster()">
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-admin btn-admin-primary" onclick="generateRoster()"><i class="fa-solid fa-list-check"></i> Generar N&oacute;mina</button>
+                <button class="btn-admin btn-admin-green" onclick="createShipitShipments()"><i class="fa-solid fa-truck-fast"></i> Crear Env&iacute;os en Shipit</button>
+                <button class="btn-admin" onclick="updateShipitTracking()"><i class="fa-solid fa-rotate"></i> Actualizar Tracking</button>
+                <button class="btn-admin" onclick="exportRoster()"><i class="fa-solid fa-file-excel"></i> Exportar</button>
+                <button class="btn-admin" onclick="clearRoster()" style="color:#E74C3C"><i class="fa-solid fa-trash"></i> Limpiar n&oacute;mina</button>
+                <a href="https://app.shipit.cl" target="_blank" class="btn-admin" style="background:#4A90D9;color:white;text-decoration:none"><i class="fa-solid fa-external-link-alt"></i> Ir a Shipit</a>
+              </div>
+            </div>
+
+            <div style="background:#E3F2FD;border-radius:8px;padding:16px;margin-top:16px;font-size:0.85rem;color:#1565C0;line-height:1.6">
+              <i class="fa-solid fa-info-circle" style="margin-right:6px"></i>
+              <strong>Importante:</strong> Al crear env&iacute;os se generan las etiquetas en Shipit. Imprime las etiquetas y prepara las cajas. El d&iacute;a 25 del mes, ve a Shipit y solicita el <strong>retiro</strong> para que el courier pase a buscar las cajas. La fecha de entrega estimada se actualiza cuando el courier recoge los paquetes.
+            </div>
+
+            <div id="rosterTableContainer">
+              <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--gray-200);text-align:left">
+                    <th style="padding:12px 8px">Nombre</th>
+                    <th style="padding:12px 8px">Direcci&oacute;n</th>
+                    <th style="padding:12px 8px">Comuna</th>
+                    <th style="padding:12px 8px">Plan</th>
+                    <th style="padding:12px 8px">Env&iacute;o</th>
+                    <th style="padding:12px 8px">Costo</th>
+                    <th style="padding:12px 8px">Estado</th>
+                    <th style="padding:12px 8px">Tracking</th>
+                    <th style="padding:12px 8px"></th>
+                  </tr>
+                </thead>
+                <tbody id="rosterTableBody">
+                  <tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">Selecciona un mes y genera la n&oacute;mina</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-card" style="margin-top:20px">
+            <h3 style="margin-bottom:16px"><i class="fa-solid fa-gear"></i> Configuraci&oacute;n de Env&iacute;o</h3>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+              <div class="form-group">
+                <label>Ancho paquete (cm)</label>
+                <input type="number" id="cfgWidth" class="form-control" placeholder="28">
+              </div>
+              <div class="form-group">
+                <label>Alto paquete (cm)</label>
+                <input type="number" id="cfgHeight" class="form-control" placeholder="12">
+              </div>
+              <div class="form-group">
+                <label>Largo paquete (cm)</label>
+                <input type="number" id="cfgLength" class="form-control" placeholder="22">
+              </div>
+              <div class="form-group">
+                <label>Peso paquete (kg)</label>
+                <input type="number" step="0.1" id="cfgWeight" class="form-control" placeholder="1.2">
+              </div>
+              <div class="form-group">
+                <label>Comuna origen</label>
+                <input type="text" id="cfgOrigin" class="form-control" placeholder="Las Condes">
+              </div>
+              <div class="form-group">
+                <label>D&iacute;a de env&iacute;o</label>
+                <input type="number" id="cfgShipDay" class="form-control" placeholder="25">
+              </div>
+              <div class="form-group">
+                <label>D&iacute;as h&aacute;biles de corte</label>
+                <input type="number" id="cfgCutoffDays" class="form-control" placeholder="10">
+              </div>
+              <div class="form-group">
+                <label>D&iacute;as aviso antes del corte</label>
+                <input type="number" id="cfgNotifyDays" class="form-control" placeholder="5">
+              </div>
+              <div class="form-group">
+                <label>Env&iacute;o m&iacute;nimo display ($)</label>
+                <input type="number" id="cfgMinShipping" class="form-control" placeholder="2990">
+              </div>
+            </div>
+            <button class="btn-admin btn-admin-primary" onclick="saveShippingConfig()" style="margin-top:16px"><i class="fa-solid fa-save"></i> Guardar Configuraci&oacute;n</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ====== Surveys Page ====== -->
+      <div class="admin-page" id="page-surveys">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="font-weight:600">Per&iacute;odo:</label>
+            <input type="month" id="surveyMonth" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px" onchange="loadSurveyResults()">
+            <button class="btn-admin" onclick="loadSurveyResultsAll()">Ver acumulado</button>
+          </div>
+        </div>
+
+        <div class="admin-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px">
+          <div class="admin-card" style="text-align:center;padding:24px">
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">Entrega</div>
+            <div style="font-size:2.5rem;font-weight:700;color:var(--teal)" id="csatDeliveryAvg">-</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)" id="csatDeliveryCount">0 respuestas</div>
+          </div>
+          <div class="admin-card" style="text-align:center;padding:24px">
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">Contenido</div>
+            <div style="font-size:2.5rem;font-weight:700;color:var(--green)" id="csatContentAvg">-</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)" id="csatContentCount">0 respuestas</div>
+          </div>
+          <div class="admin-card" style="text-align:center;padding:24px">
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">Tasa de Respuesta</div>
+            <div style="font-size:2.5rem;font-weight:700;color:#F4B942" id="csatResponseRate">-</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)" id="csatResponseDetail">0/0 encuestas</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px">
+          <div class="admin-card">
+            <h4 style="margin-bottom:16px">Distribuci&oacute;n - Entrega</h4>
+            <div id="csatDeliveryBars"><p style="color:var(--text-muted);text-align:center;padding:12px">Sin datos</p></div>
+          </div>
+          <div class="admin-card">
+            <h4 style="margin-bottom:16px">Distribuci&oacute;n - Contenido</h4>
+            <div id="csatContentBars"><p style="color:var(--text-muted);text-align:center;padding:12px">Sin datos</p></div>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h4 style="margin-bottom:16px">Comentarios recientes</h4>
+          <div id="csatComments" style="max-height:400px;overflow-y:auto">
+            <p style="color:var(--text-muted);text-align:center;padding:20px">No hay comentarios</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Submission Modal -->
+  <div class="modal-overlay" id="submissionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Detalle del Mensaje</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

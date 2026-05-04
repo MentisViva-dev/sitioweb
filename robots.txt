@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /unidos.html
+Disallow: /api/
+Disallow: /data/
+Disallow: /.claude/
+
+Sitemap: https://mentisviva.cl/sitemap.xml

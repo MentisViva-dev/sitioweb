@@ -1,0 +1,592 @@
+{
+  "global": {
+    "siteName": "Mentis Viva",
+    "logo": "assets/logos/logo-color.png",
+    "logoBlanco": "assets/logos/logo-blanco.png",
+    "isotipo": "assets/logos/isotipo-color.png",
+    "isotipoClinica": "assets/logos/isotipo-color-1.png",
+    "isotipoEditorial": "assets/logos/isotipo-color-2.png",
+    "isotipoFundacion": "assets/logos/isotipo-color-3.png",
+    "nav": {
+      "items": [
+        {
+          "label": "Inicio",
+          "url": "index.html"
+        },
+        {
+          "label": "Centro",
+          "url": "centro.html"
+        },
+        {
+          "label": "Editorial",
+          "url": "editorial.html"
+        },
+        {
+          "label": "Fundación",
+          "url": "fundacion.html"
+        },
+        {
+          "label": "Recursos",
+          "url": "recursos.html"
+        }
+      ]
+    },
+    "footer": {
+      "descripcion": "Mentis Viva es un ecosistema dedicado al bienestar psicológico, la cultura literaria y el compromiso social. Creemos en el poder transformador de la mente, las palabras y la acción comunitaria.",
+      "contacto": {
+        "email": "contacto@mentisviva.cl",
+        "telefono": "+56 9 5370 7346",
+        "direccion": "Santiago, Chile"
+      },
+      "redes": {
+        "instagram": "https://instagram.com/mentisviva",
+        "facebook": "https://facebook.com/mentisviva",
+        "tiktok": "https://tiktok.com/@mentisviva"
+      },
+      "copyright": "© 2026 Mentis Viva. Todos los derechos reservados."
+    },
+    "pageVisibility": {
+      "centro.html": true,
+      "editorial.html": true,
+      "fundacion.html": true,
+      "recursos.html": false
+    },
+    "gaId": ""
+  },
+  "landing": {
+    "hero": {
+      "titulo": "Mente, Cultura y Compromiso Social",
+      "subtitulo": "Un ecosistema dedicado a transformar vidas a través de la psicología, la lectura y la acción comunitaria.",
+      "backgroundImage": ""
+    },
+    "secciones": [
+      {
+        "titulo": "Centro Psicológico",
+        "descripcion": "Terapias contextuales con enfoque en ACT y DBT, desde una mirada de humanidad compartida y compasión. Sesiones individuales, grupales, terapias de pareja y coaching para tu bienestar emocional.",
+        "icono": "fa-brain",
+        "url": "centro.html",
+        "color": "teal"
+      },
+      {
+        "titulo": "Editorial",
+        "descripcion": "Lee, Crece y Vive. Libros que integran la psicología con la vida cotidiana, cuidadosamente curados para tu desarrollo personal.",
+        "icono": "fa-book-open",
+        "url": "editorial.html",
+        "color": "green"
+      },
+      {
+        "titulo": "Fundación",
+        "descripcion": "Comprometidos con la educación psicológica. Charlas y talleres en centros educacionales para construir una sociedad más consciente.",
+        "icono": "fa-heart",
+        "url": "fundacion.html",
+        "color": "celeste"
+      },
+      {
+        "titulo": "Recursos",
+        "descripcion": "Investigaciones, artículos y contenido seleccionado por nuestro equipo de profesionales para tu desarrollo y crecimiento personal.",
+        "icono": "fa-file-lines",
+        "url": "recursos.html",
+        "color": "teal"
+      }
+    ],
+    "about": {
+      "titulo": "Sobre Mentis Viva",
+      "texto": "Nacimos con la convicción de que el bienestar psicológico es un derecho fundamental. Nuestro enfoque integra la práctica clínica, la difusión cultural a través de la lectura, y la acción social directa en comunidades educativas. En Mentis Viva, cada arista de nuestro trabajo refuerza a las demás, creando un impacto genuino y duradero."
+    }
+  },
+  "clinica": {
+    "banner": {
+      "titulo": "Centro Psicológico Mentis Viva",
+      "subtitulo": "Tu bienestar emocional es nuestra prioridad",
+      "backgroundImage": "https://placehold.co/1920x800/2B8A9E/FFFFFF/jpg?text=Centro+Psicol%C3%B3gico",
+      "overlayOpacity": 50
+    },
+    "enfoque": {
+      "titulo": "Nuestro Enfoque Terapéutico",
+      "subtitulo": "ACT, DBT y Humanidad Compartida",
+      "imagen": "https://placehold.co/800x600/2B8A9E/FFFFFF/jpg?text=Mentis+Viva",
+      "texto": "En Mentis Viva trabajamos desde un enfoque contextual, contamos con especialistas formados en ACT (terapia de aceptación y compromiso) y DBT (Terapia dialéctico-conductual) todo desde la base de la humanidad compartida. Creemos que el sufrimiento humano es parte natural de la vida, y nuestro objetivo no es eliminarlo, sino ayudarte a construir una vida valiosa modificando la manera en que te relacionas con las dificultades. Todas nuestras terapias están basadas en evidencia. Reconocemos la dignidad inherente de cada persona y su capacidad de crecimiento y transformación.",
+      "pilares": [
+        {
+          "titulo": "Aceptación",
+          "descripcion": "Aprender a estar presente con las emociones difíciles sin luchar contra ellas, abriéndote a la experiencia completa de vivir."
+        },
+        {
+          "titulo": "Compromiso",
+          "descripcion": "Identificar tus valores más profundos y tomar acciones concretas que te acerquen a la vida que deseas construir."
+        },
+        {
+          "titulo": "Humanidad Compartida",
+          "descripcion": "Reconocer que el sufrimiento, los errores y las emociones difíciles forman parte de la experiencia humana universal, lo que permite relacionarse con uno mismo y con otros desde la conexión, la compasión y la pertenencia."
+        }
+      ]
+    },
+    "servicios": [
+      {
+        "titulo": "Terapia Individual",
+        "descripcion": "Sesiones personalizadas en un espacio seguro y confidencial. Trabajamos contigo para identificar patrones, desarrollar flexibilidad psicológica y avanzar hacia tus metas vitales.",
+        "icono": "fa-user",
+        "destacado": false
+      },
+      {
+        "titulo": "Terapia Grupal",
+        "descripcion": "Grupos terapéuticos donde la experiencia compartida potencia el crecimiento. Aprende de otros, siente el apoyo de la comunidad y desarrolla habilidades sociales en un entorno protegido.",
+        "icono": "fa-users",
+        "destacado": false
+      },
+      {
+        "titulo": "Terapia de Parejas",
+        "descripcion": "Acompañamiento terapéutico para parejas que buscan mejorar su comunicación, resolver conflictos y fortalecer su vínculo desde la comprensión y el respeto mutuo.",
+        "icono": "fa-heart",
+        "destacado": false
+      },
+      {
+        "titulo": "Terapia Familiar",
+        "descripcion": "Intervenciones orientadas a mejorar la dinámica familiar, fortalecer los lazos afectivos y desarrollar herramientas de comunicación entre todos los miembros de la familia.",
+        "icono": "fa-people-roof",
+        "destacado": false
+      },
+      {
+        "titulo": "Terapia TINR",
+        "descripcion": "Sesiones más breves, orientadas a objetivos específicos. Ideal para quienes buscan orientación puntual.",
+        "icono": "fa-pencil",
+        "destacado": false
+      }
+    ],
+    "formulario": {
+      "titulo": "Agenda tu Sesión",
+      "subtitulo": "Compártenos tus datos y nos pondremos en contacto contigo",
+      "campos": [
+        "nombre",
+        "email",
+        "telefono",
+        "tipoConsulta",
+        "mensaje"
+      ],
+      "tiposConsulta": [
+        "Terapia Individual",
+        "Terapia Grupal",
+        "Terapia de Parejas",
+        "Terapia Familiar",
+        "Coaching Psicológico",
+        "Consulta General"
+      ]
+    },
+    "testimonios": [
+      {
+        "nombre": "María G.",
+        "texto": "Mentis Viva me ayudó a encontrar herramientas reales para manejar mi ansiedad. El enfoque ACT cambió mi perspectiva de vida.",
+        "rating": 5
+      },
+      {
+        "nombre": "Carlos R.",
+        "texto": "Las sesiones grupales fueron transformadoras. Descubrí que no estaba solo y aprendí tanto de los demás como de mi terapeuta.",
+        "rating": 5
+      },
+      {
+        "nombre": "Andrea P.",
+        "texto": "La Terapia TINR me permitió tomar decisiones importantes en mi carrera con claridad y confianza.",
+        "rating": 5
+      }
+    ],
+    "fraseCompromiso": {
+      "texto": "Porque cada mente merece ser escuchada, cada emoción validada, y cada persona tiene el derecho de vivir una vida plena y con sentido.",
+      "autor": "Equipo Mentis Viva",
+      "backgroundImage": "https://placehold.co/800x600/7AC94F/FFFFFF/jpg?text=Centro",
+      "overlayOpacity": 80
+    }
+  },
+  "editorial": {
+    "banner": {
+      "titulo": "Editorial Mentis Viva",
+      "subtitulo": "Donde la psicología y la literatura se encuentran",
+      "backgroundImage": "https://placehold.co/1920x800/2B8A9E/FFFFFF/jpg?text=Editorial",
+      "overlayOpacity": 20
+    },
+    "slogan": {
+      "titulo": "Lee, Crece y Vive",
+      "texto": "Creemos profundamente en el valor de la lectura como una vía de exploración y comprensión de la experiencia humana. Los libros abren un espacio seguro para acercarse a la propia vida psicológica, ampliar la forma en que se entienden las emociones y reconocer, en las historias de otros, aspectos de la propia trayectoria. En Editorial Mentis Viva, cada libro se selecciona con el propósito de nutrir la mente, ampliar la comprensión del comportamiento humano y acompañar procesos de crecimiento personal."
+    },
+    "calugas": [
+      {
+        "titulo": "Profundidad Psicológica",
+        "descripcion": "Cada título es elegido por su capacidad de explorar la condición humana con rigor científico y sensibilidad emocional.",
+        "icono": "fa-brain"
+      },
+      {
+        "titulo": "Historia",
+        "descripcion": "Narrativas que trascienden el tiempo y nos conectan con la experiencia universal de ser humano en todas sus dimensiones.",
+        "icono": "fa-clock-rotate-left"
+      },
+      {
+        "titulo": "Curadores",
+        "descripcion": "Nuestro equipo de psicólogos y biblioterapéutas selecciona cuidadosamente cada obra para garantizar su valor terapéutico.",
+        "icono": "fa-magnifying-glass"
+      },
+      {
+        "titulo": "Sorpresas",
+        "descripcion": "Cada entrega incluye elementos inesperados: marcapáginas terapéuticos, ejercicios de reflexión y guías de lectura consciente.",
+        "icono": "fa-gift"
+      }
+    ],
+    "countdown": {
+      "titulo": "Tu viaje literario continúa en...",
+      "fechaObjetivo": "monthly:20:10:00",
+      "backgroundImage": "https://placehold.co/1920x800/1E6B7B/FFFFFF/jpg?text=Pr%C3%B3ximo+lanzamiento",
+      "overlayOpacity": 85,
+      "textoEvento": "Próximo lanzamiento editorial"
+    },
+    "planes": [
+      {
+        "nombre": "Lector Curioso",
+        "precio": "$21.990",
+        "periodo": "/mes",
+        "descripcion": "Perfecto para comenzar tu viaje literario",
+        "beneficios": [
+          "1 libro mensual seleccionado",
+          "Marcapáginas exclusivo",
+          "Revista con enfoque psicológico",
+          "Regalo sorpresa"
+        ],
+        "destacado": true,
+        "ctaTexto": "Comenzar"
+      }
+    ],
+    "testimonios": [
+      {
+        "nombre": "Valentina M.",
+        "texto": "Cada libro que recibo es exactamente lo que necesito leer en ese momento. Es como si conocieran mi alma.",
+        "rating": 5
+      },
+      {
+        "nombre": "Diego S.",
+        "texto": "Los ejercicios de reflexión que acompañan cada libro han sido más útiles que muchas sesiones terapéuticas que he tenido.",
+        "rating": 5
+      },
+      {
+        "nombre": "Francisca L.",
+        "texto": "La comunidad de lectores es increíble. Compartir las reflexiones después de cada libro es mi momento favorito del mes.",
+        "rating": 5
+      }
+    ],
+    "contacto": {
+      "titulo": "Contáctanos",
+      "subtitulo": "¿Tienes dudas sobre nuestros planes? Escríbenos y te ayudaremos a encontrar el ideal para ti."
+    },
+    "catalogo": {
+      "titulo": "Nuestro Catálogo",
+      "subtitulo": "Cada libro es una invitación a explorar la mente, las emociones y la experiencia humana. Desliza para descubrirlos.",
+      "categorias": [
+        {
+          "id": "todos",
+          "nombre": "Todos"
+        },
+        {
+          "id": "ensayos-psicologicos",
+          "nombre": "Ensayos Psicológicos"
+        },
+        {
+          "id": "libros",
+          "nombre": "Libros"
+        },
+        {
+          "id": "infantiles",
+          "nombre": "Infantiles"
+        }
+      ],
+      "libros": [
+        {
+          "id": "compasion-humanidad-compartida-act",
+          "titulo": "Compasión, humanidad compartida y ACT",
+          "autor": "María de los Ángeles Valdés Arteaga y Álvaro José Rodríguez López",
+          "categoriaId": "ensayos-psicologicos",
+          "portada": "https://placehold.co/240x360/2B8A9E/FFFFFF/png?text=Compasi%C3%B3n%0Ay+ACT",
+          "resumenCorto": "La ciencia psicológica contemporánea aplicada a una vida con sentido, desde la Terapia de Aceptación y Compromiso.",
+          "descripcionLarga": "Este libro se adentra en los procesos psicológicos que configuran la experiencia humana desde una perspectiva contemporánea, integrando avances de la ciencia con una comprensión aplicada a la vida cotidiana. A través de un recorrido claro y fundamentado, se exploran conceptos clave que permiten comprender cómo pensamos, sentimos y actuamos en distintos contextos.\n\nLejos de una exposición meramente teórica, la obra articula conocimiento con utilidad práctica, mostrando cómo los modelos actuales de la psicología pueden traducirse en herramientas concretas para el desarrollo personal, la toma de decisiones y la construcción de una vida con sentido.\n\nCada capítulo ofrece una mirada estructurada y accesible, pensada tanto para quienes se inician en el área como para quienes buscan profundizar su comprensión desde un enfoque riguroso. La lectura propone un diálogo constante entre teoría y experiencia, situando al lector en un rol activo dentro de su propio proceso de comprensión.\n\nUna invitación a explorar la mente desde un lugar informado, crítico y aplicado, donde la psicología se presenta como una disciplina viva, en permanente evolución.",
+          "idioma": "Español",
+          "destacado": true,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/Compasi%C3%B3n-humanidad-compartida-vida-vivir-ebook/dp/B0GWW91QCX/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33730/maria-valdes/compasion-humanidad-compartida-y-act.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "el-acto-de-educar-con-conciencia",
+          "titulo": "El acto de educar con conciencia",
+          "autor": "María de los Ángeles Valdés Arteaga y Álvaro José Rodríguez López",
+          "categoriaId": "ensayos-psicologicos",
+          "portada": "https://placehold.co/240x360/1E6B7B/FFFFFF/png?text=Educar+con%0Aconciencia",
+          "resumenCorto": "Evolución, neurociencia y vínculo: una mirada profunda al sentido de enseñar en el siglo XXI.",
+          "descripcionLarga": "El acto de educar con conciencia es una obra que propone una comprensión profunda y multidimensional de la educación, integrando evolución humana, neurociencia y desarrollo emocional para replantear el sentido de enseñar. A lo largo de sus capítulos, el texto sostiene que educar constituye un proceso inherentemente humano, arraigado en la biología, en el vínculo y en la transmisión cultural acumulativa que caracteriza a la especie.\n\nEl libro recorre, en una primera parte, los fundamentos evolutivos del aprendizaje, mostrando cómo la enseñanza surge como una capacidad distintiva del ser humano, vinculada a la cooperación, la cognición social y la construcción de entornos de aprendizaje. Luego, examina el papel del vínculo temprano como organizador del desarrollo, destacando la relevancia del apego, la regulación emocional y la interacción social en la configuración del cerebro que aprende.\n\nEn su desarrollo histórico, la obra analiza críticamente el modelo escolar tradicional, entendiendo sus raíces en la lógica industrial y sus efectos sobre la experiencia educativa. Desde ahí, introduce los aportes contemporáneos de la neurociencia y la psicología del desarrollo, abordando fenómenos como el estrés, el trauma, la motivación y la relación pedagógica como núcleo del aprendizaje significativo.\n\nEn su propuesta final, el texto plantea una educación centrada en la compasión, la comunidad y el reconocimiento del docente como agente humano dentro del proceso educativo. Se propone un modelo que articula evidencia científica con prácticas pedagógicas realistas, orientadas a construir espacios educativos que sostengan el desarrollo integral de los estudiantes.",
+          "idioma": "Español",
+          "destacado": false,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/acto-educar-consciencia-Evoluci%C3%B3n-neurociencia-ebook/dp/B0GWYMKW2X/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33731/maria-valdes/el-acto-de-educar-con-consciencia.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "intervencion-en-crisis-educadores",
+          "titulo": "Intervención en Crisis y Primeros Auxilios Psicológicos para Educadores",
+          "autor": "María de los Ángeles Valdés Arteaga y Álvaro José Rodríguez López",
+          "categoriaId": "ensayos-psicologicos",
+          "portada": "https://placehold.co/240x360/2B8A9E/FFFFFF/png?text=Intervenci%C3%B3n%0Aen+Crisis",
+          "resumenCorto": "Herramientas concretas para que docentes y educadores acompañen con sentido en los momentos que más importan.",
+          "descripcionLarga": "Hay momentos en la escuela que cambian todo. Un estudiante que llega distinto, que se quiebra, que ya no puede seguir como si nada. Y muchas veces, quien está ahí primero es el educador, sin saber exactamente qué hacer, pero con la certeza de que no puede mirar hacia otro lado.\n\nEste libro nace desde ese lugar. No desde la teoría lejana, sino desde la experiencia real de sostener a alguien cuando más lo necesita.\n\nAquí vas a encontrar una forma clara y cercana de entender qué es una crisis, cómo reconocerla y cómo acompañar sin hacer daño. No busca convertirte en especialista, sino darte herramientas concretas para estar presente con sentido, con calma y con criterio en esos momentos que importan.\n\nPorque a veces, lo más importante no es tener todas las respuestas, sino saber cómo estar.\n\nY estar bien, puede cambiar una vida.",
+          "idioma": "Español",
+          "destacado": true,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/Intervenci%C3%B3n-Primeros-Auxilios-Psicol%C3%B3gicos-Educadores-ebook/dp/B0GX32HMKQ/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33732/maria-valdes/intervencion-en-crisis-y-primeros-auxilios-psicologicos-para-e.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "cartografia-de-la-experiencia",
+          "titulo": "Cartografía de la experiencia",
+          "autor": "María de los Ángeles Valdés Arteaga y Álvaro José Rodríguez López",
+          "categoriaId": "ensayos-psicologicos",
+          "portada": "https://placehold.co/240x360/1E6B7B/FFFFFF/png?text=Cartograf%C3%ADa%0Ade+la+experiencia",
+          "resumenCorto": "Diez territorios para pensar la mente desde la neurociencia, la filosofía y las terapias de tercera generación.",
+          "descripcionLarga": "Cartografía de la experiencia explora cómo la mente construye, encarna y transforma la realidad desde un diálogo contemporáneo entre neurociencia, filosofía y clínica.\n\nA través de diez territorios —como el cerebro predictivo, la cognición encarnada y la teoría polivagal—, el libro integra evidencia empírica y práctica terapéutica en un marco coherente con las terapias de tercera generación.\n\nMás que entregar respuestas cerradas, propone un modelo de la mente como sistema dinámico, corporal y relacional, abriendo nuevas formas de comprender el sufrimiento psicológico y el cambio clínico.\n\nUna obra dirigida a quienes buscan pensar la psicología desde sus desarrollos más actuales, con rigor conceptual y relevancia aplicada.",
+          "idioma": "Español",
+          "destacado": false,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/Cartograf%C3%ADa-experiencia-construye-transforma-realidad-ebook/dp/B0GX7SC58C/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33727/maria-valdes/cartografias-de-la-experiencia.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "locos-divanes-laboratorios",
+          "titulo": "Locos, divanes y laboratorios: La increíble historia de la psicología",
+          "autor": "Editorial Mentis Viva",
+          "categoriaId": "libros",
+          "portada": "https://placehold.co/240x360/7AC94F/FFFFFF/png?text=Locos,+divanes%0Ay+laboratorios",
+          "resumenCorto": "Un recorrido ágil y provocador por la historia de la psicología: de los místicos a Wundt, Freud y el conductismo.",
+          "descripcionLarga": "Locos, divanes y laboratorios es un recorrido ágil, provocador y profundamente informado por la historia de la psicología, desde sus raíces filosóficas hasta las grandes escuelas que marcaron el siglo XX. A través de una narrativa envolvente, el libro muestra cómo la comprensión de la mente humana surge entre médicos, filósofos, místicos y científicos, en un trayecto donde conviven ideas brillantes, errores fascinantes y descubrimientos que redefinen lo humano.\n\nDesde las teorías antiguas sobre el alma hasta la fundación del primer laboratorio experimental por Wilhelm Wundt, el texto reconstruye el nacimiento de la psicología como ciencia. Luego, explora las tensiones entre enfoques: la psicología funcional de William James, el psicoanálisis de Freud, las propuestas de Jung y Adler, y el giro radical del conductismo. Cada capítulo integra contexto histórico, anécdotas reveladoras y análisis conceptual, mostrando cómo cada autor responde a los límites de su época.",
+          "idioma": "Español",
+          "destacado": true,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/Locos-divanes-laboratorios-incre%C3%ADble-psicolog%C3%ADa-ebook/dp/B0GX311LNX/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33729/maria-valdes/locos-divanes-y-laboratorios.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "de-estrellas-a-vida",
+          "titulo": "De estrellas a vida",
+          "autor": "Álvaro José Rodríguez López y María de los Ángeles Valdés Arteaga",
+          "categoriaId": "libros",
+          "portada": "https://placehold.co/240x360/5FA83A/FFFFFF/png?text=De+estrellas%0Aa+vida",
+          "resumenCorto": "La historia de todo: desde el origen del universo hasta el surgimiento de la vida en la Tierra.",
+          "descripcionLarga": "En esta obra, Álvaro José Rodríguez López y María de los Ángeles Valdés Arteaga invitan al lector a un viaje fascinante a través del tiempo y el espacio. Desde el primer instante de la expansión del universo hasta el surgimiento de las primeras formas de vida en la Tierra, este libro narra «la historia de todo» con una claridad cautivadora.\n\nLo que descubrirás en sus páginas:\n• El origen del cosmos: el nacimiento del tiempo y el espacio, la formación de las primeras estrellas y galaxias.\n• La forja de la materia: el proceso de creación de los elementos químicos que componen todo lo que conocemos.\n• El milagro de la vida: las condiciones únicas y precisas que permitieron que la vida emergiera en nuestro planeta.\n• Un enfoque interdisciplinario: cada capítulo construye un puente sólido entre la física, la química y la biología, revelando la continuidad que une al cosmos con nosotros.\n\nEscrito con un lenguaje accesible pero de gran rigor científico, De Estrellas a Vida conecta las dos preguntas más profundas de la humanidad: ¿cómo surgió el universo y cómo encajamos nosotros en él? Es una lectura esencial para mentes curiosas que buscan comprender su lugar en la inmensa historia del universo.",
+          "idioma": "Español",
+          "destacado": false,
+          "tiendas": [
+            {
+              "nombre": "Amazon",
+              "url": "https://www.amazon.com/estrellas-vida-Spanish-Editorial-Mentis-ebook/dp/B0GX3764PW/",
+              "color": "FF9900"
+            },
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33728/maria-valdes/de-estrellas-a-vida.html",
+              "color": "2B8A9E"
+            }
+          ]
+        },
+        {
+          "id": "el-corazon-valiente-de-lila",
+          "titulo": "El corazón valiente de Lila",
+          "autor": "María de los Ángeles Valdés Arteaga y Álvaro José Rodríguez López",
+          "categoriaId": "infantiles",
+          "portada": "https://placehold.co/240x360/95D972/FFFFFF/png?text=El+coraz%C3%B3n%0Avaliente+de+Lila",
+          "resumenCorto": "Un cuento ACT para acompañar a niños y niñas a conectar con sus emociones desde la flexibilidad psicológica.",
+          "descripcionLarga": "En el bosque de los abrazos vive Lila, una pequeña valiente que, como todos los niños, a veces siente miedo, tristeza o dudas que parecen grandes nubes en su cielo.\n\nA través de un relato tierno y poético, El corazón valiente de Lila introduce a niños y niñas en los 6 caminos de la flexibilidad psicológica (ACT): aprender a aceptar las emociones, observar los pensamientos sin quedarse atrapados en ellos, conectar con el presente, descubrir el «yo que observa», reconocer lo que realmente importa y dar pequeños pasos valientes hacia ello.\n\nPero este libro no termina en la historia. En su segunda parte, encontrarás ejercicios prácticos, simples y lúdicos, diseñados para que niños y adultos practiquen juntos estas habilidades emocionales en el día a día. A través del juego, la imaginación y la conexión, cada ejercicio ayuda a transformar lo aprendido en experiencia real.\n\nUna herramienta cálida y cercana para acompañar el desarrollo emocional de los niños, fortalecer su bienestar y cultivar un corazón valiente... paso a paso.",
+          "idioma": "Español",
+          "destacado": true,
+          "tiendas": [
+            {
+              "nombre": "Autores Editores",
+              "url": "https://www.autoreseditores.com/libro/33753/maria-valdes/el-corazon-valiente-de-lila.html",
+              "color": "2B8A9E"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "fundacion": {
+    "banner": {
+      "titulo": "Fundación Mentis Viva",
+      "subtitulo": "Educando mentes, transformando comunidades",
+      "backgroundImage": "https://placehold.co/1920x800/7AC94F/FFFFFF/jpg?text=Fundaci%C3%B3n",
+      "overlayOpacity": 50
+    },
+    "mision": {
+      "titulo": "Nuestra Misión",
+      "texto": "Creemos que la educación es un eje fundamental para construir una sociedad más consciente, empática y compasiva. Por eso, a través de nuestra fundación, llevamos charlas y talleres a centros educacionales, entregando herramientas prácticas a estudiantes, docentes y familias.",
+      "valores": [
+        {
+          "titulo": "Accesibilidad",
+          "descripcion": "La salud mental no es un privilegio, es un derecho. Llevamos conocimiento a quienes más lo necesitan.",
+          "icono": "fa-universal-access"
+        },
+        {
+          "titulo": "Prevención",
+          "descripcion": "Educamos antes de que surja la crisis. Entregar herramientas tempranas salva vidas y transforma comunidades.",
+          "icono": "fa-shield-heart"
+        },
+        {
+          "titulo": "Comunidad",
+          "descripcion": "Trabajamos con la comunidad educativa completa: estudiantes, docentes, directivos y familias.",
+          "icono": "fa-people-group"
+        }
+      ]
+    },
+    "queHacemos": {
+      "titulo": "¿Qué Hacemos?",
+      "imagen": "https://placehold.co/800x600/7AC94F/FFFFFF/jpg?text=Talleres",
+      "texto": "Realizamos charlas y talleres en establecimientos educacionales abordando temas fundamentales de salud mental. Nuestro equipo de psicólogos profesionales diseña cada intervención adaptada a la realidad y necesidades de cada comunidad educativa.",
+      "temas": [
+        "Ansiedad y manejo del estrés en adolescentes",
+        "Bullying y convivencia escolar",
+        "Regulación emocional",
+        "Autoestima y construcción de identidad",
+        "Comunicación efectiva en la familia",
+        "Primeros auxilios psicológicos para docentes",
+        "Intervención en crisis",
+        "Humanidad compartida"
+      ]
+    },
+    "impacto": {
+      "titulo": "Nuestro Impacto",
+      "stats": [
+        {
+          "numero": "7+",
+          "label": "Charlas realizadas"
+        },
+        {
+          "numero": "210+",
+          "label": "Personas alcanzadas"
+        },
+        {
+          "numero": "3+",
+          "label": "Centros educacionales"
+        },
+        {
+          "numero": "98%",
+          "label": "Satisfacción"
+        }
+      ]
+    },
+    "charlas": [
+      {
+        "titulo": "Regulación Emocional en Adolescentes",
+        "fecha": "2026-03-15",
+        "lugar": "Liceo Bicentenario, Santiago",
+        "descripcion": "Taller práctico sobre técnicas de mindfulness y regulación emocional para estudiantes de enseñanza media.",
+        "imagen": ""
+      },
+      {
+        "titulo": "Primeros Auxilios Psicológicos",
+        "fecha": "2026-02-20",
+        "lugar": "Colegio San Martín, Valparaíso",
+        "descripcion": "Capacitación a docentes sobre cómo identificar y responder ante crisis emocionales de sus estudiantes.",
+        "imagen": ""
+      },
+      {
+        "titulo": "Convivencia Escolar y Bullying",
+        "fecha": "2026-01-10",
+        "lugar": "Escuela República de Chile, Concepción",
+        "descripcion": "Charla interactiva con dinámicas grupales para sensibilizar sobre el impacto del acoso escolar.",
+        "imagen": ""
+      }
+    ],
+    "cta": {
+      "titulo": "¿Quieres que visitemos tu centro educacional?",
+      "texto": "Estamos comprometidos con llevar educación psicológica de calidad a todo Chile. Si representas a un centro educacional y quieres que realicemos una charla o taller, contáctanos.",
+      "botonTexto": "Solícita una Charla",
+      "imagen": "https://placehold.co/800x600/5FA83A/FFFFFF/jpg?text=Comunidades"
+    },
+    "galeria": []
+  },
+  "recursos": {
+    "banner": {
+      "titulo": "Recursos",
+      "subtitulo": "Investigaciones, artículos y contenido para tu crecimiento",
+      "backgroundImage": "",
+      "overlayOpacity": 85
+    },
+    "items": []
+  },
+  "terminos": {
+    "titulo": "Términos y Condiciones de Uso",
+    "fecha": "Abril 2026",
+    "contenido": "<p>Bienvenido/a a Mentis Viva. Los presentes Términos y Condiciones de Uso (en adelante, los «Términos») regulan el acceso y uso del sitio web mentisviva.cl (en adelante, el «Sitio»), así como la contratación de los servicios ofrecidos por Mentis Viva (en adelante, «Mentis Viva», «nosotros» o «la Empresa»), con domicilio en Santiago, Chile. Le rogamos leer atentamente estos Términos antes de utilizar nuestros servicios.</p><h2>1. Aceptación de los Términos</h2><p>Al acceder, navegar o utilizar el Sitio, y/o al contratar cualquiera de los servicios ofrecidos por Mentis Viva, usted declara haber leído, comprendido y aceptado íntegramente los presentes Términos, así como nuestra Política de Privacidad. Si no está de acuerdo con alguna disposición de estos Términos, deberá abstenerse de utilizar el Sitio y sus servicios.</p><p>Para utilizar los servicios de Mentis Viva, usted debe ser mayor de 18 años de edad. Los menores de 18 años podrán acceder al Sitio y contratar servicios únicamente con el consentimiento expreso y la supervisión de su padre, madre o tutor legal, quien asumirá la responsabilidad por el uso que el menor haga del Sitio y los servicios.</p><h2>2. Descripción de los Servicios</h2><p>Mentis Viva es un ecosistema dedicado al bienestar psicológico, la cultura literaria y el compromiso social, que opera a través de tres áreas principales:</p><h3>2.1. Centro Psicológico Mentis Viva</h3><p>Ofrece servicios de atención psicológica, incluyendo terapia individual, terapia de parejas, terapia grupal y coaching, con un enfoque basado en terapias contextuales (ACT – Terapia de Aceptación y Compromiso, y DBT – Terapia Dialéctico-Conductual). Los servicios del Centro Psicológico constituyen atención profesional en psicología y <strong>no constituyen, en ningún caso, diagnóstico médico, tratamiento médico ni asesoría médica</strong>. No sustituyen la consulta psiquiátrica ni la atención médica especializada.</p><h3>2.2. Editorial Mentis Viva</h3><p>Ofrece un servicio de suscripción mensual mediante el cual los suscriptores reciben una caja curada que incluye libros y materiales terapéuticos cuidadosamente seleccionados por nuestro equipo de profesionales. Los planes, precios y condiciones de la suscripción se detallan en la sección 4 de estos Términos.</p><h3>2.3. Fundación Mentis Viva</h3><p>Realiza talleres educativos, charlas y actividades de formación psicológica en centros educacionales y comunidades, con el objetivo de promover el bienestar emocional y la salud mental en la población. La participación en las actividades de la Fundación puede estar sujeta a términos y condiciones adicionales específicos de cada programa.</p><h2>3. Registro y Cuenta de Usuario</h2><p>Para acceder a determinados servicios de Mentis Viva, incluida la suscripción a la Editorial, puede ser necesario crear una cuenta de usuario. Al registrarse, usted se compromete a:</p><ul><li>Proporcionar información veraz, completa, actualizada y exacta en el formulario de registro.</li><li>Mantener actualizada su información personal, incluyendo datos de contacto y dirección de envío.</li><li>Mantener la confidencialidad de su contraseña y credenciales de acceso. La seguridad de su cuenta es responsabilidad exclusiva del usuario.</li><li>Notificar de inmediato a Mentis Viva ante cualquier uso no autorizado de su cuenta o cualquier otra vulneración de seguridad.</li></ul><p>Cada persona podrá mantener únicamente una (1) cuenta de usuario. Mentis Viva se reserva el derecho de suspender o cancelar cuentas que contengan información falsa, duplicada, o que incumplan estos Términos, sin previo aviso y sin que ello genere derecho a indemnización alguna.</p><h2>4. Suscripciones y Pagos</h2><h3>4.1. Planes de Suscripción</h3><p>La Editorial Mentis Viva ofrece los siguientes planes de suscripción mensual:</p><ul><li><strong>Lector Curioso:</strong> $12.990 CLP/mes.</li><li><strong>Explorador Mental:</strong> $19.990 CLP/mes.</li><li><strong>Mente Plena:</strong> $29.990 CLP/mes.</li></ul><p>El contenido específico de cada plan se detalla en la página de la Editorial dentro del Sitio. Mentis Viva se reserva el derecho de modificar, añadir o descontinuar planes de suscripción en cualquier momento, sujeto a las condiciones de notificación establecidas en estos Términos.</p><h3>4.2. Facturación y Cobro</h3><p>Las suscripciones son de carácter mensual con cobro recurrente automático. El procesamiento de los pagos se realiza a través de la plataforma <strong>Flow.cl</strong>, que acepta tarjetas de crédito y débito. Mentis Viva no almacena directamente los datos de su tarjeta; estos son gestionados de forma segura por Flow.cl conforme a sus propios estándares de seguridad.</p><p>El cobro mensual se realizará aproximadamente <strong>diez (10) días hábiles antes del día 25 de cada mes</strong>, fecha programada para el despacho de la caja mensual. La fecha exacta de cobro puede variar según el calendario de días hábiles vigente.</p><h3>4.3. Monto del Pago</h3><p>El monto total cobrado mensualmente incluye:</p><ul><li>El precio del plan de suscripción seleccionado.</li><li>El costo de envío, el cual varía según la ubicación del destinatario y el servicio de courier asignado (Starken, Chilexpress, Blue Express u otros operadores disponibles a través de Shipit).</li></ul><p>Todos los precios se expresan en pesos chilenos (CLP) e incluyen el Impuesto al Valor Agregado (IVA) cuando corresponda, conforme a la legislación tributaria vigente en Chile.</p><h3>4.4. Pagos Fallidos</h3><p>En caso de que el cobro automático no pueda ser procesado (fondos insuficientes, tarjeta vencida, rechazo del emisor u otras causas), el suscriptor dispondrá de un plazo de <strong>veinticuatro (24) horas</strong> para regularizar su medio de pago y completar el cobro exitosamente. Transcurrido dicho plazo sin que el pago haya sido procesado con éxito, Mentis Viva se reserva el derecho de excluir al suscriptor del envío correspondiente al mes en curso, sin que ello genere derecho a reclamo o compensación.</p><h3>4.5. Modificación de Precios</h3><p>Mentis Viva podrá modificar los precios de sus planes de suscripción. Cualquier cambio de precio será notificado a los suscriptores activos con al menos <strong>treinta (30) días de anticipación</strong> mediante correo electrónico enviado a la dirección registrada en su cuenta. El nuevo precio se aplicará a partir del ciclo de facturación siguiente a la fecha efectiva del cambio. El suscriptor que no esté de acuerdo con el nuevo precio podrá cancelar su suscripción antes de que el nuevo precio entre en vigor, sin penalización alguna.</p><h2>5. Política de Cancelación</h2><p>El suscriptor podrá cancelar su suscripción en cualquier momento desde su perfil de usuario dentro del Sitio. La cancelación surtirá efecto al término del ciclo de facturación en curso, es decir, el suscriptor mantendrá acceso a los beneficios de su plan hasta la fecha de vencimiento del período ya pagado.</p><p>No se realizarán reembolsos proporcionales por el período restante del ciclo de facturación en curso. Si la cancelación se realiza antes de la fecha de despacho mensual (día 25 del mes) y el cobro del mes correspondiente aún no ha sido procesado, no se enviará la caja de dicho mes ni se realizará cobro alguno.</p><h2>6. Política de Reembolsos</h2><p>De conformidad con lo dispuesto en la Ley N° 19.496 sobre Protección de los Derechos de los Consumidores de Chile, Mentis Viva establece la siguiente política de reembolsos:</p><h3>6.1. Regla General</h3><p><strong>No se otorgarán reembolsos</strong> en los siguientes casos:</p><ul><li>Una vez que la caja mensual ha sido despachada al suscriptor.</li><li>Por contenido digital que ya haya sido entregado o puesto a disposición del suscriptor.</li><li>Por servicios de atención psicológica ya prestados.</li></ul><h3>6.2. Productos Dañados o Defectuosos</h3><p>En caso de que el suscriptor reciba productos con daños físicos evidentes o defectos de fabricación, podrá solicitar la <strong>reposición</strong> del producto afectado (no reembolso monetario) dentro de un plazo de <strong>diez (10) días corridos</strong> contados desde la fecha de recepción, proporcionando evidencia fotográfica del daño o defecto. Mentis Viva evaluará cada caso y, de ser procedente, enviará un producto de reemplazo sin costo adicional.</p><h3>6.3. Derecho a Retracto</h3><p>Conforme al artículo 3° bis letra b) de la Ley N° 19.496, en las compras realizadas por medios electrónicos, el consumidor tiene derecho a retractarse de la compra dentro de los <strong>diez (10) días calendario</strong> siguientes a la recepción del producto, siempre que:</p><ul><li>El producto se encuentre en su empaque original, sellado y sin uso.</li><li>No haya sido abierto, manipulado ni deteriorado por el consumidor.</li></ul><p>Dado que las cajas de suscripción de la Editorial Mentis Viva contienen contenido personalizado y curado específicamente para cada plan, y considerando la naturaleza de los productos incluidos, <strong>el derecho a retracto podría no ser aplicable en todos los casos</strong>. No obstante, Mentis Viva se compromete a evaluar cada solicitud de retracto de manera individual y de buena fe, buscando siempre una solución justa para el consumidor.</p><p>Para ejercer cualquier derecho contemplado en esta sección, el suscriptor deberá comunicarse a <strong>contacto@mentisviva.cl</strong> indicando su nombre completo, número de pedido y descripción detallada de la situación.</p><h2>7. Envíos y Entregas</h2><h3>7.1. Despacho Mensual</h3><p>Las cajas de suscripción serán despachadas el día <strong>25 de cada mes</strong>. Esta fecha es referencial y podrá variar en un rango de <strong>± cinco (5) días hábiles</strong> por razones logísticas, operacionales o de fuerza mayor.</p><h3>7.2. Tiempos de Entrega</h3><p>Los tiempos de entrega dependen del servicio de courier utilizado y del destino de envío, estimados entre <strong>dos (2) y diez (10) días hábiles</strong> contados desde la fecha de despacho. Los envíos a zonas extremas del territorio nacional pueden tener plazos de entrega superiores.</p><h3>7.3. Cobertura</h3><p>Mentis Viva realiza envíos a todo el territorio continental de Chile. Las zonas extremas y localidades de difícil acceso podrán tener tiempos de entrega extendidos y costos de envío diferenciados.</p><h3>7.4. Servicio de Courier</h3><p>Los envíos son gestionados a través de la plataforma <strong>Shipit</strong>, utilizando servicios de courier como Starken, Chilexpress, Blue Express u otros operadores logísticos disponibles. Mentis Viva se reserva el derecho de cambiar el proveedor de servicios de courier en cualquier momento, sin previo aviso, con el fin de garantizar la mejor experiencia de entrega posible.</p><h3>7.5. Responsabilidad del Usuario</h3><p>El suscriptor es responsable de proporcionar y mantener actualizada una dirección de envío completa, correcta y válida. Las entregas fallidas debido a direcciones incorrectas, incompletas o desactualizadas proporcionadas por el suscriptor serán de exclusiva responsabilidad de este, y Mentis Viva no estará obligada a realizar un reenvío gratuito.</p><h3>7.6. Demoras del Courier</h3><p>Mentis Viva no se hace responsable por retrasos, pérdidas o daños ocasionados por el servicio de courier una vez que el paquete ha sido entregado al transportista. En caso de incidencias durante el transporte, Mentis Viva colaborará con el suscriptor en la gestión del reclamo ante el courier correspondiente.</p><h2>8. Propiedad Intelectual</h2><p>Todo el contenido del Sitio, incluyendo pero no limitado a textos, imágenes, fotografías, gráficos, logotipos, iconos, diseños, interfaces, código fuente, marcas comerciales y demás material, es propiedad exclusiva de Mentis Viva o de sus licenciantes, y se encuentra protegido por las leyes de propiedad intelectual e industrial vigentes en Chile (Ley N° 17.336 sobre Propiedad Intelectual y Ley N° 19.039 sobre Propiedad Industrial) y por los tratados internacionales aplicables.</p><p>Los libros y materiales incluidos en las cajas de suscripción están sujetos a los derechos de autor de sus respectivos autores y editoriales. La adquisición de una suscripción otorga al suscriptor una licencia de uso personal, intransferible y no exclusiva sobre el contenido recibido.</p><p>Queda estrictamente prohibida la reproducción, distribución, transformación, comunicación pública o cualquier otra forma de explotación, total o parcial, del contenido del Sitio o de los materiales suministrados por Mentis Viva, sin la autorización previa, expresa y por escrito de Mentis Viva o del titular de los derechos correspondientes.</p><h2>9. Protección de Datos Personales</h2><p>Mentis Viva se compromete a proteger la privacidad y los datos personales de sus usuarios, de conformidad con lo establecido en la Ley N° 19.628 sobre Protección de la Vida Privada y demás normativa vigente en Chile sobre protección de datos personales.</p><h3>9.1. Datos Recopilados</h3><p>Mentis Viva podrá recopilar los siguientes datos personales:</p><ul><li>Datos de identificación: nombre completo, RUT, fecha de nacimiento.</li><li>Datos de contacto: correo electrónico, número telefónico, dirección postal.</li><li>Datos de facturación y transacciones: historial de pagos y suscripciones (los datos de tarjeta son gestionados por Flow.cl).</li><li>Datos de navegación: dirección IP, tipo de navegador, páginas visitadas, cookies.</li></ul><h3>9.2. Finalidad del Tratamiento</h3><p>Los datos personales serán utilizados para:</p><ul><li>Gestionar la cuenta de usuario y los servicios contratados.</li><li>Procesar pagos y enviar las cajas de suscripción.</li><li>Enviar comunicaciones relacionadas con el servicio (confirmaciones, notificaciones, avisos de cambio de términos).</li><li>Enviar información comercial y promocional, siempre que el usuario haya otorgado su consentimiento.</li><li>Mejorar la calidad del Sitio y la experiencia del usuario.</li></ul><h3>9.3. Compartición con Terceros</h3><p>Mentis Viva <strong>no comparte, vende ni cede</strong> datos personales a terceros, salvo en los siguientes casos estrictamente necesarios para la prestación de los servicios:</p><ul><li><strong>Flow.cl:</strong> para el procesamiento seguro de pagos.</li><li><strong>Shipit y empresas de courier</strong> (Starken, Chilexpress, Blue Express): para la gestión y seguimiento de envíos.</li><li>Cuando sea requerido por ley, orden judicial o autoridad competente.</li></ul><h3>9.4. Derechos del Usuario</h3><p>De acuerdo con la Ley N° 19.628, el usuario tiene derecho a:</p><ul><li>Acceder a sus datos personales almacenados por Mentis Viva.</li><li>Solicitar la rectificación de datos inexactos o incompletos.</li><li>Solicitar la eliminación o bloqueo de sus datos personales cuando corresponda.</li><li>Revocar su consentimiento para el tratamiento de datos con fines comerciales.</li></ul><p>Para ejercer estos derechos, el usuario podrá comunicarse a <strong>contacto@mentisviva.cl</strong>.</p><h3>9.5. Uso de Cookies</h3><p>El Sitio utiliza cookies y tecnologías similares para mejorar la experiencia de navegación, analizar el tráfico del Sitio y personalizar contenido. El usuario puede configurar su navegador para rechazar cookies, aunque esto podría afectar la funcionalidad de algunas secciones del Sitio.</p><h2>10. Servicios del Centro Psicológico</h2><p>Los siguientes términos aplican específicamente a los servicios del Centro Psicológico Mentis Viva:</p><h3>10.1. Naturaleza de los Servicios</h3><p>Los servicios del Centro Psicológico consisten en atención psicológica profesional y <strong>no constituyen tratamiento médico</strong>. No deben interpretarse como un sustituto de la atención psiquiátrica, la medicación psicotrópica ni la atención médica de emergencia. En caso de crisis o emergencia de salud mental, el usuario deberá acudir a los servicios de urgencia correspondientes.</p><h3>10.2. Confidencialidad</h3><p>Las sesiones terapéuticas y toda la información compartida en el contexto de la atención psicológica serán tratadas con estricta confidencialidad profesional, conforme a las normas éticas del Colegio de Psicólogos de Chile y la legislación vigente. La confidencialidad podrá ser exceptuada únicamente en los casos previstos por la ley, tales como:</p><ul><li>Riesgo inminente para la vida o integridad física del paciente o de terceros.</li><li>Sospecha fundada de abuso o maltrato a menores de edad, personas mayores o personas en situación de discapacidad.</li><li>Requerimiento por orden judicial o autoridad competente.</li></ul><h3>10.3. Cancelación de Sesiones</h3><p>El usuario podrá cancelar o reprogramar una sesión agendada con al menos <strong>veinticuatro (24) horas de anticipación</strong>. Las cancelaciones realizadas con menos de 24 horas de anticipación, o la inasistencia sin aviso previo, podrán estar sujetas al cobro íntegro de la sesión.</p><h2>11. Limitación de Responsabilidad</h2><h3>11.1. Disponibilidad del Sitio</h3><p>El Sitio y sus servicios se proporcionan «en el estado en que se encuentran» («as is») y «según disponibilidad». Mentis Viva no garantiza que el Sitio funcione de manera ininterrumpida, libre de errores, virus u otros componentes dañinos. Mentis Viva se reserva el derecho de suspender temporalmente el acceso al Sitio por razones de mantenimiento, actualización o mejora.</p><h3>11.2. Exclusión de Daños Indirectos</h3><p>En la máxima medida permitida por la legislación chilena aplicable, Mentis Viva no será responsable por daños indirectos, incidentales, especiales, consecuenciales o punitivos, incluyendo pero no limitado a pérdida de beneficios, datos, oportunidades de negocio u otros daños intangibles, derivados del uso o la imposibilidad de uso del Sitio o sus servicios.</p><h3>11.3. Límite Máximo de Responsabilidad</h3><p>En cualquier caso, la responsabilidad total acumulada de Mentis Viva frente al usuario, por cualquier concepto derivado de estos Términos o del uso de los servicios, no excederá el monto total efectivamente pagado por el usuario a Mentis Viva durante los últimos <strong>tres (3) meses</strong> anteriores al hecho que origina el reclamo.</p><h3>11.4. Fuerza Mayor</h3><p>Mentis Viva no será responsable por el incumplimiento o retraso en el cumplimiento de sus obligaciones cuando dicho incumplimiento o retraso sea consecuencia de eventos de fuerza mayor o caso fortuito, incluyendo, entre otros: desastres naturales (terremotos, inundaciones, erupciones volcánicas), pandemias o emergencias sanitarias, huelgas, disturbios civiles, actos de autoridad gubernamental, interrupciones en los servicios de telecomunicaciones o energía, o cualquier otro evento fuera del control razonable de Mentis Viva.</p><h2>12. Modificaciones a los Términos</h2><p>Mentis Viva se reserva el derecho de modificar, actualizar o reemplazar los presentes Términos en cualquier momento. Las modificaciones sustanciales serán notificadas a los usuarios registrados con al menos <strong>treinta (30) días de anticipación</strong> mediante:</p><ul><li>Correo electrónico enviado a la dirección registrada en la cuenta del usuario.</li><li>Publicación de un aviso destacado en el Sitio.</li></ul><p>El uso continuado del Sitio o de los servicios de Mentis Viva con posterioridad a la fecha de entrada en vigencia de los Términos modificados constituirá la aceptación íntegra de dichas modificaciones. Si el usuario no está de acuerdo con las modificaciones, deberá dejar de utilizar el Sitio y, de ser el caso, cancelar su suscripción activa.</p><h2>13. Ley Aplicable y Jurisdicción</h2><p>Los presentes Términos se rigen e interpretan de acuerdo con las leyes de la República de Chile. Para la resolución de cualquier controversia derivada de estos Términos o del uso de los servicios de Mentis Viva, las partes acuerdan:</p><ul><li><strong>Instancia de mediación:</strong> Antes de iniciar cualquier acción judicial, las partes procurarán resolver la controversia de manera amistosa a través de una mediación. El consumidor podrá recurrir al Servicio Nacional del Consumidor (SERNAC) para ejercer sus derechos conforme a la Ley N° 19.496.</li><li><strong>Jurisdicción:</strong> En caso de no alcanzar un acuerdo, las partes se someten a la jurisdicción de los tribunales ordinarios de justicia de la ciudad de Santiago de Chile.</li></ul><h2>14. Disposiciones Generales</h2><ul><li><strong>Divisibilidad:</strong> Si alguna disposición de estos Términos fuere declarada nula o inaplicable, las disposiciones restantes mantendrán su plena vigencia y efecto.</li><li><strong>Renuncia:</strong> La falta de ejercicio por parte de Mentis Viva de cualquier derecho o disposición contenida en estos Términos no constituirá una renuncia a dicho derecho o disposición.</li><li><strong>Acuerdo completo:</strong> Estos Términos, junto con la Política de Privacidad y cualquier término adicional aplicable a servicios específicos, constituyen el acuerdo íntegro entre el usuario y Mentis Viva con respecto al uso del Sitio y los servicios.</li></ul><h2>15. Contacto</h2><p>Para cualquier consulta, reclamo o solicitud relacionada con estos Términos y Condiciones de Uso, el usuario podrá comunicarse con Mentis Viva a través de los siguientes medios:</p><ul><li><strong>Correo electrónico:</strong> contacto@mentisviva.cl</li><li><strong>Dirección:</strong> Santiago, Chile</li></ul><p><em>Última actualización: Abril 2026.</em></p>"
+  },
+  "_visibility": {
+    "landing.hero._visible": true,
+    "landing.secciones._visible": true,
+    "landing.about._visible": true,
+    "clinica.enfoque._visible": true,
+    "clinica.servicios._visible": true,
+    "clinica.testimonios._visible": true,
+    "clinica.fraseCompromiso._visible": true,
+    "editorial.slogan._visible": true,
+    "editorial.calugas._visible": true,
+    "editorial.countdown._visible": true,
+    "editorial.planes._visible": true,
+    "editorial.testimonios._visible": true,
+    "editorial.contacto._visible": true,
+    "fundacion.mision._visible": true,
+    "fundacion.queHacemos._visible": true,
+    "fundacion.impacto._visible": true,
+    "fundacion.charlas._visible": false,
+    "fundacion.galeria._visible": false,
+    "fundacion.cta._visible": true
+  },
+  "_meta": {
+    "editorial.catalogo._visible": true,
+    "auth.enabled": false,
+    "editorial.planes._visible": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Mentis Viva - Mente, Cultura y Compromiso Social",
+  "short_name": "Mentis Viva",
+  "description": "Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n dedicados al bienestar emocional en Chile.",
+  "start_url": "https://mentisviva.cl/",
+  "display": "standalone",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2B8A9E",
+  "icons": [
+    {
+      "src": "assets/logos/isotipo-color.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logos/isotipo-color.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "lang": "es",
+  "categories": ["health", "education", "books"]
+}

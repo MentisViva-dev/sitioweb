@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encuesta - Mentis Viva</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/logos/isotipo-color.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .survey-container { max-width:520px; margin:120px auto 60px; padding:0 24px; }
+    .survey-card { background:#fff; border-radius:20px; padding:40px; border:1px solid #e9ecef; text-align:center; }
+    .survey-stars { display:flex; justify-content:center; gap:16px; margin:30px 0 8px; }
+    .survey-star { font-size:3rem; cursor:pointer; transition:transform 0.2s, opacity 0.2s; opacity:0.35; user-select:none; min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+    .survey-star:hover { opacity:0.7; transform:scale(1.15); }
+    .survey-star.selected { opacity:1; transform:scale(1.1); }
+    .survey-labels { display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; padding:0 8px; margin-bottom:20px; }
+    .survey-comment { width:100%; min-height:100px; padding:14px 18px; border:1px solid #dee2e6; border-radius:12px; font-family:Inter,sans-serif; font-size:1rem; resize:vertical; margin-top:16px; }
+    .survey-comment:focus { outline:none; border-color:#2B8A9E; box-shadow:0 0 0 3px rgba(43,138,158,0.15); }
+    .survey-submit { background:#2B8A9E; color:#fff; border:none; padding:14px 40px; border-radius:30px; font-size:1rem; font-weight:600; cursor:pointer; margin-top:24px; transition:all 0.3s; min-height:48px; }
+    .survey-submit:hover { background:#1E6B7B; transform:translateY(-2px); }
+    .survey-submit:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .survey-score-display { font-size:1.1rem; font-weight:600; color:#2B8A9E; margin-top:4px; min-height:24px; }
+
+    @media (max-width: 480px) {
+      .survey-container { margin-top:90px; padding:0 16px; }
+      .survey-card { padding:24px 16px; }
+      .survey-stars { gap:8px; }
+      .survey-star { font-size:2.5rem; }
+      .survey-submit { width:100%; padding:14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar" id="navbar"></header>
+
+  <main class="survey-container">
+    <div class="survey-card">
+
+      <!-- Loading -->
+      <div id="surveyLoading" style="padding:40px">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:#2B8A9E"></i>
+        <p style="margin-top:12px;color:#6C757D">Cargando encuesta...</p>
+      </div>
+
+      <!-- Survey Form -->
+      <div id="surveyForm" style="display:none">
+        <div style="font-size:3rem;margin-bottom:16px" id="surveyIcon"></div>
+        <h2 id="surveyTitle" style="margin-bottom:8px"></h2>
+        <p id="surveySubtitle" style="color:#6C757D"></p>
+
+        <div class="survey-stars" id="surveyStars">
+          <span class="survey-star" data-score="1" onclick="selectScore(1)">&#x1F61F;</span>
+          <span class="survey-star" data-score="2" onclick="selectScore(2)">&#x1F615;</span>
+          <span class="survey-star" data-score="3" onclick="selectScore(3)">&#x1F610;</span>
+          <span class="survey-star" data-score="4" onclick="selectScore(4)">&#x1F60A;</span>
+          <span class="survey-star" data-score="5" onclick="selectScore(5)">&#x1F929;</span>
+        </div>
+        <div class="survey-labels"><span>Muy mal</span><span>Excelente</span></div>
+        <div class="survey-score-display" id="scoreDisplay"></div>
+
+        <div id="commentSection" style="display:none">
+          <textarea class="survey-comment" id="surveyComment" placeholder="Cu&eacute;ntanos m&aacute;s... &iquest;Qu&eacute; te gust&oacute;? &iquest;Qu&eacute; podemos mejorar? (opcional)"></textarea>
+        </div>
+
+        <button class="survey-submit" id="surveySubmitBtn" onclick="submitSurvey()" disabled>Enviar respuesta</button>
+      </div>
+
+      <!-- Thank you -->
+      <div id="surveyThanks" style="display:none">
+        <div style="font-size:4rem;margin-bottom:16px">&#x1F49A;</div>
+        <h2>&iexcl;Gracias por tu respuesta!</h2>
+        <p style="color:#6C757D;margin-top:12px">Tu feedback nos ayuda a hacer cada caja mejor.</p>
+        <a href="https://mentisviva.cl" style="display:inline-block;margin-top:24px;color:#2B8A9E;font-weight:600">Volver a Mentis Viva</a>
+      </div>
+
+      <!-- Already responded -->
+      <div id="surveyAlready" style="display:none">
+        <div style="font-size:3rem;margin-bottom:16px">&#x2705;</div>
+        <h2>Ya respondiste esta encuesta</h2>
+        <p style="color:#6C757D;margin-top:12px">Gracias por tu participaci&oacute;n.</p>
+        <a href="https://mentisviva.cl" style="display:inline-block;margin-top:24px;color:#2B8A9E;font-weight:600">Volver a Mentis Viva</a>
+      </div>
+
+      <!-- Invalid -->
+      <div id="surveyInvalid" style="display:none">
+        <div style="font-size:3rem;margin-bottom:16px">&#x274C;</div>
+        <h2>Enlace inv&aacute;lido</h2>
+        <p style="color:#6C757D;margin-top:12px">Este enlace de encuesta no es v&aacute;lido o ha expirado.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer" id="footer"></footer>
+
+  <script src="js/content.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+  let surveyToken = '';
+  let surveyType = '';
+  let selectedScoreVal = 0;
+  const scoreLabels = {1:'Muy mal', 2:'Mal', 3:'Regular', 4:'Bueno', 5:'Excelente'};
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await ContentManager.init();
+    ContentManager.renderNavbar('encuesta.html');
+    ContentManager.renderFooter();
+
+    const params = new URLSearchParams(window.location.search);
+    surveyToken = params.get('token') || '';
+    surveyType = params.get('type') || '';
+    const quickScore = parseInt(params.get('quick') || '0');
+
+    if (!surveyToken) {
+      document.getElementById('surveyLoading').style.display = 'none';
+      document.getElementById('surveyInvalid').style.display = 'block';
+      return;
+    }
+
+    // Quick submit from email (delivery one-click)
+    if (quickScore >= 1 && quickScore <= 5) {
+      await quickSubmit(quickScore);
+      return;
+    }
+
+    // Load survey info
+    try {
+      const res = await fetch('api/surveys.php?action=get_survey&token=' + encodeURIComponent(surveyToken));
+      const data = await res.json();
+      document.getElementById('surveyLoading').style.display = 'none';
+
+      if (!data.ok) {
+        document.getElementById('surveyInvalid').style.display = 'block';
+        return;
+      }
+      if (data.already_responded) {
+        document.getElementById('surveyAlready').style.display = 'block';
+        return;
+      }
+
+      surveyType = data.survey_type || surveyType;
+
+      if (surveyType === 'delivery') {
+        document.getElementById('surveyIcon').innerHTML = '&#x1F4E6;';
+        document.getElementById('surveyTitle').textContent = '\u00bfC\u00f3mo lleg\u00f3 tu caja?';
+        document.getElementById('surveySubtitle').textContent = 'Eval\u00faa el estado en que recibiste tu paquete';
+      } else {
+        document.getElementById('surveyIcon').innerHTML = '&#x1F4DA;';
+        document.getElementById('surveyTitle').textContent = '\u00bfTe gust\u00f3 el contenido?';
+        document.getElementById('surveySubtitle').textContent = 'Eval\u00faa el libro y los materiales de tu caja';
+        document.getElementById('commentSection').style.display = 'block';
+      }
+
+      document.getElementById('surveyForm').style.display = 'block';
+    } catch (e) {
+      document.getElementById('surveyLoading').style.display = 'none';
+      document.getElementById('surveyInvalid').style.display = 'block';
+    }
+  });
+
+  function selectScore(score) {
+    selectedScoreVal = score;
+    document.querySelectorAll('.survey-star').forEach(el => {
+      el.classList.toggle('selected', parseInt(el.dataset.score) <= score);
+    });
+    document.getElementById('scoreDisplay').textContent = score + '/5 - ' + scoreLabels[score];
+    document.getElementById('surveySubmitBtn').disabled = false;
+  }
+
+  async function submitSurvey() {
+    if (!selectedScoreVal || !surveyToken) return;
+    const btn = document.getElementById('surveySubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const fd = new FormData();
+      fd.append('action', 'submit');
+      fd.append('token', surveyToken);
+      fd.append('score', selectedScoreVal);
+      const comment = document.getElementById('surveyComment')?.value || '';
+      if (comment) fd.append('comment', comment);
+
+      const res = await fetch('api/surveys.php', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (data.ok) {
+        document.getElementById('surveyForm').style.display = 'none';
+        document.getElementById('surveyThanks').style.display = 'block';
+      } else {
+        alert(data.error || 'Error al enviar');
+        btn.disabled = false;
+        btn.textContent = 'Enviar respuesta';
+      }
+    } catch (e) {
+      alert('Error de conexi\u00f3n. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Enviar respuesta';
+    }
+  }
+
+  async function quickSubmit(score) {
+    try {
+      const fd = new FormData();
+      fd.append('action', 'submit');
+      fd.append('token', surveyToken);
+      fd.append('score', score);
+      const res = await fetch('api/surveys.php', { method: 'POST', body: fd });
+      const data = await res.json();
+      document.getElementById('surveyLoading').style.display = 'none';
+
+      if (data.ok) {
+        document.getElementById('surveyThanks').style.display = 'block';
+      } else if (data.error && data.error.includes('Ya respondiste')) {
+        document.getElementById('surveyAlready').style.display = 'block';
+      } else {
+        document.getElementById('surveyForm').style.display = 'block';
+        selectScore(score);
+      }
+    } catch (e) {
+      document.getElementById('surveyLoading').style.display = 'none';
+      document.getElementById('surveyForm').style.display = 'block';
+    }
+  }
+  </script>
+</body>
+</html>

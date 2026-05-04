@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Env&iacute;o - Mentis Viva</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="assets/logos/isotipo-color.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .tracking-container { max-width: 600px; margin: 120px auto 60px; padding: 0 24px; }
+        .tracking-card { background: var(--white); border-radius: var(--radius-lg); padding: 40px; border: 1px solid var(--gray-100); text-align: center; }
+        .tracking-icon { font-size: 3rem; color: var(--teal); margin-bottom: 20px; }
+        .tracking-code { font-family: monospace; font-size: 1.2rem; background: var(--gray-50); padding: 12px 24px; border-radius: var(--radius-md); display: inline-block; margin: 16px 0; letter-spacing: 2px; word-break: break-all; max-width: 100%; }
+        .tracking-status { margin-top: 24px; padding: 20px; border-radius: var(--radius-md); }
+        .tracking-status.transit { background: #E3F2FD; color: #1565C0; }
+        .tracking-status.delivered { background: var(--green-bg); color: var(--green-dark); }
+        .tracking-status.pending { background: #FFF8E1; color: #F57F17; }
+        .tracking-external { margin-top: 24px; }
+        .tracking-external a { color: var(--teal); font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+        .tracking-loading { padding: 40px; text-align: center; }
+        .tracking-spinner { font-size: 2rem; color: var(--teal); animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+          .tracking-container { margin-top: 90px; padding: 0 16px; }
+          .tracking-card { padding: 24px 16px; }
+          .tracking-code { font-size: 1rem; padding: 10px 16px; }
+          .tracking-icon { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar" id="navbar"></header>
+
+    <main class="tracking-container">
+        <div class="tracking-card">
+            <div id="trackingLoading" class="tracking-loading">
+                <i class="fa-solid fa-spinner tracking-spinner"></i>
+                <p style="margin-top:16px;color:var(--text-muted)">Consultando estado del env&iacute;o...</p>
+            </div>
+            <div id="trackingContent" style="display:none">
+                <div class="tracking-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                <h2 style="margin-bottom:8px">Seguimiento de tu Caja</h2>
+                <p style="color:var(--text-muted)">Courier: <strong id="trackingCourier">-</strong></p>
+                <div class="tracking-code" id="trackingCodeDisplay">-</div>
+                <div id="trackingStatusContainer"></div>
+                <div class="tracking-external" id="trackingExternal">
+                    <p>Tambi&eacute;n puedes ver el seguimiento directamente en:</p>
+                    <a id="trackingExternalLink" href="#" target="_blank">
+                        <i class="fa-solid fa-external-link-alt"></i> Sitio del courier
+                    </a>
+                </div>
+            </div>
+            <div id="trackingNotFound" style="display:none">
+                <div class="tracking-icon" style="color:var(--text-muted)"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h2>Env&iacute;o no encontrado</h2>
+                <p style="color:var(--text-muted);margin-top:12px">No encontramos informaci&oacute;n para este c&oacute;digo. Si tu caja fue despachada recientemente, intenta de nuevo en unas horas.</p>
+                <a href="cuenta.html" class="btn btn-primary" style="margin-top:24px">Volver a mi cuenta</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer" id="footer"></footer>
+
+    <script src="js/content.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await ContentManager.init();
+            ContentManager.renderNavbar('tracking.html');
+            ContentManager.renderFooter();
+
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const courier = params.get('courier') || '';
+
+            if (!code) {
+                document.getElementById('trackingLoading').style.display = 'none';
+                document.getElementById('trackingNotFound').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('trackingCodeDisplay').textContent = code;
+            document.getElementById('trackingCourier').textContent = courier || 'Courier';
+
+            // Build external tracking URLs
+            const courierUrls = {
+                'chilexpress': 'https://www.chilexpress.cl/estado-de-tu-envio?tracking=' + code,
+                'starken': 'https://www.starken.cl/seguimiento?codigo=' + code,
+                'blue express': 'https://www.bluex.cl/seguimiento?n=' + code,
+                'correos de chile': 'https://www.correos.cl/web/guest/seguimiento-en-linea?codigos=' + code
+            };
+            const externalUrl = courierUrls[courier.toLowerCase()] || 'https://www.shipit.cl/seguimiento/' + code;
+            document.getElementById('trackingExternalLink').href = externalUrl;
+
+            // Try to get tracking from our API
+            try {
+                const res = await fetch('https://api.mentisviva.cl/api/shipping/track', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tracking_code: code, courier: courier }),
+                });
+                const data = await res.json();
+
+                if (data.ok && data.tracking) {
+                    renderTracking(data.tracking);
+                } else {
+                    showFallbackTracking(code, courier, externalUrl);
+                }
+            } catch (e) {
+                showFallbackTracking(code, courier, externalUrl);
+            }
+        });
+
+        function renderTracking(tracking) {
+            document.getElementById('trackingLoading').style.display = 'none';
+            document.getElementById('trackingContent').style.display = 'block';
+
+            const container = document.getElementById('trackingStatusContainer');
+            let statusClass = 'transit';
+            let statusText = 'En tr\u00e1nsito';
+            let statusIcon = 'fa-truck';
+
+            if (tracking.status === 'delivered') {
+                statusClass = 'delivered';
+                statusText = 'Entregado';
+                statusIcon = 'fa-check-circle';
+            } else if (tracking.status === 'pending') {
+                statusClass = 'pending';
+                statusText = 'Preparando env\u00edo';
+                statusIcon = 'fa-clock';
+            }
+
+            container.innerHTML = `
+                <div class="tracking-status ${statusClass}">
+                    <i class="fa-solid ${statusIcon}" style="font-size:1.5rem"></i>
+                    <p style="font-weight:700;font-size:1.1rem;margin-top:8px">${statusText}</p>
+                    ${tracking.detail ? '<p style="margin-top:4px;font-size:0.9rem">' + tracking.detail + '</p>' : ''}
+                </div>
+            `;
+        }
+
+        function showFallbackTracking(code, courier, externalUrl) {
+            document.getElementById('trackingLoading').style.display = 'none';
+            document.getElementById('trackingContent').style.display = 'block';
+
+            document.getElementById('trackingStatusContainer').innerHTML = `
+                <div class="tracking-status transit">
+                    <i class="fa-solid fa-truck" style="font-size:1.5rem"></i>
+                    <p style="font-weight:700;font-size:1.1rem;margin-top:8px">Tu caja est\u00e1 en camino</p>
+                    <p style="margin-top:4px;font-size:0.9rem">Para m\u00e1s detalles, consulta directamente en el sitio del courier.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Cuenta - Mentis Viva Editorial</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/logos/isotipo-color.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/cuenta.css">
+  <script src="https://www.google.com/recaptcha/api.js?render=6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LW9MH65Z3N"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LW9MH65Z3N');</script>
+</head>
+<body>
+
+  <header class="navbar" id="navbar"></header>
+
+  <main>
+  <section class="cuenta-section">
+    <div class="container cuenta-container">
+      <!-- Loading state -->
+      <div id="loadingState" style="text-align:center;padding:80px 0">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--green)"></i>
+        <p style="margin-top:12px;color:var(--text-muted)">Cargando...</p>
+      </div>
+
+      <!-- Not logged in -->
+      <div id="notLoggedIn" style="display:none;text-align:center;padding:60px 20px">
+        <i class="fa-solid fa-user-lock" style="font-size:3rem;color:var(--gray-300);margin-bottom:16px"></i>
+        <h2>Inicia sesi&oacute;n para ver tu cuenta</h2>
+        <p style="color:var(--text-muted);margin-bottom:24px">Necesitas una cuenta de Editorial Mentis Viva</p>
+        <button class="btn btn-green btn-lg" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesi&oacute;n</button>
+        <p style="margin-top:16px;font-size:0.9rem;color:var(--text-muted)">&iquest;No tienes cuenta? <a href="#" onclick="openAuthModal('register');return false" style="color:var(--green);font-weight:600">Reg&iacute;strate</a></p>
+      </div>
+
+      <!-- User panel -->
+      <div id="userPanel" style="display:none">
+        <div class="user-welcome">
+          <h1>Hola, <span id="userName"></span></h1>
+          <p>Gestiona tu suscripci&oacute;n y datos personales</p>
+        </div>
+
+        <div class="panel-grid">
+          <!-- Plan -->
+          <div class="panel-card">
+            <h3><i class="fa-solid fa-book-open"></i> Mi Plan</h3>
+            <div id="userPlan"></div>
+          </div>
+
+          <!-- Info personal -->
+          <div class="panel-card">
+            <h3><i class="fa-solid fa-user"></i> Datos Personales</h3>
+            <div id="userInfo"></div>
+            <button class="btn-edit" onclick="openEditModal('info')"><i class="fa-solid fa-pen"></i> Editar</button>
+          </div>
+
+          <!-- Direcci&oacute;n -->
+          <div class="panel-card">
+            <h3><i class="fa-solid fa-location-dot"></i> Direcci&oacute;n de Env&iacute;o</h3>
+            <div id="userAddress"></div>
+            <button class="btn-edit" onclick="openEditModal('address')"><i class="fa-solid fa-pen"></i> Editar</button>
+          </div>
+
+          <!-- Env&iacute;o -->
+          <div class="panel-card" id="shippingCard" style="display:none">
+            <h3><i class="fa-solid fa-truck"></i> Env&iacute;o</h3>
+            <div id="shippingInfo">
+              <p><strong>M&eacute;todo:</strong> <span id="profileShippingMethod">-</span></p>
+              <p><strong>Costo:</strong> <span id="profileShippingCost">-</span></p>
+              <p><strong>Pr&oacute;ximo despacho:</strong> <span id="profileNextShipment">-</span></p>
+            </div>
+            <div id="shippingLockedMsg" style="display:none;margin-top:12px;padding:12px;background:#FFF3E0;border-radius:8px;font-size:0.9rem;color:#E65100">
+              <i class="fa-solid fa-lock"></i> Env&iacute;o confirmado para este mes. Podr&aacute;s cambiar despu&eacute;s del despacho.
+            </div>
+            <button class="btn-edit" onclick="openEditModal('shipping')"><i class="fa-solid fa-pen"></i> Cambiar</button>
+          </div>
+
+          <!-- Seguimiento -->
+          <div class="panel-card" id="trackingCard" style="display:none">
+            <div class="panel-card-header">
+              <h3><i class="fa-solid fa-location-dot"></i> Seguimiento de Env&iacute;o</h3>
+            </div>
+            <div id="trackingInfo">
+              <p>Tu caja fue despachada. Haz seguimiento aqu&iacute;:</p>
+              <a id="trackingLink" href="#" target="_blank" class="btn btn-primary btn-sm" style="margin-top:12px">
+                <i class="fa-solid fa-map-location-dot"></i> Ver seguimiento
+              </a>
+            </div>
+          </div>
+
+          <!-- Historial de cobros -->
+          <div class="panel-card full-width">
+            <h3><i class="fa-solid fa-receipt"></i> Historial de Cobros</h3>
+            <div id="userOrders"></div>
+          </div>
+
+          <!-- Seguridad -->
+          <div class="panel-card full-width">
+            <h3><i class="fa-solid fa-shield"></i> Seguridad y Cuenta</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn-outline-sm" onclick="changeCard()"><i class="fa-solid fa-credit-card"></i> Cambiar tarjeta</button>
+              <button class="btn-outline-sm" onclick="openEditModal('password')"><i class="fa-solid fa-key"></i> Cambiar contrase&ntilde;a</button>
+              <button class="btn-outline-sm" onclick="logoutUser()" style="color:var(--text-muted)"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesi&oacute;n</button>
+            </div>
+          </div>
+
+          <!-- Cancelar suscripci&oacute;n -->
+          <div id="cancelSection" class="panel-card full-width" style="display:none;text-align:center;padding:24px">
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px">&iquest;Deseas cancelar tu suscripci&oacute;n?</p>
+            <button onclick="cancelSubscription()" style="background:none;border:1px solid var(--gray-300);color:var(--text-muted);font-size:0.82rem;cursor:pointer;font-family:var(--font-sans);padding:8px 20px;border-radius:20px;transition:var(--transition)" onmouseover="this.style.borderColor='#E74C3C';this.style.color='#E74C3C'" onmouseout="this.style.borderColor='var(--gray-300)';this.style.color='var(--text-muted)'">Cancelar suscripci&oacute;n</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+    <div class="auth-modal">
+      <div class="auth-header" style="flex-direction:column;gap:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div style="display:flex;align-items:center;gap:10px">
+            <img src="assets/logos/isotipo-color-2.png" alt="Editorial psicol&oacute;gica Mentis Viva" style="height:28px">
+            <h2 id="authTitle" style="font-size:1.1rem;margin:0">Editorial Mentis Viva</h2>
+          </div>
+          <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+        </div>
+        <div class="auth-tabs" style="margin:0;border:none;margin-top:12px">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesi&oacute;n</button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">Registrarse</button>
+        </div>
+      </div>
+      <div class="auth-body">
+
+        <p class="auth-error" id="authError"></p>
+
+        <!-- Login form -->
+        <form id="loginForm" onsubmit="submitLogin(event)">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="tu@email.com">
+          </div>
+          <div class="form-group">
+            <label>Contrase&ntilde;a</label>
+            <input type="password" name="password" required placeholder="Tu contrase&ntilde;a" minlength="8">
+          </div>
+          <button type="submit" class="auth-submit"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesi&oacute;n</button>
+          <p style="text-align:center;margin-top:12px">
+            <a href="#" onclick="showForgotPassword();return false" style="color:var(--teal);font-size:0.9rem">&iquest;Olvidaste tu contrase&ntilde;a?</a>
+          </p>
+        </form>
+
+        <!-- Register form -->
+        <form id="registerForm" style="display:none" onsubmit="submitRegister(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" name="nombre" required placeholder="Tu nombre">
+            </div>
+            <div class="form-group">
+              <label>Apellido *</label>
+              <input type="text" name="apellido" required placeholder="Tu apellido">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" name="email" required placeholder="tu@email.com">
+          </div>
+          <div class="form-group">
+            <label>Contrase&ntilde;a * (m&iacute;nimo 8 caracteres)</label>
+            <input type="password" name="password" required placeholder="Crea una contrase&ntilde;a segura" minlength="8">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>RUT (opcional)</label>
+              <input type="text" name="rut" id="regRut" placeholder="12.345.678-9" maxlength="12">
+            </div>
+            <div class="form-group">
+              <label>Tel&eacute;fono</label>
+              <div style="display:flex;align-items:center;gap:0">
+                <span style="background:var(--gray-50);border:1px solid var(--gray-200);border-right:none;padding:14px 12px;border-radius:var(--radius-sm) 0 0 var(--radius-sm);font-size:0.95rem;color:var(--text-secondary);white-space:nowrap">+56</span>
+                <input type="tel" name="telefono_num" id="regTelNum" placeholder="9 1234 5678" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+                <input type="hidden" name="telefono" id="regTelFull">
+              </div>
+            </div>
+          </div>
+
+          <div class="address-section">
+            <h3><i class="fa-solid fa-truck"></i> Direcci&oacute;n de env&iacute;o</h3>
+            <div class="form-group">
+              <label>Direcci&oacute;n (calle) — escribe y selecciona del listado</label>
+              <input type="text" name="direccion" id="regDireccion" placeholder="Escribe tu direcci&oacute;n..." autocomplete="off">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>N&uacute;mero</label>
+                <input type="text" name="numero" placeholder="1234">
+              </div>
+              <div class="form-group">
+                <label>Depto/Oficina</label>
+                <input type="text" name="depto" placeholder="Opcional">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Comuna</label>
+                <input type="text" name="comuna" placeholder="Providencia">
+              </div>
+              <div class="form-group">
+                <label>Ciudad</label>
+                <input type="text" name="ciudad" placeholder="Santiago">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Regi&oacute;n</label>
+                <select name="region">
+                  <option value="">Selecciona</option>
+                  <option>Arica y Parinacota</option>
+                  <option>Tarapac&aacute;</option>
+                  <option>Antofagasta</option>
+                  <option>Atacama</option>
+                  <option>Coquimbo</option>
+                  <option>Valpara&iacute;so</option>
+                  <option>Metropolitana</option>
+                  <option>O'Higgins</option>
+                  <option>Maule</option>
+                  <option>&Ntilde;uble</option>
+                  <option>Biob&iacute;o</option>
+                  <option>Araucan&iacute;a</option>
+                  <option>Los R&iacute;os</option>
+                  <option>Los Lagos</option>
+                  <option>Ays&eacute;n</option>
+                  <option>Magallanes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>C&oacute;digo Postal</label>
+                <input type="text" name="codigo_postal" placeholder="Opcional">
+              </div>
+            </div>
+            <input type="hidden" name="lat" id="regLat">
+            <input type="hidden" name="lng" id="regLng">
+            <div id="regMap" style="width:100%;height:200px;border-radius:var(--radius-md);background:var(--gray-50);margin-top:12px;border:1px solid var(--gray-200);display:none"></div>
+          </div>
+
+          <div class="form-group" style="margin-top:8px">
+            <label>Pregunta de seguridad *</label>
+            <select name="security_question" required class="form-control">
+              <option value="">Selecciona una pregunta</option>
+              <option>&iquest;Cu&aacute;l es el nombre de tu primera mascota?</option>
+              <option>&iquest;En qu&eacute; ciudad naciste?</option>
+              <option>&iquest;Cu&aacute;l es el nombre de tu mejor amigo/a de la infancia?</option>
+              <option>&iquest;Cu&aacute;l fue tu primer colegio?</option>
+              <option>&iquest;Cu&aacute;l es el segundo nombre de tu madre?</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Respuesta *</label>
+            <input type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control">
+          </div>
+
+          <button type="submit" class="auth-submit"><i class="fa-solid fa-user-plus"></i> Crear Cuenta</button>
+          <p style="text-align:center;font-size:0.82rem;color:var(--text-muted);margin-top:12px">Despu&eacute;s de registrarte podr&aacute;s elegir tu plan de suscripci&oacute;n</p>
+        </form>
+
+        <!-- Forgot Password form -->
+        <form id="forgotForm" style="display:none" onsubmit="submitForgotPassword(event)">
+          <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.9rem">Ingresa tu email y te enviaremos un enlace para restablecer tu contrase&ntilde;a.</p>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="tu@email.com">
+          </div>
+          <button type="submit" class="auth-submit"><i class="fa-solid fa-paper-plane"></i> Enviar enlace</button>
+          <p style="text-align:center;margin-top:12px">
+            <a href="#" onclick="switchAuthTab('login');return false" style="color:var(--teal);font-size:0.9rem">Volver al login</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="auth-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+    <div class="auth-modal">
+      <div class="auth-header">
+        <h2 id="editTitle">Editar</h2>
+        <button class="auth-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="auth-body" id="editBody"></div>
+    </div>
+  </div>
+
+  <!-- Shipping Selection Modal -->
+  <div class="auth-overlay" id="shippingOverlay">
+    <div class="auth-modal" style="max-width:520px">
+      <div class="auth-header">
+        <h2 id="shippingModalTitle">Selecciona tu m&eacute;todo de env&iacute;o</h2>
+        <button class="auth-close" onclick="closeShippingModal()">&times;</button>
+      </div>
+      <div class="auth-body" id="shippingModalBody">
+        <div id="shippingLoading" style="text-align:center;padding:30px">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--teal)"></i>
+          <p style="margin-top:12px;color:var(--text-muted)">Consultando opciones de env&iacute;o...</p>
+        </div>
+        <div id="shippingOptions" style="display:none">
+          <div id="shippingOptionsList"></div>
+          <div class="shipping-summary" style="margin-top:24px;padding:20px;background:var(--gray-50);border-radius:var(--radius-md)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span>Suscripci&oacute;n:</span>
+              <span id="shippingSumPlan">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span>Env&iacute;o (<span id="shippingSumCourier">-</span>):</span>
+              <span id="shippingSumShipping">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;padding-top:12px;border-top:2px solid var(--gray-200)">
+              <span>Total mensual:</span>
+              <span id="shippingSumTotal" style="color:var(--teal)">$0</span>
+            </div>
+          </div>
+          <div id="shippingDateInfo" style="margin-top:16px;padding:16px;background:var(--teal-bg);border-radius:var(--radius-md);text-align:center">
+            <i class="fa-solid fa-box" style="color:var(--teal);font-size:1.3rem"></i>
+            <p style="margin-top:8px;font-weight:600;color:var(--teal)" id="shippingNextDate">Tu primera caja se despacha el 25 de junio 2026</p>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;display:none" id="shippingTrialNote">El primer cobro se realizar&aacute; antes de esa fecha.</p>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:20px" id="confirmShippingBtn" onclick="confirmShippingAndPay()">Confirmar y pagar</button>
+        </div>
+        <div id="shippingError" style="display:none;text-align:center;padding:30px">
+          <i class="fa-solid fa-exclamation-triangle" style="font-size:2rem;color:#E74C3C"></i>
+          <p style="margin-top:12px">No pudimos consultar opciones de env&iacute;o. Verifica tu direcci&oacute;n.</p>
+          <button class="btn btn-secondary" style="margin-top:16px" onclick="closeShippingModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer" id="footer"></footer>
+
+  <script src="js/content.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // === API Cloudflare Workers ===
+    const API_BASE = 'https://api.mentisviva.cl/api';
+    const API = API_BASE;        // legacy alias
+    const PROF_API = API_BASE;   // legacy alias
+    const PAY_API = API_BASE;    // legacy alias
+
+    // Cookies HttpOnly: el browser las gestiona automáticamente.
+    // Estas funciones quedan como no-ops para compat con código viejo.
+    function getToken() { return ''; }
+    function setToken(_t) { /* no-op */ }
+    function clearToken() { /* no-op */ }
+
+    // Helpers REST: TODO fetch necesita credentials:'include' (cookies cross-domain)
+    async function apiGet(path) {
+      return fetch(API_BASE + path, { method: 'GET', credentials: 'include' });
+    }
+    async function apiPost(path, body) {
+      const opts = { method: 'POST', credentials: 'include', headers: {} };
+      if (body instanceof FormData) {
+        const obj = {};
+        for (const [k, v] of body.entries()) obj[k] = v;
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(obj);
+      } else if (body instanceof URLSearchParams) {
+        opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        opts.body = body.toString();
+      } else if (typeof body === 'object' && body !== null) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      return fetch(API_BASE + path, opts);
+    }
+    async function apiPatch(path, body) {
+      return fetch(API_BASE + path, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+    }
+    function authFetch(url, opts = {}) {
+      return fetch(url, { ...opts, credentials: 'include' });
+    }
+
+    // Dynamic plan prices from CMS
+    function getCMSPlanPrices() {
+      const editorial = ContentManager.get('editorial');
+      const prices = {};
+      if (editorial && editorial.planes) {
+        editorial.planes.forEach(p => {
+          const price = parseInt(String(p.precio || '0').replace(/[$.,\s]/g, ''));
+          if (p.nombre && price > 0) prices[p.nombre] = price;
+        });
+      }
+      return prices;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ContentManager.init();
+      ContentManager.renderNavbar('editorial.html');
+      ContentManager.renderFooter();
+      initScrollAnimations();
+
+      // Auth gate: si el CMS lo deshabilita, mostramos mensaje y no intentamos sesión
+      const authEnabled = ContentManager.get('_meta.auth.enabled') !== false;
+      if (!authEnabled) {
+        document.getElementById('loadingState').style.display = 'none';
+        const main = document.querySelector('.cuenta-container') || document.querySelector('main');
+        if (main) {
+          main.innerHTML = `
+            <div style="max-width:560px;margin:80px auto;padding:48px 24px;text-align:center;background:var(--white);border-radius:16px;border:1px solid var(--gray-100)">
+              <i class="fa-solid fa-lock" style="font-size:3rem;color:var(--teal);margin-bottom:16px"></i>
+              <h2 style="margin-bottom:12px">Área de cuenta en preparación</h2>
+              <p style="color:var(--text-muted);margin-bottom:24px">Estamos afinando los últimos detalles de la suscripción y el inicio de sesión. Muy pronto podrás crear tu cuenta y suscribirte a la editorial.</p>
+              <a href="editorial.html" class="btn btn-green btn-lg"><i class="fa-solid fa-arrow-left"></i> Volver a la editorial</a>
+            </div>`;
+        }
+        return;
+      }
+
+      checkSession();
+    });
+
+    async function checkSession() {
+      // Handle password reset/revert URL params before anything else
+      const resetToken = urlParams.get('reset');
+      if (resetToken) {
+        showResetPasswordForm(resetToken);
+        return;
+      }
+      const revertToken = urlParams.get('revert');
+      if (revertToken) {
+        showRevertPasswordResult(revertToken);
+        return;
+      }
+      // Cookies HttpOnly: el server las verifica via /auth/check
+      try {
+        const r = await apiGet('/auth/check');
+        const data = await r.json();
+        document.getElementById('loadingState').style.display = 'none';
+        if (data.logged_in) {
+          loadUserPanel(data.user);
+          // If came with ?plan= and logged in, open shipping selection
+          const planUrl = urlParams.get('plan');
+          if (planUrl && !urlParams.get('verify') && !urlParams.get('card_registered')) {
+            openShippingModal(decodeURIComponent(planUrl));
+          }
+        } else {
+          // If came with ?plan= and NOT logged in, open register
+          const planUrl = urlParams.get('plan');
+          if (planUrl && !urlParams.get('verify') && !urlParams.get('card_registered')) {
+            openAuthModal('register');
+          }
+          document.getElementById('notLoggedIn').style.display = '';
+        }
+      } catch(e) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('notLoggedIn').style.display = '';
+      }
+    }
+
+    function loadUserPanel(user) {
+      document.getElementById('userPanel').style.display = '';
+      document.getElementById('userName').textContent = user.nombre;
+
+      // Plan (handle both 'plan' from login and 'plan_nombre' from check)
+      const planEl = document.getElementById('userPlan');
+      const userPlan = user.plan || user.plan_nombre;
+      if (userPlan) {
+        const statusClass = user.plan_status === 'active' ? 'active' : 'pending';
+        const statusText = user.plan_status === 'active' ? 'Activo' : 'Pendiente de pago';
+        let payBtn = '';
+        if (user.plan_status === 'pending') {
+          payBtn = `<button class="btn-edit" onclick="payPlan('${userPlan}')" style="margin-top:12px"><i class="fa-solid fa-credit-card"></i> Pagar ahora</button>`;
+        }
+        let changePlanBtn = '';
+        if (user.plan_status === 'active') {
+          changePlanBtn = '<a href="editorial.html" class="btn-edit" style="display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>';
+        }
+        planEl.innerHTML = `<p style="font-size:1.2rem;font-weight:700;margin-bottom:8px">${userPlan}</p><span class="plan-badge ${statusClass}">${statusText}</span>${payBtn}${changePlanBtn}`;
+        if (user.plan_status === 'active') {
+          document.getElementById('cancelSection').style.display = '';
+        }
+      } else {
+        planEl.innerHTML = `<span class="plan-badge none">Sin plan</span><p style="margin-top:8px"><a href="editorial.html" style="color:var(--green);font-weight:600">Ver planes disponibles</a></p>`;
+      }
+
+      // Info
+      document.getElementById('userInfo').innerHTML = `
+        <div class="profile-field"><label>Email</label><span>${user.email}</span></div>
+        <div class="profile-field"><label>Nombre</label><span>${user.nombre} ${user.apellido || ''}</span></div>
+        ${user.rut ? `<div class="profile-field"><label>RUT</label><span>${user.rut}</span></div>` : ''}
+        ${user.telefono ? `<div class="profile-field"><label>Tel&eacute;fono</label><span>${user.telefono}</span></div>` : ''}
+      `;
+
+      // Load full profile for address
+      apiGet('/profile/me')
+        .then(r=>r.json()).then(d => {
+          if (d.ok) {
+            const u = d.user;
+            const street = [u.direccion, u.numero].filter(Boolean).join(' ');
+            const depto = u.depto ? 'Depto ' + u.depto : '';
+            const location = [u.comuna, u.ciudad, u.region].filter(Boolean).join(', ');
+            const addrParts = [street, depto, location].filter(Boolean);
+            document.getElementById('userAddress').innerHTML = addrParts.length ? `<p>${addrParts.join('<br>')}</p>` : '<p style="color:var(--text-muted)">Sin direcci&oacute;n configurada</p>';
+            // Update plan from full profile (in case it was just activated)
+            if (u.plan_nombre && u.plan_status) {
+              const planEl = document.getElementById('userPlan');
+              const statusClass = u.plan_status === 'active' ? 'active' : 'pending';
+              const statusText = u.plan_status === 'active' ? 'Activo' : 'Pendiente de pago';
+              let cpBtn = u.plan_status === 'active' ? '<a href="editorial.html" class="btn-edit" style="margin-top:12px;display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>' : '';
+              planEl.innerHTML = `<p style="font-size:1.2rem;font-weight:700;margin-bottom:8px">${u.plan_nombre}</p><span class="plan-badge ${statusClass}">${statusText}</span>${cpBtn}`;
+              if (u.plan_status === 'active') document.getElementById('cancelSection').style.display = '';
+            }
+
+            // Show shipping info
+            if (u.shipping_method) {
+              document.getElementById('shippingCard').style.display = '';
+              document.getElementById('profileShippingMethod').textContent = u.shipping_method;
+              document.getElementById('profileShippingCost').textContent = '$' + formatCLP(u.shipping_cost || 0) + '/mes';
+              if (u.next_shipment_date) {
+                const sd = new Date(u.next_shipment_date + 'T12:00:00');
+                const sMonths = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                document.getElementById('profileNextShipment').textContent = sd.getDate() + ' de ' + sMonths[sd.getMonth()] + ' ' + sd.getFullYear();
+              }
+              if (u.shipping_locked) {
+                document.getElementById('shippingLockedMsg').style.display = 'block';
+                const editBtn = document.querySelector('#shippingCard .btn-edit');
+                if (editBtn) editBtn.style.display = 'none';
+              }
+            }
+
+            // Show tracking info if available
+            if (u.tracking_code) {
+              document.getElementById('trackingCard').style.display = '';
+              const courier = u.shipping_method || '';
+              document.getElementById('trackingLink').href = 'tracking.html?code=' + encodeURIComponent(u.tracking_code) + '&courier=' + encodeURIComponent(courier);
+            }
+
+            // Store billing date for orders section
+            window._nextBillingDate = u.next_billing_date || null;
+            // Update billing date in orders if already rendered
+            if (window._nextBillingDate) {
+              const existingEl = document.getElementById('billingDateMsg');
+              if (existingEl) {
+                const bd = new Date(window._nextBillingDate + 'T12:00:00');
+                const bm = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                existingEl.innerHTML = '<i class="fa-solid fa-calendar-check" style="margin-right:6px"></i>Tu pr\u00f3ximo cobro ser\u00e1 el ' + bd.getDate() + ' de ' + bm[bd.getMonth()] + ' ' + bd.getFullYear();
+                existingEl.style.display = '';
+              }
+            }
+          }
+        });
+
+      // Orders + subscription history
+      apiGet('/profile/orders')
+        .then(r=>r.json()).then(d => {
+          const el = document.getElementById('userOrders');
+          if (d.ok && d.orders.length > 0) {
+            const statusMap = {pending:'Pendiente',processing:'Procesando',paid:'Pagado',active:'Próximo cobro',shipped:'Enviado',delivered:'Entregado',cancelled:'Cancelado',refunded:'Reembolsado'};
+            const statusColors = {pending:'#E6A817',processing:'#E6A817',paid:'var(--green)',active:'#2196F3',shipped:'var(--teal)',delivered:'var(--green-dark)',cancelled:'var(--text-muted)',refunded:'#E53E3E'};
+            const deliveredCount = d.orders.filter(o => o.status === 'delivered').length;
+            const paidCount = d.orders.filter(o => o.status === 'paid').length;
+
+            let html = `<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+              <div style="background:var(--green-bg);padding:12px 20px;border-radius:var(--radius-md);flex:1;min-width:120px;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--green)">${deliveredCount}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted)">Cajas recibidas</div>
+              </div>
+              <div style="background:var(--gray-50);padding:12px 20px;border-radius:var(--radius-md);flex:1;min-width:120px;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700">${paidCount}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted)">Pagos realizados</div>
+              </div>
+            </div>`;
+
+            html += '<div style="border:1px solid var(--gray-100);border-radius:var(--radius-md);overflow:hidden">';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:10px 16px;background:var(--gray-50);font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px"><span>Fecha</span><span>Plan</span><span>Monto</span><span>Estado</span></div>';
+
+            html += d.orders.map(o => {
+              const date = new Date(o.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'short',day:'numeric'});
+              const color = statusColors[o.status] || 'var(--text-muted)';
+              return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:12px 16px;border-top:1px solid var(--gray-50);font-size:0.88rem;align-items:center">
+                <span>${date}</span>
+                <span>${o.plan_nombre}</span>
+                <span>$${Number(o.monto).toLocaleString('es-CL')}</span>
+                <span style="color:${color};font-weight:600;font-size:0.82rem"><i class="fa-solid ${o.status==='paid'||o.status==='delivered'?'fa-circle-check':o.status==='active'?'fa-calendar-check':'fa-clock'}" style="margin-right:4px"></i>${statusMap[o.status]||o.status}</span>
+              </div>`;
+            }).join('');
+
+            html += '</div>';
+
+            // Placeholder for billing date - always render, fill from profile data
+            html += '<p id="billingDateMsg" style="text-align:center;margin-top:16px;padding:12px;background:var(--teal-bg);border-radius:var(--radius-md);color:var(--teal-dark);font-weight:600;font-size:0.9rem;display:none"></p>';
+
+            el.innerHTML = html;
+
+            // Fill billing date: try immediately, then poll until both element and data are ready
+            function fillBillingDate() {
+              var bdEl = document.getElementById('billingDateMsg');
+              if (bdEl && window._nextBillingDate) {
+                var bd = new Date(window._nextBillingDate + 'T12:00:00');
+                var bm = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                bdEl.innerHTML = '<i class="fa-solid fa-calendar-check" style="margin-right:6px"></i>Tu pr\u00f3ximo cobro ser\u00e1 el ' + bd.getDate() + ' de ' + bm[bd.getMonth()] + ' ' + bd.getFullYear();
+                bdEl.style.display = '';
+                return true;
+              }
+              return false;
+            }
+            if (!fillBillingDate()) {
+              // Poll every 500ms for up to 5 seconds until profile data arrives
+              var billingRetries = 0;
+              var billingInterval = setInterval(function() {
+                billingRetries++;
+                if (fillBillingDate() || billingRetries >= 10) {
+                  clearInterval(billingInterval);
+                }
+              }, 500);
+            }
+
+            // Show cancel button if has active subscription
+            if (user.plan_status === 'active') {
+              document.getElementById('cancelSection').style.display = '';
+            }
+          } else {
+            el.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;text-align:center;padding:20px">A&uacute;n no tienes cobros registrados</p>';
+          }
+        });
+    }
+
+    // Auth modal
+    function openAuthModal(tab) {
+      document.getElementById('authOverlay').classList.add('active');
+      switchAuthTab(tab || 'login');
+      if (tab === 'register') loadGoogleMaps();
+    }
+    function closeAuthModal() {
+      document.getElementById('authOverlay').classList.remove('active');
+      // Hide map when closing auth modal
+      var mapDiv = document.getElementById('regMap');
+      if (mapDiv) mapDiv.style.display = 'none';
+    }
+
+    function switchAuthTab(tab) {
+      document.getElementById('forgotForm').style.display = 'none';
+      document.querySelector('.auth-tabs').style.display = '';
+      document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', i === (tab==='register'?1:0)));
+      document.getElementById('loginForm').style.display = tab==='login' ? '' : 'none';
+      document.getElementById('registerForm').style.display = tab==='register' ? '' : 'none';
+      document.getElementById('authTitle').textContent = tab==='login' ? 'Iniciar Sesi\u00f3n' : 'Crear Cuenta';
+      document.getElementById('authError').style.display = 'none';
+      // Init autocomplete when register tab becomes visible
+      if (tab === 'register' && mapsLoaded && !mapsAutocomplete) {
+        setTimeout(setupAutocomplete, 200);
+      }
+      // Keep map hidden until address is selected
+      if (tab === 'register') {
+        const mapDiv = document.getElementById('regMap');
+        if (mapDiv) mapDiv.style.display = 'none';
+      }
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg; el.style.display = 'block';
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ingresando...';
+
+      const fd = new FormData(e.target);
+      try {
+        const r = await apiPost('/auth/login', fd);
+        const d = await r.json();
+        if (d.ok) {
+          // Cookie HttpOnly ya qued\u00f3 seteada por el server. No hay token JS.
+          closeAuthModal();
+          document.getElementById('notLoggedIn').style.display = 'none';
+          document.getElementById('loadingState').style.display = '';
+          window.history.replaceState({}, '', 'cuenta.html');
+          checkSession();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesi\u00f3n';
+          if (d.code === 'EMAIL_NOT_VERIFIED') {
+            const email = (fd.get('email') || '').toString();
+            showAuthError(d.error);
+            document.getElementById('authError').innerHTML += ` <a href="#" onclick="resendVerification('${email}');return false" style="color:var(--green)">Reenviar verificaci\u00f3n</a>`;
+          } else {
+            showAuthError(d.error || 'Credenciales incorrectas');
+          }
+        }
+      } catch(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesi\u00f3n';
+        showAuthError('Error de conexi\u00f3n');
+      }
+    }
+
+    // RUT auto-format: 12.345.678-9
+    document.getElementById('regRut')?.addEventListener('input', function(e) {
+      let v = this.value.replace(/[^0-9kK]/g, '').toUpperCase();
+      if (v.length > 9) v = v.slice(0, 9);
+      if (v.length > 1) {
+        const dv = v.slice(-1);
+        const body = v.slice(0, -1);
+        const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        this.value = formatted + '-' + dv;
+      }
+    });
+
+    // Combine phone: hidden field = +56 + visible input
+    document.getElementById('regTelNum')?.addEventListener('input', function() {
+      const num = this.value.replace(/[^0-9]/g, '');
+      document.getElementById('regTelFull').value = num ? '+56' + num : '';
+    });
+
+    async function submitRegister(e) {
+      e.preventDefault();
+
+      // Combine phone before submit
+      const telNum = document.getElementById('regTelNum')?.value.replace(/[^0-9]/g, '') || '';
+      document.getElementById('regTelFull').value = telNum ? '+56' + telNum : '';
+
+      // Warn if depto is empty
+      const deptoField = e.target.querySelector('[name="depto"]');
+      if (deptoField && !deptoField.value.trim()) {
+        if (!confirm('No ingresaste Depto/Oficina. \u00bfDeseas continuar sin este dato? Si vives en un departamento, presiona Cancelar para completarlo.')) {
+          deptoField.focus();
+          return;
+        }
+      }
+
+      const fd = new FormData(e.target);
+      // Remove the visible phone field, keep the hidden full one
+      fd.delete('telefono_num');
+      // T\u00e9rminos aceptados (obligatorio en backend nuevo)
+      fd.append('terms_accepted', '1');
+      // Get reCAPTCHA token
+      try {
+        const recaptchaToken = await grecaptcha.execute('6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0', {action: 'register'});
+        fd.append('recaptcha_token', recaptchaToken);
+      } catch(re) { console.warn('reCAPTCHA not loaded'); }
+      try {
+        const r = await apiPost('/auth/register', fd);
+        const d = await r.json();
+        if (d.ok && d.verify) {
+          closeAuthModal();
+          document.getElementById('loadingState').style.display = 'none';
+          document.getElementById('notLoggedIn').style.display = '';
+          document.getElementById('notLoggedIn').innerHTML = `
+            <div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <i class="fa-solid fa-envelope-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i>
+              <h2>Revisa tu email</h2>
+              <p style="color:var(--text-muted);margin-bottom:16px">${d.message}</p>
+              <p style="font-size:0.85rem;color:var(--text-muted)">Revisa tu bandeja de entrada y spam.</p>
+              <button class="btn-outline-sm" style="margin-top:16px" onclick="resendVerification('${fd.get('email')}')">Reenviar email de verificaci\u00f3n</button>
+            </div>`;
+        } else if (d.ok) {
+          // Server emiti\u00f3 cookie HttpOnly autom\u00e1ticamente
+          closeAuthModal(); location.reload();
+        } else {
+          showAuthError(d.error || 'No pudimos completar el registro');
+        }
+      } catch(err) { showAuthError('Error de conexi\u00f3n'); }
+    }
+
+    // ---- Forgot / Reset / Revert Password ----
+    function showForgotPassword() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('forgotForm').style.display = '';
+      document.getElementById('authTitle').textContent = 'Recuperar Contrase\u00f1a';
+      document.getElementById('authError').style.display = 'none';
+      document.querySelector('.auth-tabs').style.display = 'none';
+    }
+
+    async function submitForgotPassword(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        const token = await grecaptcha.execute('6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0', {action: 'forgot_password'});
+        fd.append('recaptcha_token', token);
+      } catch(re) {}
+      try {
+        const r = await apiPost('/auth/forgot-password', fd);
+        const d = await r.json();
+        if (d.ok) {
+          document.getElementById('forgotForm').innerHTML = '<div style="text-align:center"><i class="fa-solid fa-envelope-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h3>Revisa tu email</h3><p style="color:var(--text-muted);margin-top:8px">' + (d.message || 'Si el email existe, recibir\u00e1s un enlace.') + '</p><p style="margin-top:16px"><a href="#" onclick="switchAuthTab(\'login\');return false" style="color:var(--teal)">Volver al login</a></p></div>';
+        } else {
+          showAuthError(d.error || 'No pudimos procesar la solicitud');
+        }
+      } catch(err) {
+        showAuthError('Error de conexi\u00f3n.');
+      }
+    }
+
+    async function showResetPasswordForm(token) {
+      document.getElementById('loadingState').style.display = 'none';
+      try {
+        const r = await apiPost('/auth/get-reset-question', { token: token });
+        const d = await r.json();
+        if (!d.ok) {
+          document.getElementById('notLoggedIn').style.display = '';
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Enlace inv\u00e1lido</h2><p style="color:var(--text-muted)">' + (d.error || 'El enlace ha expirado o es inv\u00e1lido.') + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
+          return;
+        }
+        document.getElementById('notLoggedIn').style.display = '';
+        document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:420px;margin:0 auto;min-height:60vh;display:flex;flex-direction:column;justify-content:center">' +
+          '<div style="text-align:center;margin-bottom:24px">' +
+            '<i class="fa-solid fa-shield-halved" style="font-size:2.5rem;color:var(--teal);margin-bottom:12px"></i>' +
+            '<h2>Restablecer Contrase\u00f1a</h2>' +
+            '<p style="color:var(--text-muted);font-size:0.9rem">Responde tu pregunta de seguridad y elige una nueva contrase\u00f1a.</p>' +
+          '</div>' +
+          '<form id="resetPasswordForm" onsubmit="submitResetPassword(event, \'' + token + '\')">' +
+            '<div class="form-group"><label style="font-weight:600">' + d.question + '</label><input type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control"></div>' +
+            '<div class="form-group"><label>Nueva contrase\u00f1a (m\u00ednimo 8 caracteres)</label><input type="password" name="new_password" required minlength="8" placeholder="Nueva contrase\u00f1a" class="form-control"></div>' +
+            '<div class="form-group"><label>Confirmar nueva contrase\u00f1a</label><input type="password" name="confirm_password" required minlength="8" placeholder="Confirma tu contrase\u00f1a" class="form-control"></div>' +
+            '<p class="auth-error" id="resetError" style="display:none"></p>' +
+            '<button type="submit" class="btn btn-primary" style="width:100%"><i class="fa-solid fa-key"></i> Cambiar Contrase\u00f1a</button>' +
+          '</form>' +
+        '</div>';
+      } catch(e) {
+        document.getElementById('notLoggedIn').style.display = '';
+        document.getElementById('notLoggedIn').innerHTML = '<div style="text-align:center;padding:60px"><p style="color:#E74C3C">Error de conexi\u00f3n.</p></div>';
+      }
+    }
+
+    async function submitResetPassword(e, token) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      if (fd.get('new_password') !== fd.get('confirm_password')) {
+        document.getElementById('resetError').style.display = 'block';
+        document.getElementById('resetError').textContent = 'Las contrase\u00f1as no coinciden.';
+        return;
+      }
+      fd.append('token', token);
+      try {
+        const r = await apiPost('/auth/reset-password', fd);
+        const d = await r.json();
+        if (d.ok) {
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a actualizada</h2><p style="color:var(--text-muted);margin-top:8px">Tu contrase\u00f1a ha sido cambiada exitosamente. Revisa tu email para m\u00e1s detalles.</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
+        } else {
+          document.getElementById('resetError').style.display = 'block';
+          document.getElementById('resetError').textContent = d.error || 'Error al restablecer.';
+        }
+      } catch(err) {
+        document.getElementById('resetError').style.display = 'block';
+        document.getElementById('resetError').textContent = 'Error de conexi\u00f3n.';
+      }
+    }
+
+    async function showRevertPasswordResult(token) {
+      document.getElementById('loadingState').style.display = 'none';
+      try {
+        // Endpoint legacy (revert_password) — el backend nuevo no lo implementa.
+        // Mostramos mensaje informativo y redirigimos a soporte.
+        const r = { ok: false, error: 'La función de revertir contraseña no está disponible. Si necesitas ayuda, contacta a contacto@mentisviva.cl.' };
+        const d = r;
+        document.getElementById('notLoggedIn').style.display = '';
+        if (d.ok) {
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a revertida</h2><p style="color:var(--text-muted);margin-top:8px">' + d.message + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
+        } else {
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Error</h2><p style="color:var(--text-muted);margin-top:8px">' + (d.error || 'No se pudo revertir.') + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
+        }
+      } catch(e) {
+        document.getElementById('notLoggedIn').style.display = '';
+        document.getElementById('notLoggedIn').innerHTML = '<div style="text-align:center;padding:60px"><p style="color:#E74C3C">Error de conexi\u00f3n.</p></div>';
+      }
+    }
+
+    async function resendVerification(email) {
+      const r = await apiPost('/auth/resend-verification', { email: email });
+      const d = await r.json();
+      alert(d.message || d.error || 'Enviado');
+    }
+
+    function selectPlan(el) {
+      // Kept for compatibility
+    }
+
+    async function logoutUser() {
+      try { await apiPost('/auth/logout', {}); } catch(e) {}
+      // Cookie se borra desde el server (Set-Cookie Max-Age=0). Reload para refrescar UI.
+      location.reload();
+    }
+
+    // Pay plan via Flow — register card then subscribe
+    async function payPlan(planName) {
+      if (!confirm('Ser\u00e1s redirigido a Flow para registrar tu tarjeta. Se cobrar\u00e1 autom\u00e1ticamente cada mes. \u00bfContinuar?')) return;
+      try {
+        const r = await apiPost('/pay/subscribe', { plan: planName });
+        const d = await r.json();
+        if (d.ok && d.redirect) {
+          window.location.href = d.redirect;
+        } else if (d.ok) {
+          alert(d.message || 'Suscripci\u00f3n creada. El cobro se confirmar\u00e1 por email.');
+          location.reload();
+        } else {
+          alert('Error: ' + (d.error || 'Intenta de nuevo') + (d.details ? '\n\nDetalle: ' + JSON.stringify(d.details) : ''));
+        }
+      } catch(e) {
+        alert('Error de conexi\u00f3n. Intenta de nuevo.');
+      }
+    }
+
+    // =============================================
+    // Shipping integration
+    // =============================================
+    let selectedShippingPlan = null;
+    let selectedShippingOption = null;
+    let shippingOptions = [];
+
+    function openShippingModal(planName) {
+        selectedShippingPlan = planName;
+        selectedShippingOption = null;
+        var ov = document.getElementById('shippingOverlay');
+        ov.style.display = '';
+        ov.classList.add('active');
+        document.getElementById('shippingLoading').style.display = 'block';
+        document.getElementById('shippingOptions').style.display = 'none';
+        document.getElementById('shippingError').style.display = 'none';
+        fetchShippingQuotes();
+    }
+
+    function closeShippingModal() {
+        var ov = document.getElementById('shippingOverlay');
+        ov.classList.remove('active');
+    }
+
+    async function fetchShippingQuotes() {
+        try {
+            const res = await apiPost('/shipping/quote', {});
+            const data = await res.json();
+
+            if (data.ok && data.options && data.options.length > 0) {
+                shippingOptions = data.options;
+                renderShippingOptions(data.options, data.next_shipment_date, data.is_past_cutoff, data.billing_date);
+            } else {
+                document.getElementById('shippingLoading').style.display = 'none';
+                document.getElementById('shippingError').style.display = 'block';
+            }
+        } catch (e) {
+            document.getElementById('shippingLoading').style.display = 'none';
+            document.getElementById('shippingError').style.display = 'block';
+        }
+    }
+
+    function renderShippingOptions(options, nextDate, isPastCutoff, billingDate) {
+        const planPrices = getCMSPlanPrices();
+        const planPrice = planPrices[selectedShippingPlan] || 0;
+        const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+        const listEl = document.getElementById('shippingOptionsList');
+        listEl.innerHTML = options.map((opt, i) => `
+            <label class="shipping-option ${i === 0 ? 'selected' : ''}" onclick="selectShipping(${i})">
+                <input type="radio" name="shipping" ${i === 0 ? 'checked' : ''} style="display:none">
+                <div class="shipping-option-radio"><div class="shipping-option-dot"></div></div>
+                <div class="shipping-option-info">
+                    <strong>${opt.courier}</strong>
+                </div>
+                <div class="shipping-option-price">$${formatCLP(opt.price)}</div>
+            </label>
+        `).join('');
+
+        selectShipping(0);
+
+        const dateEl = document.getElementById('shippingNextDate');
+        const trialEl = document.getElementById('shippingTrialNote');
+        if (nextDate) {
+            const d = new Date(nextDate + 'T12:00:00');
+            dateEl.textContent = 'Tu primera caja se despacha el ' + d.getDate() + ' de ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+        if (billingDate) {
+            const b = new Date(billingDate + 'T12:00:00');
+            trialEl.style.display = 'block';
+            trialEl.textContent = 'Tu primer cobro ser\u00e1 el ' + b.getDate() + ' de ' + months[b.getMonth()] + ' ' + b.getFullYear();
+        } else {
+            trialEl.style.display = 'none';
+        }
+
+        document.getElementById('shippingLoading').style.display = 'none';
+        document.getElementById('shippingOptions').style.display = 'block';
+    }
+
+    function selectShipping(index) {
+        selectedShippingOption = shippingOptions[index];
+        const planPrices = getCMSPlanPrices();
+        const planPrice = planPrices[selectedShippingPlan] || 0;
+        const shippingPrice = selectedShippingOption.price;
+
+        document.querySelectorAll('.shipping-option').forEach((el, i) => {
+            el.classList.toggle('selected', i === index);
+        });
+
+        document.getElementById('shippingSumPlan').textContent = '$' + formatCLP(planPrice);
+        document.getElementById('shippingSumCourier').textContent = selectedShippingOption.courier;
+        document.getElementById('shippingSumShipping').textContent = '$' + formatCLP(shippingPrice);
+        document.getElementById('shippingSumTotal').textContent = '$' + formatCLP(planPrice + shippingPrice);
+    }
+
+    function formatCLP(n) {
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    async function confirmShippingAndPay() {
+        if (!selectedShippingOption || !selectedShippingPlan) return;
+
+        const btn = document.getElementById('confirmShippingBtn');
+        btn.disabled = true;
+        btn.textContent = 'Procesando...';
+
+        try {
+            const res = await apiPost('/shipping/save-preference', {
+                shipping_method: selectedShippingOption.courier,
+                shipping_service_type: selectedShippingOption.service_type || 'standard',
+                shipping_cost: selectedShippingOption.price,
+            });
+            const data = await res.json();
+
+            if (!data.ok) {
+                alert(data.error || 'Error al guardar preferencia de env\u00edo');
+                btn.disabled = false;
+                btn.textContent = 'Confirmar y pagar';
+                return;
+            }
+
+            closeShippingModal();
+            payPlan(selectedShippingPlan);
+        } catch (e) {
+            alert('Error de conexi\u00f3n. Intenta de nuevo.');
+            btn.disabled = false;
+            btn.textContent = 'Confirmar y pagar';
+        }
+    }
+
+    // After returning from Flow card registration, subscribe to plan
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Pre-select plan from URL (coming from editorial) — handled after session check
+
+    // Email verification
+    if (urlParams.get('verify')) {
+      (async () => {
+        try {
+          const r = await apiPost('/auth/verify', { token: urlParams.get('verify') });
+          const d = await r.json();
+          document.getElementById('loadingState').style.display = 'none';
+          if (d.ok) {
+            // Cookie HttpOnly ya seteada por el server
+            document.getElementById('notLoggedIn').style.display = '';
+            document.getElementById('notLoggedIn').innerHTML = `
+              <div style="max-width:450px;margin:0 auto;text-align:center;padding:40px 20px">
+                <div style="width:80px;height:80px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                  <i class="fa-solid fa-circle-check" style="font-size:2.5rem;color:var(--green)"></i>
+                </div>
+                <h2 style="margin-bottom:12px">Cuenta verificada</h2>
+                <p style="color:var(--text-muted);margin-bottom:8px">Bienvenido/a a Editorial Mentis Viva</p>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:24px">Ser\u00e1s redirigido a los planes en <span id="countdown">5</span> segundos...</p>
+                <a href="editorial.html#planes" class="btn btn-green btn-lg"><i class="fa-solid fa-book-open"></i> Ver planes ahora</a>
+              </div>`;
+            let sec = 5;
+            const timer = setInterval(() => {
+              sec--;
+              const el = document.getElementById('countdown');
+              if (el) el.textContent = sec;
+              if (sec <= 0) { clearInterval(timer); window.location.href = 'editorial.html#planes'; }
+            }, 1000);
+          } else {
+            document.getElementById('notLoggedIn').style.display = '';
+            document.getElementById('notLoggedIn').innerHTML = `
+              <div style="text-align:center;padding:40px 20px">
+                <i class="fa-solid fa-circle-xmark" style="font-size:2.5rem;color:var(--text-muted);margin-bottom:16px"></i>
+                <h2>Enlace inv\u00e1lido</h2>
+                <p style="color:var(--text-muted);margin-bottom:16px">${d.error || 'Este enlace ha expirado o ya fue usado.'}</p>
+                <button class="btn btn-green" onclick="openAuthModal('login')">Iniciar Sesi\u00f3n</button>
+              </div>`;
+          }
+        } catch(e) {
+          document.getElementById('loadingState').style.display = 'none';
+          alert('Error de conexi\u00f3n');
+        }
+      })();
+    }
+
+    if (urlParams.get('card_registered') === '1' && urlParams.get('plan')) {
+      // Card registered, now create subscription
+      (async () => {
+        const plan = urlParams.get('plan');
+        try {
+          const r = await apiPost('/pay/subscribe', { plan: plan });
+          const d = await r.json();
+          if (d.ok) {
+            const pp = getCMSPlanPrices();
+            const planAmount = pp[plan] || 0;
+            alert('\u00a1Suscripci\u00f3n activada! Se cobrar\u00e1 $' + formatCLP(planAmount) + ' + env\u00edo mensualmente.');
+            window.history.replaceState({}, '', 'cuenta.html');
+            location.reload();
+          } else {
+            alert('Error al activar suscripci\u00f3n: ' + (d.error || 'Intenta de nuevo'));
+          }
+        } catch(e) {
+          alert('Error de conexi\u00f3n al activar suscripci\u00f3n.');
+        }
+      })();
+    }
+
+    if (urlParams.get('payment') === 'success') {
+      setTimeout(() => alert('\u00a1Pago exitoso! Tu suscripci\u00f3n est\u00e1 activa.'), 500);
+    } else if (urlParams.get('payment') === 'error') {
+      setTimeout(() => alert('Hubo un problema con el pago. Intenta de nuevo.'), 500);
+    }
+
+    // Change card
+    async function changeCard() {
+      if (!confirm('IMPORTANTE: Se eliminar\u00e1 tu tarjeta actual antes de registrar la nueva. Debes completar el registro de la nueva tarjeta para que tu suscripci\u00f3n siga activa. \u00bfContinuar?')) return;
+      try {
+        const r = await apiPost('/pay/change-card', {});
+        const d = await r.json();
+        if (d.ok && d.redirect) {
+          window.location.href = d.redirect;
+        } else {
+          alert('Error: ' + (d.error || 'Intenta de nuevo'));
+        }
+      } catch(e) {
+        alert('Error de conexi\u00f3n');
+      }
+    }
+
+    // Handle card change return
+    if (urlParams.get('card_changed') === '1') {
+      setTimeout(() => {
+        alert('Tarjeta actualizada correctamente.');
+        window.history.replaceState({}, '', 'cuenta.html');
+      }, 500);
+    }
+
+    // Cancel subscription
+    async function cancelSubscription() {
+      if (!confirm('\u00bfEst\u00e1s seguro de cancelar tu suscripci\u00f3n?\n\nSi ya pagaste tu caja del mes, la recibir\u00e1s igual y no se cobrar\u00e1 el pr\u00f3ximo. Puedes reactivar antes del cierre de ciclo.')) return;
+      try {
+        const r = await apiPost('/pay/cancel', {});
+        const d = await r.json();
+        if (d.ok) {
+          if (d.deferred && d.effective_date) {
+            alert('Cancelaci\u00f3n programada. Recibir\u00e1s tu caja de este mes y no se cobrar\u00e1 el pr\u00f3ximo. Efectiva: ' + d.effective_date);
+          } else {
+            alert('Suscripci\u00f3n cancelada. Lamentamos verte partir.');
+          }
+          location.reload();
+        } else {
+          alert('Error: ' + (d.error || 'Intenta de nuevo o cont\u00e1ctanos.'));
+        }
+      } catch(e) {
+        alert('Error de conexi\u00f3n.');
+      }
+    }
+
+    // Edit modals
+    async function openEditModal(type) {
+      const overlay = document.getElementById('editOverlay');
+      const title = document.getElementById('editTitle');
+      const body = document.getElementById('editBody');
+      const safe = (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      // Fetch current user data
+      let userData = {};
+      try {
+        const r = await apiGet('/profile/me');
+        const d = await r.json();
+        if (d.ok) userData = d.user;
+      } catch (e) { /* use empty defaults */ }
+
+      if (type === 'info') {
+        title.textContent = 'Editar Datos Personales';
+        body.innerHTML = `
+          <form id="editInfoForm" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nombre</label>
+              <input type="text" name="nombre" value="${safe(userData.nombre)}" class="auth-input" required>
+            </div>
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Apellido</label>
+              <input type="text" name="apellido" value="${safe(userData.apellido)}" class="auth-input">
+            </div>
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">RUT</label>
+              <input type="text" name="rut" value="${safe(userData.rut)}" class="auth-input" placeholder="12.345.678-9">
+            </div>
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Tel&eacute;fono</label>
+              <input type="text" name="telefono" value="${safe(userData.telefono)}" class="auth-input" placeholder="+56 9 1234 5678">
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+              <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+              <button type="submit" class="btn btn-green">Guardar</button>
+            </div>
+          </form>`;
+        document.getElementById('editInfoForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.disabled = true; btn.textContent = 'Guardando...';
+          const fd = new FormData(e.target);
+          try {
+            const r = await apiPatch('/profile/update', Object.fromEntries(fd));
+            const d = await r.json();
+            if (d.ok) {
+              closeEditModal();
+              if (typeof showToast === 'function') showToast('Datos actualizados', 'success');
+              setTimeout(() => location.reload(), 800);
+            } else {
+              btn.disabled = false; btn.textContent = 'Guardar';
+              alert('Error: ' + (d.error || 'Intenta de nuevo.'));
+            }
+          } catch (err) {
+            btn.disabled = false; btn.textContent = 'Guardar';
+            alert('Error de conexión.');
+          }
+        });
+
+      } else if (type === 'address') {
+        loadGoogleMaps();
+        title.textContent = 'Editar Direcci\u00f3n de Env\u00edo';
+        body.innerHTML = `
+          <form id="editAddressForm" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Direcci&oacute;n</label>
+              <input type="text" name="direccion" value="${safe(userData.direccion)}" class="auth-input" placeholder="Calle o avenida">
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">N&uacute;mero</label>
+                <input type="text" name="numero" value="${safe(userData.numero)}" class="auth-input">
+              </div>
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Depto / Oficina</label>
+                <input type="text" name="depto" value="${safe(userData.depto)}" class="auth-input">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Comuna</label>
+                <input type="text" name="comuna" value="${safe(userData.comuna)}" class="auth-input">
+              </div>
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Ciudad</label>
+                <input type="text" name="ciudad" value="${safe(userData.ciudad)}" class="auth-input">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Regi&oacute;n</label>
+                <input type="text" name="region" value="${safe(userData.region)}" class="auth-input">
+              </div>
+              <div style="flex:1">
+                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">C&oacute;digo Postal</label>
+                <input type="text" name="codigo_postal" value="${safe(userData.codigo_postal)}" class="auth-input">
+              </div>
+            </div>
+            <input type="hidden" name="lat" value="${safe(userData.lat)}">
+            <input type="hidden" name="lng" value="${safe(userData.lng)}">
+            <div id="editMap" style="width:100%;height:200px;border-radius:var(--radius-md);background:var(--gray-50);margin-top:4px;border:1px solid var(--gray-200);display:none"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+              <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+              <button type="submit" class="btn btn-green">Guardar</button>
+            </div>
+          </form>`;
+        // Connect Google Maps autocomplete to the address field
+        function tryInitEditAutocomplete() {
+          if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            setTimeout(tryInitEditAutocomplete, 500);
+            return;
+          }
+          const addrInput = document.querySelector('#editAddressForm input[name="direccion"]');
+          if (!addrInput) return;
+          const ac = new google.maps.places.Autocomplete(addrInput, {
+            types: ['address'],
+            componentRestrictions: { country: 'cl' }
+          });
+          ac.addListener('place_changed', () => {
+            const place = ac.getPlace();
+            if (!place || !place.address_components) return;
+            const form = document.getElementById('editAddressForm');
+            const get = (type) => {
+              const c = place.address_components.find(c => c.types.includes(type));
+              return c ? c.long_name : '';
+            };
+            const streetNum = get('street_number');
+            if (streetNum) form.querySelector('[name="numero"]').value = streetNum;
+            form.querySelector('[name="comuna"]').value = get('locality') || get('administrative_area_level_3') || get('sublocality_level_1') || '';
+            form.querySelector('[name="ciudad"]').value = get('administrative_area_level_2') || get('locality') || '';
+            form.querySelector('[name="region"]').value = get('administrative_area_level_1') || '';
+            form.querySelector('[name="codigo_postal"]').value = get('postal_code') || '';
+            if (place.geometry && place.geometry.location) {
+              form.querySelector('[name="lat"]').value = place.geometry.location.lat();
+              form.querySelector('[name="lng"]').value = place.geometry.location.lng();
+              // Show map in edit modal
+              var editMapDiv = document.getElementById('editMap');
+              if (editMapDiv) {
+                editMapDiv.style.display = 'block';
+                if (!window._editMap) {
+                  window._editMap = new google.maps.Map(editMapDiv, { center: place.geometry.location, zoom: 17, disableDefaultUI: true, zoomControl: true });
+                  window._editMarker = new google.maps.Marker({ map: window._editMap, position: place.geometry.location });
+                } else {
+                  google.maps.event.trigger(window._editMap, 'resize');
+                  window._editMap.setCenter(place.geometry.location);
+                  window._editMap.setZoom(17);
+                  window._editMarker.setPosition(place.geometry.location);
+                }
+              }
+            }
+          });
+        }
+        tryInitEditAutocomplete();
+
+        document.getElementById('editAddressForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.disabled = true; btn.textContent = 'Guardando...';
+          const fd = new FormData(e.target);
+          try {
+            const r = await apiPatch('/profile/update', Object.fromEntries(fd));
+            const d = await r.json();
+            if (d.ok) {
+              closeEditModal();
+              if (typeof showToast === 'function') showToast('Dirección actualizada', 'success');
+              setTimeout(() => location.reload(), 800);
+            } else {
+              btn.disabled = false; btn.textContent = 'Guardar';
+              alert('Error: ' + (d.error || 'Intenta de nuevo.'));
+            }
+          } catch (err) {
+            alert('Error de conexi\u00f3n.');
+          }
+        });
+
+      } else if (type === 'password') {
+        title.textContent = 'Cambiar Contrase\u00f1a';
+        // Fetch user's security question
+        const secQ = safe(userData?.security_question || 'Pregunta de seguridad');
+        body.innerHTML = `
+          <form id="editPasswordForm" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Contrase&ntilde;a actual</label>
+              <input type="password" name="current_password" class="auth-input" required>
+            </div>
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nueva contrase&ntilde;a (m&iacute;nimo 8 caracteres)</label>
+              <input type="password" name="new_password" class="auth-input" required minlength="8">
+            </div>
+            <div>
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Confirmar nueva contrase&ntilde;a</label>
+              <input type="password" name="confirm_password" class="auth-input" required minlength="8">
+            </div>
+            <div style="padding:16px;background:var(--gray-50);border-radius:var(--radius-md);border:1px solid var(--gray-200)">
+              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block"><i class="fa-solid fa-shield-halved" style="color:var(--teal);margin-right:4px"></i> ${secQ}</label>
+              <input type="text" name="security_answer" class="auth-input" required placeholder="Tu respuesta">
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+              <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+              <button type="submit" class="btn btn-green">Cambiar</button>
+            </div>
+          </form>`;
+        document.getElementById('editPasswordForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          if (fd.get('new_password') !== fd.get('confirm_password')) {
+            alert('Las contrase\u00f1as no coinciden.');
+            return;
+          }
+          if (fd.get('new_password').length < 8) {
+            alert('La contrase\u00f1a debe tener al menos 8 caracteres.');
+            return;
+          }
+          try {
+            const r = await apiPost('/auth/change-password', {
+              current_password: fd.get('current_password'),
+              new_password: fd.get('new_password'),
+            });
+            const d = await r.json();
+            if (d.ok) {
+              alert('Contrase\u00f1a actualizada correctamente.');
+              closeEditModal();
+            } else {
+              alert('Error: ' + (d.error || 'Intenta de nuevo.'));
+            }
+          } catch (err) {
+            alert('Error de conexi\u00f3n.');
+          }
+        });
+
+      } else if (type === 'shipping') {
+        title.textContent = 'Cambiar M\u00e9todo de Env\u00edo';
+        body.innerHTML = `
+          <div id="editShippingLoading" style="text-align:center;padding:30px">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--teal)"></i>
+            <p style="margin-top:12px;color:var(--text-muted)">Consultando opciones...</p>
+          </div>
+          <div id="editShippingContent" style="display:none">
+            <div id="editShippingList"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+              <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+              <button type="button" class="btn btn-green" id="editShippingSaveBtn" onclick="saveEditShipping()">Guardar</button>
+            </div>
+          </div>
+          <div id="editShippingError" style="display:none;text-align:center;padding:30px">
+            <p style="color:#E74C3C">No se pudieron obtener opciones de env\u00edo.</p>
+            <button class="btn btn-outline" style="margin-top:12px" onclick="closeEditModal()">Cerrar</button>
+          </div>`;
+
+        // Fetch shipping quotes
+        (async () => {
+          try {
+            const res = await apiPost('/shipping/quote', {});
+            const data = await res.json();
+            if (data.ok && data.options && data.options.length > 0) {
+              shippingOptions = data.options;
+              selectedShippingOption = data.options[0];
+              const planPrices = getCMSPlanPrices();
+              const userPlanName = document.querySelector('#userPlan p')?.textContent || '';
+              const planPrice = planPrices[userPlanName] || 0;
+              const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+              const listEl = document.getElementById('editShippingList');
+              listEl.innerHTML = data.options.map((opt, i) => `
+                <label class="shipping-option ${i === 0 ? 'selected' : ''}" onclick="selectEditShipping(${i})">
+                  <input type="radio" name="edit_shipping" ${i === 0 ? 'checked' : ''} style="display:none">
+                  <div class="shipping-option-radio"><div class="shipping-option-dot"></div></div>
+                  <div class="shipping-option-info">
+                    <strong>${opt.courier}</strong>
+                  </div>
+                  <div class="shipping-option-price">$${formatCLP(opt.price)}</div>
+                </label>
+              `).join('');
+
+              // Add summary like the registration modal
+              const firstOpt = data.options[0];
+              let summaryHtml = '<div class="shipping-summary" style="margin-top:20px;padding:20px;background:var(--gray-50);border-radius:var(--radius-md)">';
+              summaryHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Suscripci\u00f3n:</span><span id="editShipSumPlan">$' + formatCLP(planPrice) + '</span></div>';
+              summaryHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Env\u00edo (<span id="editShipSumCourier">' + firstOpt.courier + '</span>):</span><span id="editShipSumShipping">$' + formatCLP(firstOpt.price) + '</span></div>';
+              summaryHtml += '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;padding-top:12px;border-top:2px solid var(--gray-200)"><span>Total mensual:</span><span id="editShipSumTotal" style="color:var(--teal)">$' + formatCLP(planPrice + firstOpt.price) + '</span></div>';
+              summaryHtml += '</div>';
+
+              if (data.next_shipment_date) {
+                const d = new Date(data.next_shipment_date + 'T12:00:00');
+                summaryHtml += '<div style="margin-top:12px;padding:12px;background:var(--teal-bg);border-radius:var(--radius-md);text-align:center"><p style="font-weight:600;color:var(--teal-dark);font-size:0.9rem;margin:0"><i class="fa-solid fa-box"></i> Pr\u00f3ximo despacho: ' + d.getDate() + ' de ' + months[d.getMonth()] + ' ' + d.getFullYear() + '</p></div>';
+              }
+
+              listEl.insertAdjacentHTML('afterend', summaryHtml);
+
+              // Store planPrice for selectEditShipping
+              window._editShipPlanPrice = planPrice;
+
+              document.getElementById('editShippingLoading').style.display = 'none';
+              document.getElementById('editShippingContent').style.display = 'block';
+            } else {
+              document.getElementById('editShippingLoading').style.display = 'none';
+              document.getElementById('editShippingError').style.display = 'block';
+            }
+          } catch (e) {
+            document.getElementById('editShippingLoading').style.display = 'none';
+            document.getElementById('editShippingError').style.display = 'block';
+          }
+        })();
+      }
+
+      overlay.classList.add('active');
+    }
+
+    function selectEditShipping(index) {
+      selectedShippingOption = shippingOptions[index];
+      document.querySelectorAll('#editShippingList .shipping-option').forEach((el, i) => {
+        el.classList.toggle('selected', i === index);
+      });
+      // Update summary
+      const pp = window._editShipPlanPrice || 0;
+      const sp = selectedShippingOption.price;
+      const sc = document.getElementById('editShipSumCourier');
+      const ss = document.getElementById('editShipSumShipping');
+      const st = document.getElementById('editShipSumTotal');
+      if (sc) sc.textContent = selectedShippingOption.courier;
+      if (ss) ss.textContent = '$' + formatCLP(sp);
+      if (st) st.textContent = '$' + formatCLP(pp + sp);
+    }
+
+    async function saveEditShipping() {
+      if (!selectedShippingOption) return;
+      const btn = document.getElementById('editShippingSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+      try {
+        const res = await apiPost('/shipping/save-preference', {
+          shipping_method: selectedShippingOption.courier,
+          shipping_service_type: selectedShippingOption.service_type || 'standard',
+          shipping_cost: selectedShippingOption.price,
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          closeEditModal();
+          location.reload();
+        } else {
+          alert(data.error || 'Error al guardar.');
+          btn.disabled = false;
+          btn.textContent = 'Guardar';
+        }
+      } catch (e) {
+        alert('Error de conexi\u00f3n.');
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    function closeEditModal() { document.getElementById('editOverlay').classList.remove('active'); }
+
+    // Google Maps Autocomplete
+    let mapsLoaded = false;
+    let mapsAutocomplete = null;
+    let mapsMap = null;
+    let mapsMarker = null;
+
+    function initGoogleMaps() {
+      mapsLoaded = true;
+      setupAutocomplete();
+    }
+
+    function setupAutocomplete() {
+      if (!mapsLoaded || !window.google || !window.google.maps || !window.google.maps.places) return;
+      const input = document.getElementById('regDireccion');
+      if (!input || mapsAutocomplete) return;
+      // Only init when input is visible (register tab is open)
+      if (input.offsetParent === null) return;
+
+      // Create autocomplete
+      mapsAutocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['address'],
+        componentRestrictions: { country: 'cl' },
+        fields: ['address_components', 'geometry', 'formatted_address']
+      });
+
+      // Prevent form submit on Enter when selecting from dropdown
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') e.preventDefault();
+      });
+
+      // Let Google handle pac-container positioning natively
+      // Only ensure the modal scrolls to show the input when focused on mobile
+      input.addEventListener('focus', () => {
+        setTimeout(() => {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      });
+
+      // Init map (hidden until address is selected)
+      const mapDiv = document.getElementById('regMap');
+      if (mapDiv) {
+        mapsMap = new google.maps.Map(mapDiv, {
+          center: { lat: -33.4489, lng: -70.6693 },
+          zoom: 12,
+          disableDefaultUI: true,
+          zoomControl: true
+        });
+        mapsMarker = new google.maps.Marker({ map: mapsMap });
+      }
+
+      // Listen for place selection
+      mapsAutocomplete.addListener('place_changed', () => {
+        const place = mapsAutocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+
+        // Show map and update
+        const mapDiv = document.getElementById('regMap');
+        if (mapDiv && mapsMap) {
+          mapDiv.style.display = 'block';
+          google.maps.event.trigger(mapsMap, 'resize');
+          mapsMap.setCenter(place.geometry.location);
+          mapsMap.setZoom(17);
+          mapsMarker.setPosition(place.geometry.location);
+        }
+
+        // Set lat/lng
+        document.getElementById('regLat').value = place.geometry.location.lat();
+        document.getElementById('regLng').value = place.geometry.location.lng();
+
+        // Auto-fill address fields
+        const form = document.getElementById('registerForm');
+        // Reset fields first
+        form.querySelector('[name="numero"]').value = '';
+        form.querySelector('[name="comuna"]').value = '';
+        form.querySelector('[name="ciudad"]').value = '';
+        form.querySelector('[name="codigo_postal"]').value = '';
+
+        const components = place.address_components || [];
+        components.forEach(c => {
+          const types = c.types;
+          if (types.includes('route')) {
+            form.querySelector('[name="direccion"]').value = c.long_name;
+          }
+          if (types.includes('street_number')) {
+            form.querySelector('[name="numero"]').value = c.long_name;
+          }
+          if (types.includes('locality') || types.includes('administrative_area_level_3')) {
+            form.querySelector('[name="comuna"]').value = c.long_name;
+          }
+          if (types.includes('administrative_area_level_2')) {
+            form.querySelector('[name="ciudad"]').value = c.long_name;
+          }
+          if (types.includes('administrative_area_level_1')) {
+            const regionName = c.long_name.replace('Regi\u00f3n ', '').replace('de ', '').replace('del ', '').replace("O\u2019Higgins", "O'Higgins").trim();
+            const regionSelect = form.querySelector('[name="region"]');
+            let found = false;
+            for (let opt of regionSelect.options) {
+              const optClean = opt.text.replace('Regi\u00f3n ', '').trim();
+              if (optClean.includes(regionName) || regionName.includes(optClean) || c.short_name === opt.value) {
+                regionSelect.value = opt.value;
+                found = true;
+                break;
+              }
+            }
+            // Try with short_name if long_name didn't match
+            if (!found) {
+              for (let opt of regionSelect.options) {
+                if (opt.text.toLowerCase().includes(regionName.toLowerCase())) {
+                  regionSelect.value = opt.value;
+                  break;
+                }
+              }
+            }
+          }
+          if (types.includes('postal_code')) {
+            form.querySelector('[name="codigo_postal"]').value = c.long_name;
+          }
+        });
+
+        // Focus on numero if it wasn't filled
+        if (!form.querySelector('[name="numero"]').value) {
+          form.querySelector('[name="numero"]').focus();
+        }
+      });
+    }
+
+    // Re-init map when auth modal opens (map needs visible container)
+    const origOpenAuth = openAuthModal;
+    openAuthModal = function(tab) {
+      origOpenAuth(tab || 'login');
+      if (tab === 'register') {
+        setTimeout(() => {
+          if (mapsLoaded && !mapsAutocomplete) {
+            setupAutocomplete();
+          }
+          if (mapsMap) {
+            var mapDiv = document.getElementById('regMap');
+            if (mapDiv) mapDiv.style.display = 'none'; // Keep hidden until address selected
+          }
+        }, 400);
+      }
+    };
+
+    // Map removed from registration - autocomplete handles address fields
+
+    // Update map when user manually edits address fields
+    function updateMapFromFields() {
+      if (!mapsMap || !window.google) return;
+      const form = document.getElementById('registerForm');
+      if (!form) return;
+      const dir = form.querySelector('[name="direccion"]')?.value || '';
+      const num = form.querySelector('[name="numero"]')?.value || '';
+      const com = form.querySelector('[name="comuna"]')?.value || '';
+      const ciu = form.querySelector('[name="ciudad"]')?.value || '';
+      const query = [dir, num, com, ciu, 'Chile'].filter(Boolean).join(', ');
+      if (query.length < 10) return;
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: query }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const loc = results[0].geometry.location;
+          const mapDiv = document.getElementById('regMap');
+          if (mapDiv) mapDiv.style.display = 'block';
+          if (mapsMap) { mapsMap.setCenter(loc); mapsMap.setZoom(16); }
+          if (mapsMarker) mapsMarker.setPosition(loc);
+          document.getElementById('regLat').value = loc.lat();
+          document.getElementById('regLng').value = loc.lng();
+        }
+      });
+    }
+    let mapUpdateTimer = null;
+    document.addEventListener('input', (e) => {
+      if (['direccion','numero','comuna','ciudad'].includes(e.target.name) && e.target.closest('#registerForm')) {
+        clearTimeout(mapUpdateTimer);
+        mapUpdateTimer = setTimeout(updateMapFromFields, 1500);
+      }
+    });
+  </script>
+  <script>
+  // Only load Google Maps when needed (registration or address edit)
+  var gmapsLoaded = false;
+  function loadGoogleMaps() {
+    if (gmapsLoaded) return;
+    gmapsLoaded = true;
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiJ9NSu-5kc9H0iR0mlmXQoG2n5Q9wChA&libraries=places&callback=initGoogleMaps';
+    s.async = true;
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+  </script>
+
+</body>
+</html>

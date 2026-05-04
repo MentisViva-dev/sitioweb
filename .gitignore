@@ -1,0 +1,169 @@
+# ============================================================================
+# MentisViva — .gitignore
+# ============================================================================
+# Este archivo previene que datos sensibles, residuales o pesados se suban
+# a GitHub. Si tienes dudas sobre algún archivo, mejor agrégalo aquí que
+# después tener que limpiar el historial.
+# ============================================================================
+
+# --------- SECRETOS - CRÍTICO, NUNCA SUBIR ---------
+api/config.php
+api/config.local.php
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+secrets/
+.wrangler/
+
+# --------- BACKUPS Y DATOS LOCALES ---------
+data/backups/
+data/*.log
+data/*.bak
+data/*.sqlite
+data/mentisviva.db
+data/flow_*.log
+data/email_*.log
+
+# --------- ARCHIVOS PESADOS Y ZIP ---------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+WEB MENTIS.zip
+
+# --------- SCRIPTS DE BUILD WINDOWS NO PORTABLES ---------
+*.ps1
+build_docx.ps1
+build_docx_content.ps1
+create_docx.ps1
+server.ps1
+
+# --------- CONTENIDO DE MARCA Y BORRADORES ---------
+Contenido de Marca/
+Imagenes Posibles/
+content con cambios.json
+borradores/
+drafts/
+
+# --------- ARCHIVOS DE DEPLOY (paquetes locales de referencia) ---------
+# Mantenemos AUDITORIA y deploy/ porque son útiles, pero excluimos artefactos:
+deploy/cloudflare-fullstack/dist/
+deploy/cloudflare-fullstack/.wrangler/
+deploy/cloudflare-fullstack/node_modules/
+deploy/cloudflare-fullstack/.dev.vars
+deploy/cloudflare-fullstack/.env
+deploy/cloudflare-fullstack/coverage/
+
+# --------- NODE / TYPESCRIPT ---------
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.npm/
+.yarn/
+.pnp.*
+package-lock.json.bak
+
+# --------- COBERTURA DE TESTS ---------
+coverage/
+.nyc_output/
+*.lcov
+
+# --------- WRANGLER (Cloudflare CLI) ---------
+.wrangler/
+wrangler.toml.local
+.dev.vars
+
+# --------- IDEs Y EDITORES ---------
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# --------- SISTEMA OPERATIVO ---------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --------- LOGS ---------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --------- TEMPORARIES ---------
+*.tmp
+*.temp
+.cache/
+.tmp/
+
+# --------- ARCHIVOS DE CLAUDE / IA ---------
+.claude/
+.cursor/
+.aider*
+
+# --------- INSTALL/MIGRATE PHP (deben borrarse de prod) ---------
+api/install.php
+api/migrate_password.php
+api/migrate_payment_verified.php
+api/migrate_shipping.php
+api/migrate_surveys.php
+
+# --------- UPLOADS (gestionado en R2 / hosting, no en repo) ---------
+assets/uploads/
+
+# Excepción: mantener un .gitkeep para que la carpeta exista
+!assets/uploads/.gitkeep
+
+# --------- RUN INSTALL / DEBUG TEMPORARIES ---------
+run_install.html
+debug.html
+test.php
+phpinfo.php
+
+# --------- PHP COMPILED ---------
+*.opcache
+
+# --------- DATABASE DUMPS LOCALES ---------
+*.sql.gz
+backup_*.sql
+backup_*.tar
+mysqldump_*.sql
+
+# --------- STATIC SITE / CLOUDFLARE PAGES ---------
+# Excluimos el subrepo de Workers (deploy/cloudflare-fullstack/) entero del
+# repo del sitio estático — los workers tienen su propio repo (sitioweb).
+deploy/
+api/
+
+# Documentación interna (no debe ir a producción)
+AUDITORIA_MENTISVIVA.md
+BRAND_GUIDELINES.md
+DEPLOY.txt
+INSTRUCCIONES_FINALES.md
+DEPLOYMENT_STATUS.md
+*.docx
+.user.ini
+.htaccess
+
+# Backups y residuos PHP (V2Networks)
+*.bak.*
+data/*.bak.*
+php.ini
