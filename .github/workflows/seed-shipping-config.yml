@@ -1,0 +1,26 @@
+name: Seed shipping config (one-shot)
+
+# One-shot workflow to apply migrations/0002_seed_shipping_config.sql to remote D1.
+# The SQL uses INSERT OR IGNORE so it is idempotent (only fills missing keys).
+# Delete this file after a successful run.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply 0002_seed_shipping_config.sql to remote D1
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute mentisviva --file=./migrations/0002_seed_shipping_config.sql --remote
+
+      - name: Done
+        run: echo "Shipping config seed applied (idempotent)."
