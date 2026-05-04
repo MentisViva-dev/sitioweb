@@ -1020,10 +1020,20 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto; }
 }
 
-/* Prevent horizontal overflow universal — atajo para mobile */
+/* Cross-platform: forzar light theme en browsers que aplican auto-dark-mode
+   (Samsung Internet, algunos Chrome Android con "Dark theme for sites" on,
+   iOS Safari Reader Mode). Sin esto, los colores blancos del banner se
+   invertían en negro y se veía mal. */
+html { color-scheme: light; }
+
+/* Prevent horizontal overflow universal — atajo para mobile.
+   overscroll-behavior-y: contain evita que pull-to-refresh accidental
+   en Chrome Android refresque la página cuando el usuario hace scroll
+   muy rápido al inicio. */
 html, body {
   max-width: 100%;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
 }
 
 /* Skip-link: oculto visual y de layout hasta que recibe focus.
