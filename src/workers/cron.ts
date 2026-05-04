@@ -36,7 +36,9 @@ export async function scheduled(event: ScheduledEvent, env: Env, _ctx: Execution
       await cleanup(env);
     } else if (cronExpr === '0 3 * * *') {
       await dailyTasks(env, now);
-    } else if (cronExpr === '0 3 * * 0') {
+    } else if (cronExpr === '0 3 * * 7' || cronExpr === '0 3 * * 0') {
+      // wrangler.toml usa "7" para domingo (POSIX); cron también acepta "0".
+      // Aceptamos ambos para evitar drift si se renombra en wrangler.
       await weeklyTasks(env);
     } else if (cronExpr === '0 9 12 * *') {
       // El cron del día 12 es informativo; el día real del cutoff puede variar.

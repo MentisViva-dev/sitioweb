@@ -48,7 +48,10 @@ export async function handle(req: Request, env: Env, ctx: ExecutionContext): Pro
   const url = new URL(req.url);
   const path = url.pathname;
 
-  if (req.method !== 'POST' && path !== '/api/auth/check') {
+  // /api/auth/check: solo GET. Resto: solo POST.
+  if (path === '/api/auth/check') {
+    if (req.method !== 'GET') return Errors.methodNotAllowed();
+  } else if (req.method !== 'POST') {
     return Errors.methodNotAllowed();
   }
 

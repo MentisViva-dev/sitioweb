@@ -159,8 +159,12 @@ async function handleGetRoster(url: URL, env: Env): Promise<Response> {
 // =====================================================================
 
 function csvCell(v: unknown): string {
-  if (v == null) return '';
-  return `"${String(v).replace(/"/g, '""')}"`;
+  if (v == null) return '""';
+  let s = String(v);
+  // Anti CSV-injection: prefijar `'` si comienza con =, +, -, @, TAB o CR
+  // (Excel/Sheets ejecutan fórmulas en esos casos).
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return `"${s.replace(/"/g, '""')}"`;
 }
 
 async function handleExportRosterCsv(url: URL, env: Env): Promise<Response> {

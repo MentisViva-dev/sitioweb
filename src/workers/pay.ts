@@ -91,7 +91,7 @@ async function handleSubscribe(req: Request, env: Env, _ctx: ExecutionContext): 
   );
   if (!user) return Errors.unauthorized();
 
-  if (user.payment_pending && user.payment_pending) return Errors.paymentPending();
+  if (user.payment_pending) return Errors.paymentPending();
 
   // Validar plan
   const planName = String(body['plan'] ?? '').trim();
@@ -443,7 +443,10 @@ async function handleConfirmCardChange(req: Request, env: Env): Promise<Response
 async function handleRefund(req: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
   const session = await getSession(req, env);
   if (!session || !session.is_admin) return Errors.forbidden();
-  if (session.admin_role && !['superadmin', 'admin'].includes(session.admin_role)) return Errors.forbidden();
+  // Refund es destructivo: requerimos rol explícito superadmin/admin (denyByDefault).
+  // Antes existía el bug `if (session.admin_role && !allowed.includes)` que permitía pasar
+  // si admin_role venía undefined.
+  if (!session.admin_role || !['superadmin', 'admin'].includes(session.admin_role)) return Errors.forbidden();
 
   const body = await readBody(req);
   const orderId = parseInt(String(body['order_id'] ?? '0'), 10);

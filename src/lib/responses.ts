@@ -30,20 +30,26 @@ export interface ErrorBody {
 
 /** Resuelve el origen permitido para CORS según ENVIRONMENT */
 function corsOrigin(env: { SITE_URL?: string; ENVIRONMENT?: string }, requestOrigin: string | null): string {
-  // En producción: solo SITE_URL
+  const siteUrl = env.SITE_URL || 'https://mentisviva.cl';
+  // Producción: allowlist estricta = SITE_URL + variante con www.
+  // (Necesario para que requests con credentials funcionen desde www.mentisviva.cl,
+  // ya que un wildcard "*" no es válido junto a Allow-Credentials.)
   if (env.ENVIRONMENT === 'production') {
-    return env.SITE_URL || 'https://mentisviva.cl';
+    const prodAllowed = [siteUrl, 'https://www.mentisviva.cl'];
+    if (requestOrigin && prodAllowed.includes(requestOrigin)) return requestOrigin;
+    return siteUrl;
   }
   // En staging/dev: refleja el origin si está en allowlist
   const allowed = [
-    env.SITE_URL || 'https://mentisviva.cl',
+    siteUrl,
+    'https://www.mentisviva.cl',
     'https://staging.mentisviva.cl',
     'http://localhost:8788',
     'http://localhost:3000',
     'http://127.0.0.1:8788',
   ];
   if (requestOrigin && allowed.includes(requestOrigin)) return requestOrigin;
-  return env.SITE_URL || 'https://mentisviva.cl';
+  return siteUrl;
 }
 
 export function jsonOk<T extends Record<string, unknown>>(

@@ -26,6 +26,7 @@ import { verifyPassword, randomToken, jitter, DUMMY_PASSWORD_HASH } from '../lib
 import { rateLimitLogin } from '../lib/rate-limit';
 import { auditLog, AuditEvents } from '../lib/audit';
 import { nowISO } from '../lib/dates';
+import * as payWorker from './pay';
 
 export async function handle(req: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
@@ -49,7 +50,7 @@ export async function handle(req: Request, env: Env, _ctx: ExecutionContext): Pr
   if (path === '/api/admin/surveys' && method === 'GET') return handleSurveys(req, env);
   if (path === '/api/admin/audit-log' && method === 'GET') return handleAuditLog(req, env);
   if (path === '/api/admin/upload' && method === 'POST') return handleUpload(req, env, session.admin_id ?? 0);
-  if (path === '/api/admin/refund' && method === 'POST') return handleRefund(req, env);
+  if (path === '/api/admin/refund' && method === 'POST') return handleRefund(req, env, _ctx);
 
   return Errors.notFound();
 }
@@ -254,6 +255,18 @@ async function handleSubscribers(req: Request, env: Env): Promise<Response> {
   return jsonOk({ subscribers: subs, total: total?.n ?? 0, limit, offset });
 }
 
+/**
+ * Escapa una celda CSV evitando CSV-injection (Excel/Sheets ejecutan fórmulas
+ * cuando una celda comienza con =, +, -, @, TAB o CR). Prefijamos con `'` en
+ * esos casos. También duplicamos comillas dobles internas y envolvemos en " ".
+ */
+function csvCellSafe(v: unknown): string {
+  if (v == null) return '""';
+  let s = String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
 async function handleExportCsv(env: Env): Promise<Response> {
   const subs = await dbFetchAll<DbUser>(
     env.DB,
@@ -265,13 +278,16 @@ async function handleExportCsv(env: Env): Promise<Response> {
   const headers = Object.keys(subs[0] ?? { id: 0 });
   const csvLines: string[] = [headers.join(',')];
   for (const row of subs) {
-    csvLines.push(headers.map(h => `"${String((row as unknown as Record<string, unknown>)[h] ?? '').replace(/"/g, '""')}"`).join(','));
+    csvLines.push(
+      headers.map(h => csvCellSafe((row as unknown as Record<string, unknown>)[h])).join(','),
+    );
   }
   return new Response(csvLines.join('\n'), {
     status: 200,
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="subscribers_${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Cache-Control': 'no-store',
     },
   });
 }
@@ -358,12 +374,15 @@ async function handleUpload(req: Request, env: Env, adminId: number): Promise<Re
 // REFUND (delega a pay)
 // =====================================================================
 
-async function handleRefund(req: Request, env: Env): Promise<Response> {
-  // Forward to pay worker via service binding
+async function handleRefund(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  // Service bindings fueron eliminados (todos los workers viven en el mismo bundle).
+  // Re-construimos un request con la ruta /api/pay/refund e invocamos el handler local
+  // para reusar la lógica + chequeo de rol superadmin/admin que ya hace pay.handleRefund.
+  const body = await req.text();
   const newReq = new Request(`${env.API_URL}/api/pay/refund`, {
     method: 'POST',
     headers: req.headers,
-    body: await req.text(),
+    body,
   });
-  return env.PAY_WORKER.fetch(newReq as unknown as Parameters<typeof env.PAY_WORKER.fetch>[0]) as unknown as Response;
+  return payWorker.handle(newReq, env, ctx);
 }
