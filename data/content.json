@@ -197,6 +197,7 @@
     }
   },
   "editorial": {
+    "_order": ["slogan", "catalogo", "calugas", "countdown", "planes", "testimonios", "contacto"],
     "banner": {
       "titulo": "Editorial Mentis Viva",
       "subtitulo": "Donde la psicología y la literatura se encuentran",

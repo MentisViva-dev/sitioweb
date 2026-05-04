@@ -412,6 +412,36 @@
       ContentManager.toggleSection(document.querySelector('.testimonios-editorial'), 'editorial.testimonios._visible');
       ContentManager.toggleSection(document.querySelector('.contacto-editorial'), 'editorial.contacto._visible');
 
+      // Reorder modules según editorial._order (CMS controla el orden visual de las secciones).
+      // Independiente de _visibility: secciones ocultas mantienen display:none pero conservan posición.
+      const DEFAULT_EDITORIAL_ORDER = ['slogan', 'catalogo', 'calugas', 'countdown', 'planes', 'testimonios', 'contacto'];
+      const EDITORIAL_SELECTORS = {
+        slogan: '.slogan-section',
+        catalogo: '#catalogoSection',
+        calugas: '.calugas-section',
+        countdown: '#countdownSection',
+        planes: '#planes',
+        testimonios: '.testimonios-editorial',
+        contacto: '.contacto-editorial',
+      };
+      const orderRaw = (editorial && Array.isArray(editorial._order) && editorial._order.length)
+        ? editorial._order
+        : DEFAULT_EDITORIAL_ORDER;
+      // Sanitizar: filtrar nombres desconocidos y agregar al final los que falten
+      const seen = new Set();
+      const order = [];
+      orderRaw.forEach(name => {
+        if (EDITORIAL_SELECTORS[name] && !seen.has(name)) { order.push(name); seen.add(name); }
+      });
+      DEFAULT_EDITORIAL_ORDER.forEach(name => { if (!seen.has(name)) order.push(name); });
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        order.forEach(name => {
+          const sec = document.querySelector(EDITORIAL_SELECTORS[name]);
+          if (sec && sec.parentNode === mainEl) mainEl.appendChild(sec); // mueve, no clona
+        });
+      }
+
       initContactForm('contactFormEditorial');
       document.getElementById('calugasGrid')?.classList.add('mobile-carousel');
       document.getElementById('testimoniosEditorial')?.classList.add('mobile-carousel');

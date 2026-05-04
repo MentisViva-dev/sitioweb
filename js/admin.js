@@ -365,6 +365,71 @@ function populateEditorial() {
   if (e.planes) renderRepeater('editorial-planes', e.planes, renderPlan);
   if (e.testimonios) renderRepeater('editorial-testimonios', e.testimonios, renderTestimonio);
   renderCatalogoLibros();
+  renderOrderList();
+}
+
+// ---- Editorial: Reorder modules ----
+const DEFAULT_EDITORIAL_ORDER = ['slogan', 'catalogo', 'calugas', 'countdown', 'planes', 'testimonios', 'contacto'];
+const MODULE_LABELS = {
+  slogan: 'Filosofía / Slogan',
+  catalogo: 'Catálogo de libros',
+  calugas: 'Calugas (Profundidad, Historia, Curadores, Sorpresas)',
+  countdown: 'Cuenta regresiva',
+  planes: 'Suscripción a planes',
+  testimonios: 'Testimonios',
+  contacto: 'Contacto',
+};
+
+function getEditorialOrder() {
+  if (!siteData) return DEFAULT_EDITORIAL_ORDER.slice();
+  if (!siteData.editorial) siteData.editorial = {};
+  const cur = siteData.editorial._order;
+  if (!Array.isArray(cur) || !cur.length) return DEFAULT_EDITORIAL_ORDER.slice();
+  // Sanitizar: solo nombres válidos, sin duplicados, completando con los que falten
+  const seen = new Set();
+  const out = [];
+  cur.forEach(name => {
+    if (MODULE_LABELS[name] && !seen.has(name)) { out.push(name); seen.add(name); }
+  });
+  DEFAULT_EDITORIAL_ORDER.forEach(name => { if (!seen.has(name)) out.push(name); });
+  return out;
+}
+
+function renderOrderList() {
+  const list = document.getElementById('editorialOrderList');
+  if (!list) return;
+  const order = getEditorialOrder();
+  const vis = (siteData && siteData._visibility) || {};
+  list.innerHTML = order.map((name, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === order.length - 1;
+    const visKey = `editorial.${name}._visible`;
+    const visible = vis[visKey] !== false; // por defecto visible
+    const eyeIcon = visible ? 'fa-eye' : 'fa-eye-slash';
+    const eyeColor = visible ? 'var(--admin-primary)' : 'var(--admin-muted)';
+    return `<div class="order-row" data-module="${name}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:8px;margin-bottom:8px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;color:${eyeColor}" title="${visible ? 'Visible en la web' : 'Oculto en la web'}"><i class="fa-solid ${eyeIcon}"></i></span>
+      <span style="flex:1;font-weight:500">${esc(MODULE_LABELS[name] || name)}</span>
+      <button class="btn-edit" type="button" onclick="moveModule('${name}', -1)" ${isFirst ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''} title="Mover arriba"><i class="fa-solid fa-chevron-up"></i></button>
+      <button class="btn-edit" type="button" onclick="moveModule('${name}', 1)" ${isLast ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''} title="Mover abajo"><i class="fa-solid fa-chevron-down"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function moveModule(name, direction) {
+  if (!siteData) return;
+  if (!siteData.editorial) siteData.editorial = {};
+  const order = getEditorialOrder();
+  const idx = order.indexOf(name);
+  if (idx === -1) return;
+  const target = idx + direction;
+  if (target < 0 || target >= order.length) return;
+  const tmp = order[target];
+  order[target] = order[idx];
+  order[idx] = tmp;
+  siteData.editorial._order = order;
+  renderOrderList();
+  saveData();
 }
 
 function populateFundacion() {
