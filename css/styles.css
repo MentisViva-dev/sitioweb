@@ -53,7 +53,9 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
-  overflow-x: hidden;
+  /* NO ponemos overflow-x:hidden aquí. Combinarlo con body+overflow-x:hidden
+     rompe el scrolling context en Chrome/Safari desktop (mouse wheel y
+     touchpad dejan de scrollear). Solo body lo necesita. */
 }
 
 body {
@@ -63,7 +65,7 @@ body {
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: hidden; /* previene scroll horizontal accidental por overflow */
 }
 
 img {
@@ -1026,13 +1028,11 @@ html { scroll-behavior: smooth; }
    invertían en negro y se veía mal. */
 html { color-scheme: light; }
 
-/* Prevent horizontal overflow universal — atajo para mobile.
-   overscroll-behavior-y: contain evita que pull-to-refresh accidental
-   en Chrome Android refresque la página cuando el usuario hace scroll
-   muy rápido al inicio. */
-html, body {
+/* overscroll-behavior solo en body — en html rompía el scroll global.
+   contain evita que pull-to-refresh refresque la página accidentalmente
+   en Chrome Android, sin afectar el scroll normal del documento. */
+body {
   max-width: 100%;
-  overflow-x: hidden;
   overscroll-behavior-y: contain;
 }
 
