@@ -37,12 +37,13 @@
     }
 
     const cat = ContentManager.get('editorial.catalogo');
-    const visible = ContentManager.get('_meta.editorial.catalogo._visible');
+    // Visibilidad controlada por el CMS (sistema unificado _visibility)
+    const visible = ContentManager.isVisible('editorial.catalogo._visible');
 
     const seccion = document.getElementById('catalogoSection');
     if (!seccion) return;
 
-    if (visible === false) {
+    if (!visible) {
       seccion.style.display = 'none';
       return;
     }

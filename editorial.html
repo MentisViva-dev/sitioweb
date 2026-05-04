@@ -301,8 +301,10 @@
         initCountdown(editorial.countdown.fechaObjetivo);
 
         // Planes - check if user is logged in (only if auth is enabled)
+        // auth.enabled vive en _meta (controla login/registro globalmente)
+        // planes._visible vive en _visibility (sistema CMS unificado)
         const authEnabled = ContentManager.get('_meta.auth.enabled') !== false;
-        const planesVisible = ContentManager.get('_meta.editorial.planes._visible') !== false;
+        const planesVisible = ContentManager.isVisible('editorial.planes._visible');
         const planesGrid = document.getElementById('planesGrid');
         let userSession = null;
         if (authEnabled) {

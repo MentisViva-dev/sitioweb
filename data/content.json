@@ -573,8 +573,9 @@
     "clinica.fraseCompromiso._visible": true,
     "editorial.slogan._visible": true,
     "editorial.calugas._visible": true,
-    "editorial.countdown._visible": true,
-    "editorial.planes._visible": true,
+    "editorial.catalogo._visible": true,
+    "editorial.countdown._visible": false,
+    "editorial.planes._visible": false,
     "editorial.testimonios._visible": true,
     "editorial.contacto._visible": true,
     "fundacion.mision._visible": true,
@@ -585,8 +586,6 @@
     "fundacion.cta._visible": true
   },
   "_meta": {
-    "editorial.catalogo._visible": true,
-    "auth.enabled": false,
-    "editorial.planes._visible": false
+    "auth.enabled": false
   }
 }
