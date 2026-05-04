@@ -237,8 +237,19 @@
 
       const clinica = ContentManager.get('clinica');
       if (clinica) {
-        // Banner
-        document.getElementById('bannerTitle').textContent = clinica.banner.titulo;
+        // Banner — fuerza quiebre antes de "Mentis Viva" para que siempre quede en 2 líneas:
+        //   Centro Psicológico
+        //   Mentis Viva
+        const bannerTitleEl = document.getElementById('bannerTitle');
+        const titulo = clinica.banner.titulo || '';
+        if (/\sMentis\s+Viva\b/i.test(titulo)) {
+          // textContent primero para sanitizar, luego reemplazo seguro al innerHTML
+          bannerTitleEl.textContent = titulo;
+          const safe = bannerTitleEl.textContent; // ya escapado
+          bannerTitleEl.innerHTML = safe.replace(/\sMentis\s+Viva\b/i, '<br>Mentis Viva');
+        } else {
+          bannerTitleEl.textContent = titulo;
+        }
         document.getElementById('bannerSubtitle').textContent = clinica.banner.subtitulo;
         const bannerEl = document.getElementById('clinicaBanner');
         if (clinica.banner.backgroundImage) {
