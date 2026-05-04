@@ -77,29 +77,55 @@ function initContactForm(formId) {
     recent.push(Date.now());
     sessionStorage.setItem('mv_form_times', JSON.stringify(recent));
 
-    // Submit to server
+    // reCAPTCHA token (opcional — si está cargado en la página)
+    let recaptchaToken = '';
     try {
-      const fd = new FormData();
-      fd.append('form_type', formId);
-      Object.entries(data).forEach(([k, v]) => fd.append(k, v));
-      fd.append('_hp_field', honeypot.value);
-      fd.append('_load_time', loadTime.toString());
+      if (typeof grecaptcha !== 'undefined' && grecaptcha.execute) {
+        recaptchaToken = await new Promise((resolve) => {
+          grecaptcha.ready(() => {
+            grecaptcha.execute('6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0', { action: 'contact' })
+              .then(resolve, () => resolve(''));
+          });
+        });
+      }
+    } catch (_) {}
 
-      const res = await fetch('api/forms.php', { method: 'POST', body: fd });
-      const result = await res.json();
+    // Submit to Cloudflare Worker (api.mentisviva.cl)
+    // El backend espera: nombre, email, telefono, mensaje, source, website (honeypot), recaptcha_token
+    try {
+      const payload = {
+        nombre: data.nombre || '',
+        email: data.email || '',
+        telefono: data.telefono || '',
+        mensaje: data.mensaje || data.consulta || data.tipoConsulta || '',
+        source: formId,
+        website: honeypot.value, // backend espera "website" como honeypot
+        recaptcha_token: recaptchaToken,
+      };
+      // Mantener cualquier campo extra del formulario sin sobreescribir los anteriores
+      Object.entries(data).forEach(([k, v]) => {
+        if (!(k in payload) && k !== '_hp_field') payload[k] = v;
+      });
 
-      if (result.ok) {
-        showToast('Mensaje enviado correctamente. Nos pondremos en contacto pronto.', 'success');
+      const res = await fetch('https://api.mentisviva.cl/api/forms/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json().catch(() => ({}));
+
+      if (res.ok && result.ok !== false) {
+        showToast(result.message || 'Mensaje enviado correctamente. Nos pondremos en contacto pronto.', 'success');
         form.reset();
       } else {
-        throw new Error(result.error || 'Error del servidor');
+        throw new Error(result.error || `HTTP ${res.status}`);
       }
     } catch (e) {
-      // Fallback to localStorage if server unreachable
+      // Fallback offline: guarda en localStorage para no perder el mensaje del usuario
       const submissions = JSON.parse(localStorage.getItem('mentisviva_submissions') || '[]');
       submissions.push({ ...data, timestamp: new Date().toISOString(), form: formId });
       localStorage.setItem('mentisviva_submissions', JSON.stringify(submissions));
-      showToast('Mensaje guardado. Se enviará cuando haya conexión.', 'success');
+      showToast('No pudimos enviar tu mensaje (sin conexión). Quedó guardado y reintentaremos pronto.', 'success');
       form.reset();
     }
   });

@@ -3,26 +3,24 @@
 # Docs: https://developers.cloudflare.com/pages/configuration/redirects/
 # Reglas en orden: Pages elige la primera coincidencia.
 # ============================================================================
+#
+# IMPORTANTE — NO redirigir /pagina → /pagina.html
+# ----------------------------------------------------
+# Cloudflare Pages YA hace 308 automático /pagina.html → /pagina (clean URL).
+# Si agregamos /pagina → /pagina.html aquí, queda un LOOP infinito (browser
+# pide /pagina, lo redirigimos a .html, Pages lo manda de vuelta a clean).
+# Eso fue lo que rompió Safari iOS con "demasiadas redirecciones".
+# Las URLs canónicas finales son SIN .html: /centro, /editorial, /fundacion.
 
-# --- Clean URLs (sin .html) — 301 a la URL canónica con .html ---
-# Si en el futuro se prefiere lo contrario (ocultar .html), invertir estas
-# reglas y actualizar todos los <link rel="canonical">.
-/centro          /centro.html         301
-/editorial       /editorial.html      301
-/fundacion       /fundacion.html      301
-/recursos        /recursos.html       301
-/terminos        /terminos.html       301
-/cuenta          /cuenta.html         301
-/tracking        /tracking.html       301
-/encuesta        /encuesta.html       301
+# --- Errores comunes / aliases que apuntan a destino distinto ---
+/index           /                                301
+/home            /                                301
+/inicio          /                                301
+/contacto        /centro#formularioSection        301
+/blog            /recursos                        301
 
-# --- Errores comunes ---
-/index           /                    301
-/home            /                    301
-/inicio          /                    301
-/contacto        /centro.html#formularioSection 301
-/blog            /recursos.html       301
-/admin           /unidos.html         302
-/cms             /unidos.html         302
+# --- Aliases del CMS (302 porque pueden cambiar) ---
+/admin           /unidos                          302
+/cms             /unidos                          302
 
 # --- 404 fallback (Pages lo maneja por sí solo si existe 404.html) ---
