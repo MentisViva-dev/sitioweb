@@ -10,24 +10,30 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 300000; // 5 min lockout
 let lockoutUntil = parseInt(sessionStorage.getItem('mv_lockout') || '0');
 
-// SHA-256 hash for credential comparison
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+// Cloudflare Workers API base for the admin endpoints
+const API_BASE = 'https://api.mentisviva.cl/api/admin';
+
+// Stub for shipping endpoints (no Worker equivalent yet)
+function shippingNotImplemented() {
+  showAdminToast('Esta funcionalidad de envíos requiere endpoints adicionales en el backend Worker. Pendiente de implementación.');
 }
 
 // ---- Init ----
-document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('mentisviva_admin_auth') === 'true') {
-    // Restore auth hashes from session
-    authUserHash = sessionStorage.getItem('mv_uh') || '';
-    authPassHash = sessionStorage.getItem('mv_ph') || '';
-    if (!authUserHash || !authPassHash) {
-      // Session expired, force re-login
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check session by hitting /content; cookie is sent via credentials: 'include'.
+  // localStorage flag is only used as a UX hint to avoid the login screen flashing.
+  try {
+    const res = await fetch(`${API_BASE}/content`, { credentials: 'include' });
+    if (res.ok) {
+      localStorage.setItem('mentisviva_admin_auth', 'true');
+      showAdmin();
+    } else {
+      // 401 / not authenticated
       localStorage.removeItem('mentisviva_admin_auth');
-      return;
     }
-    showAdmin();
+  } catch (e) {
+    // Network error - clear UX flag and show login
+    localStorage.removeItem('mentisviva_admin_auth');
   }
 });
 
@@ -44,19 +50,28 @@ async function login() {
 
   const user = document.getElementById('loginUser').value.trim();
   const pass = document.getElementById('loginPass').value;
-  const userHash = await sha256(user);
-  const passHash = await sha256(pass);
 
-  // Verify credentials server-side
-  const fd = new FormData();
-  fd.append('u', userHash);
-  fd.append('p', passHash);
-  fd.append('check', '1');
+  // Verify credentials server-side via Worker; cookie comes back as Set-Cookie
+  const body = new URLSearchParams();
+  body.append('username', user);
+  body.append('password', pass);
+
   let authOk = false;
   try {
-    const res = await fetch('api/save.php', { method: 'POST', body: fd });
-    const data = await res.json();
-    authOk = !!data.ok;
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+    if (res.ok) {
+      // Some workers return { ok: true }, but a 200 status is sufficient
+      authOk = true;
+      try {
+        const data = await res.json();
+        if (data && data.ok === false) authOk = false;
+      } catch (_) { /* ignore non-JSON success */ }
+    }
   } catch(e) {
     authOk = false;
   }
@@ -64,11 +79,6 @@ async function login() {
     loginAttempts = 0;
     sessionStorage.removeItem('mv_login_attempts');
     sessionStorage.removeItem('mv_lockout');
-    // Store hashes in session for publish auth
-    authUserHash = userHash;
-    authPassHash = passHash;
-    sessionStorage.setItem('mv_uh', userHash);
-    sessionStorage.setItem('mv_ph', passHash);
     localStorage.setItem('mentisviva_admin_auth', 'true');
     showAdmin();
   } else {
@@ -86,12 +96,11 @@ async function login() {
   }
 }
 
-function logout() {
+async function logout() {
+  try {
+    await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' });
+  } catch (e) { /* ignore */ }
   localStorage.removeItem('mentisviva_admin_auth');
-  sessionStorage.removeItem('mv_uh');
-  sessionStorage.removeItem('mv_ph');
-  authUserHash = '';
-  authPassHash = '';
   location.reload();
 }
 
@@ -113,8 +122,14 @@ async function loadData() {
     siteData = JSON.parse(stored);
   } else {
     try {
-      const res = await fetch('data/content.json');
-      siteData = await res.json();
+      // Prefer the authoritative copy from the Worker; fall back to static JSON
+      const res = await fetch(`${API_BASE}/content`, { credentials: 'include' });
+      if (res.ok) {
+        siteData = await res.json();
+      } else {
+        const staticRes = await fetch('data/content.json');
+        siteData = await staticRes.json();
+      }
     } catch (e) {
       console.error('Error loading data:', e);
       siteData = { global: {}, landing: {}, clinica: {}, editorial: {}, fundacion: {} };
@@ -130,7 +145,7 @@ function saveData() {
     showAdminToast(`Cambios guardados (${sizeMB}MB usado)`);
   } catch (e) {
     if (e.name === 'QuotaExceededError' || e.code === 22) {
-      showAdminToast('Error: almacenamiento lleno. Reduce el tama\u00f1o de las im\u00e1genes o elimina alguna.');
+      showAdminToast('Error: almacenamiento lleno. Reduce el tamaño de las imágenes o elimina alguna.');
     } else {
       showAdminToast('Error al guardar: ' + e.message);
     }
@@ -167,7 +182,7 @@ function importData(event) {
       initVisibilityToggles();
       showAdminToast('Contenido importado correctamente');
     } catch {
-      showAdminToast('Error: archivo JSON inv\u00e1lido');
+      showAdminToast('Error: archivo JSON inválido');
     }
   };
   reader.readAsText(file);
@@ -177,18 +192,18 @@ function importData(event) {
 // ---- Navigation ----
 const pageLabels = {
   'dashboard': 'Dashboard',
-  'landing': 'P\u00e1gina Principal',
+  'landing': 'Página Principal',
   'recursos': 'Recursos',
-  'terminos': 'T\u00e9rminos y Condiciones',
+  'terminos': 'Términos y Condiciones',
   'subscribers': 'Suscriptores',
   'clinica': 'Centro',
   'editorial': 'Editorial',
-  'fundacion': 'Fundaci\u00f3n',
+  'fundacion': 'Fundación',
   'form-centro': 'Formularios Centro',
   'form-editorial': 'Formularios Editorial',
-  'form-fundacion': 'Formularios Fundaci\u00f3n',
-  'global': 'Configuraci\u00f3n Global',
-  'shipping': 'N\u00f3mina de Env\u00edo',
+  'form-fundacion': 'Formularios Fundación',
+  'global': 'Configuración Global',
+  'shipping': 'Nómina de Envío',
   'surveys': 'Encuestas'
 };
 
@@ -245,7 +260,7 @@ function saveCurrentPage() {
   collectVisibilityToggles();
   const fn = saveFunctions[currentPage];
   if (fn) fn();
-  else showAdminToast('No hay cambios que guardar en esta secci\u00f3n');
+  else showAdminToast('No hay cambios que guardar en esta sección');
 }
 
 // ---- Populate Forms ----
@@ -597,14 +612,14 @@ function handleFileUpload(input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > MAX_IMAGE_SIZE) {
-    showAdminToast('La imagen excede el l\u00edmite de 6MB');
+    showAdminToast('La imagen excede el límite de 6MB');
     input.value = '';
     return;
   }
   const targetId = input.getAttribute('data-for');
 
   // Try server upload first, fallback to base64
-  if (authUserHash && authPassHash && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
     uploadToServer(file, targetId);
   } else {
     // Local fallback: base64
@@ -619,34 +634,37 @@ function handleFileUpload(input) {
 function uploadToServer(file, targetId) {
   showAdminToast('Comprimiendo y subiendo...');
 
-  // Compress in browser, then send as base64 string (no file upload)
-  compressImage(file, 1200, 0.75, (base64str) => {
+  // Compress in browser, then upload as a file via the Worker
+  compressImageToBlob(file, 1200, 0.75, (blob) => {
     showAdminToast('Subiendo al servidor...');
     const formData = new FormData();
-    formData.append('u', authUserHash);
-    formData.append('p', authPassHash);
-    formData.append('img', base64str);
+    formData.append('file', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
 
-    fetch('api/save.php', {
+    fetch(`${API_BASE}/upload`, {
       method: 'POST',
+      credentials: 'include',
       body: formData
     })
     .then(r => r.json())
     .then(result => {
-      if (result.ok) {
-        setVal(targetId, result.url);
-        updateImagePreview(targetId, result.url);
+      if (result.ok || result.url) {
+        const url = result.url || result.location;
+        setVal(targetId, url);
+        updateImagePreview(targetId, url);
         const origKB = Math.round(file.size / 1024);
-        const compKB = Math.round(result.s / 1024);
-        showAdminToast(`Imagen subida (${origKB}KB \u2192 ${compKB}KB)`);
+        const compKB = Math.round((result.s || blob.size) / 1024);
+        showAdminToast(`Imagen subida (${origKB}KB → ${compKB}KB)`);
       } else {
         showAdminToast('Error: ' + (result.error || 'desconocido'));
       }
     })
     .catch(() => {
-      showAdminToast('Error de conexi\u00f3n. Guardando local...');
-      setVal(targetId, base64str);
-      updateImagePreview(targetId, base64str);
+      // On failure, fall back to base64-in-content
+      compressImage(file, 1200, 0.75, (base64str) => {
+        showAdminToast('Error de conexión. Guardando local...');
+        setVal(targetId, base64str);
+        updateImagePreview(targetId, base64str);
+      });
     });
   });
 }
@@ -718,25 +736,20 @@ let cachedSubmissions = [];
 
 async function loadSubmissionsFromServer() {
   try {
-    const fd = new FormData();
-    fd.append('action', 'list_submissions');
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    const res = await fetch('api/forms.php', { method: 'POST', body: fd });
+    const res = await fetch(`${API_BASE}/forms`, { credentials: 'include' });
     const data = await res.json();
-    if (data.ok) {
-      cachedSubmissions = (data.submissions || []).map(s => ({
-        id: s.id,
-        nombre: s.nombre,
-        email: s.email,
-        telefono: s.telefono,
-        tipoConsulta: s.tipo_consulta,
-        mensaje: s.comment || s.mensaje,
-        timestamp: s.created_at,
-        form: s.form_type,
-        is_read: !!parseInt(s.is_read)
-      }));
-    }
+    const list = data.submissions || data.forms || data.items || (Array.isArray(data) ? data : []);
+    cachedSubmissions = list.map(s => ({
+      id: s.id,
+      nombre: s.nombre,
+      email: s.email,
+      telefono: s.telefono,
+      tipoConsulta: s.tipo_consulta || s.tipoConsulta,
+      mensaje: s.comment || s.mensaje,
+      timestamp: s.created_at || s.createdAt || s.timestamp,
+      form: s.form_type || s.formType || s.form,
+      is_read: !!parseInt(s.is_read || s.isRead || 0)
+    }));
   } catch(e) { console.error('Error loading submissions:', e); }
 }
 
@@ -847,12 +860,10 @@ function openSubmission(timestamp) {
 
   // Mark as read on server
   if (sub.id && !sub.is_read) {
-    const fd = new FormData();
-    fd.append('action', 'mark_read');
-    fd.append('id', sub.id);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    fetch('api/forms.php', { method: 'POST', body: fd });
+    fetch(`${API_BASE}/forms/${encodeURIComponent(sub.id)}/read`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(() => {});
     sub.is_read = true;
   }
   const readStatus = getReadStatus();
@@ -864,7 +875,7 @@ function openSubmission(timestamp) {
   let fields = '';
   if (sub.nombre) fields += modalField('Nombre', sub.nombre);
   if (sub.email) fields += modalField('Email', sub.email, `<button class="copy-btn" onclick="copyText('${esc(sub.email)}', this)"><i class="fa-solid fa-copy"></i> Copiar</button>`);
-  if (sub.telefono) fields += modalField('Tel\u00e9fono', sub.telefono, `<button class="copy-btn" onclick="copyText('${esc(sub.telefono)}', this)"><i class="fa-solid fa-copy"></i> Copiar</button>`);
+  if (sub.telefono) fields += modalField('Teléfono', sub.telefono, `<button class="copy-btn" onclick="copyText('${esc(sub.telefono)}', this)"><i class="fa-solid fa-copy"></i> Copiar</button>`);
   if (sub.tipoConsulta) fields += modalField('Tipo de consulta', sub.tipoConsulta);
   if (sub.mensaje) fields += `<div class="modal-field"><div class="modal-field-label">Mensaje</div><div class="modal-field-value message">${esc(sub.mensaje)}</div></div>`;
   fields += modalField('Fecha', date);
@@ -875,7 +886,7 @@ function openSubmission(timestamp) {
   const isRead = readStatus[timestamp];
   actions.innerHTML = `
     <button class="btn-admin btn-admin-outline btn-admin-sm" onclick="toggleReadStatus('${esc(timestamp)}')">
-      <i class="fa-solid ${isRead ? 'fa-envelope' : 'fa-envelope-open'}"></i> ${isRead ? 'Marcar como no le\u00eddo' : 'Marcar como le\u00eddo'}
+      <i class="fa-solid ${isRead ? 'fa-envelope' : 'fa-envelope-open'}"></i> ${isRead ? 'Marcar como no leído' : 'Marcar como leído'}
     </button>
     <button class="btn-admin btn-admin-sm" style="background:#E74C3C;color:white;margin-left:8px" onclick="deleteSubmission(${sub.id || 0}, '${esc(timestamp)}')">
       <i class="fa-solid fa-trash"></i> Borrar
@@ -895,15 +906,13 @@ function closeModal() {
 }
 
 async function deleteSubmission(id, timestamp) {
-  if (!confirm('\u00bfEliminar este mensaje? Esta acci\u00f3n no se puede deshacer.')) return;
+  if (!confirm('¿Eliminar este mensaje? Esta acción no se puede deshacer.')) return;
   if (id) {
-    const fd = new FormData();
-    fd.append('action', 'delete_submission');
-    fd.append('id', id);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
     try {
-      await fetch('api/forms.php', { method: 'POST', body: fd });
+      await fetch(`${API_BASE}/forms/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
     } catch(e) {}
   }
   // Remove from cache
@@ -918,12 +927,10 @@ function toggleReadStatus(timestamp) {
   if (sub && sub.id) {
     sub.is_read = !sub.is_read;
     if (sub.is_read) {
-      const fd = new FormData();
-      fd.append('action', 'mark_read');
-      fd.append('id', sub.id);
-      fd.append('u', authUserHash);
-      fd.append('p', authPassHash);
-      fetch('api/forms.php', { method: 'POST', body: fd });
+      fetch(`${API_BASE}/forms/${encodeURIComponent(sub.id)}/read`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(() => {});
     }
   }
   closeModal();
@@ -967,8 +974,8 @@ function renderTestimonio(t, i) {
 function renderPilar(p, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
-    <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(p.titulo)}" data-key="titulo"></div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(p.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Título</label><input value="${esc(p.titulo)}" data-key="titulo"></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(p.descripcion)}</textarea></div>
   </div>`;
 }
 
@@ -976,10 +983,10 @@ function renderServicio(s, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(s.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(s.titulo)}" data-key="titulo"></div>
       <div class="admin-field"><label>Icono FA</label><input value="${esc(s.icono)}" data-key="icono"></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(s.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(s.descripcion)}</textarea></div>
     <div class="admin-field"><label><input type="checkbox" ${s.destacado ? 'checked' : ''} data-key="destacado"> Destacado</label></div>
   </div>`;
 }
@@ -988,14 +995,14 @@ function renderLandingSeccion(s, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(s.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(s.titulo)}" data-key="titulo"></div>
       <div class="admin-field"><label>URL</label><input value="${esc(s.url)}" data-key="url"></div>
     </div>
     <div class="admin-field-row">
       <div class="admin-field"><label>Icono FA</label><input value="${esc(s.icono)}" data-key="icono"></div>
       <div class="admin-field"><label>Color (teal/green/celeste)</label><input value="${esc(s.color)}" data-key="color"></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(s.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(s.descripcion)}</textarea></div>
   </div>`;
 }
 
@@ -1003,10 +1010,10 @@ function renderCaluga(c, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(c.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(c.titulo)}" data-key="titulo"></div>
       <div class="admin-field"><label>Icono FA</label><input value="${esc(c.icono)}" data-key="icono"></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(c.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(c.descripcion)}</textarea></div>
   </div>`;
 }
 
@@ -1019,10 +1026,10 @@ function renderPlan(p, i) {
     </div>
     <div class="admin-field-row">
       <div class="admin-field"><label>Periodo</label><input value="${esc(p.periodo)}" data-key="periodo"></div>
-      <div class="admin-field"><label>Bot\u00f3n CTA</label><input value="${esc(p.ctaTexto)}" data-key="ctaTexto"></div>
+      <div class="admin-field"><label>Botón CTA</label><input value="${esc(p.ctaTexto)}" data-key="ctaTexto"></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><input value="${esc(p.descripcion)}" data-key="descripcion"></div>
-    <div class="admin-field"><label>Beneficios (uno por l\u00ednea)</label><textarea data-key="beneficios">${p.beneficios ? p.beneficios.join('\n') : ''}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><input value="${esc(p.descripcion)}" data-key="descripcion"></div>
+    <div class="admin-field"><label>Beneficios (uno por línea)</label><textarea data-key="beneficios">${p.beneficios ? p.beneficios.join('\n') : ''}</textarea></div>
     <div class="admin-field"><label><input type="checkbox" ${p.destacado ? 'checked' : ''} data-key="destacado"> Destacado</label></div>
   </div>`;
 }
@@ -1031,10 +1038,10 @@ function renderValor(v, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(v.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(v.titulo)}" data-key="titulo"></div>
       <div class="admin-field"><label>Icono FA</label><input value="${esc(v.icono)}" data-key="icono"></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(v.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(v.descripcion)}</textarea></div>
   </div>`;
 }
 
@@ -1049,7 +1056,7 @@ function renderStat(s, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>N\u00famero</label><input value="${esc(s.numero)}" data-key="numero"></div>
+      <div class="admin-field"><label>Número</label><input value="${esc(s.numero)}" data-key="numero"></div>
       <div class="admin-field"><label>Etiqueta</label><input value="${esc(s.label)}" data-key="label"></div>
     </div>
   </div>`;
@@ -1059,11 +1066,11 @@ function renderCharla(c, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(c.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(c.titulo)}" data-key="titulo"></div>
       <div class="admin-field"><label>Fecha</label><input type="date" value="${c.fecha}" data-key="fecha"></div>
     </div>
     <div class="admin-field"><label>Lugar</label><input value="${esc(c.lugar)}" data-key="lugar"></div>
-    <div class="admin-field"><label>Descripci\u00f3n</label><textarea data-key="descripcion">${esc(c.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción</label><textarea data-key="descripcion">${esc(c.descripcion)}</textarea></div>
     <div class="admin-field"><label>URL Imagen</label><input value="${esc(c.imagen)}" data-key="imagen"></div>
   </div>`;
 }
@@ -1074,10 +1081,10 @@ function renderRecurso(r, i) {
   return `<div class="repeater-item" data-index="${i}">
     <button class="remove-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     <div class="admin-field-row">
-      <div class="admin-field"><label>T\u00edtulo</label><input value="${esc(r.titulo)}" data-key="titulo"></div>
-      <div class="admin-field"><label>Categor\u00eda</label><input value="${esc(r.categoria)}" data-key="categoria" placeholder="Libro, Art\u00edculo, Gu\u00eda..."></div>
+      <div class="admin-field"><label>Título</label><input value="${esc(r.titulo)}" data-key="titulo"></div>
+      <div class="admin-field"><label>Categoría</label><input value="${esc(r.categoria)}" data-key="categoria" placeholder="Libro, Artículo, Guía..."></div>
     </div>
-    <div class="admin-field"><label>Descripci\u00f3n (usa Enter para p\u00e1rrafos)</label><textarea data-key="descripcion" rows="4">${esc(r.descripcion)}</textarea></div>
+    <div class="admin-field"><label>Descripción (usa Enter para párrafos)</label><textarea data-key="descripcion" rows="4">${esc(r.descripcion)}</textarea></div>
     <div class="admin-field-row">
       <div class="admin-field"><label>Fecha</label><input type="date" value="${r.fecha || ''}" data-key="fecha"></div>
       <div class="admin-field"><label>URL del recurso</label><input value="${esc(r.url)}" data-key="url" placeholder="https://..."></div>
@@ -1100,7 +1107,7 @@ function renderRecurso(r, i) {
 async function uploadRecursoImage(input, imgFieldId, previewId) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > MAX_IMAGE_SIZE) { showAdminToast('Imagen muy grande (m\u00e1x 6MB)'); return; }
+  if (file.size > MAX_IMAGE_SIZE) { showAdminToast('Imagen muy grande (máx 6MB)'); return; }
 
   // Compress image
   const canvas = document.createElement('canvas');
@@ -1115,26 +1122,29 @@ async function uploadRecursoImage(input, imgFieldId, previewId) {
     }
     canvas.width = w; canvas.height = h;
     ctx.drawImage(img, 0, 0, w, h);
-    const b64 = canvas.toDataURL('image/jpeg', 0.8);
 
-    // Upload to server
-    const fd = new FormData();
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    fd.append('img', b64);
-    try {
-      const res = await fetch('api/save.php', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.ok && data.url) {
-        document.getElementById(imgFieldId).value = data.url;
-        document.getElementById(previewId).innerHTML = '<img src="' + data.url + '" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">';
-        showAdminToast('Imagen subida');
-      } else {
-        showAdminToast('Error: ' + (data.error || 'No se pudo subir'));
+    canvas.toBlob(async (blob) => {
+      const fd = new FormData();
+      fd.append('file', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+      try {
+        const res = await fetch(`${API_BASE}/upload`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const data = await res.json();
+        const url = data.url || data.location;
+        if ((data.ok || url) && url) {
+          document.getElementById(imgFieldId).value = url;
+          document.getElementById(previewId).innerHTML = '<img src="' + url + '" style="max-height:120px;border-radius:8px;border:1px solid var(--admin-border)">';
+          showAdminToast('Imagen subida');
+        } else {
+          showAdminToast('Error: ' + (data.error || 'No se pudo subir'));
+        }
+      } catch(e) {
+        showAdminToast('Error de conexión');
       }
-    } catch(e) {
-      showAdminToast('Error de conexi\u00f3n');
-    }
+    }, 'image/jpeg', 0.8);
   };
   img.src = URL.createObjectURL(file);
 }
@@ -1274,7 +1284,7 @@ async function populateDashboard() {
     const el = document.getElementById('dash-unread-' + page);
     const label = document.getElementById('dash-unread-' + page + '-label');
     if (el) el.textContent = pageSubs.length;
-    if (label) label.textContent = unread > 0 ? unread + ' sin leer' : 'todo le\u00eddo';
+    if (label) label.textContent = unread > 0 ? unread + ' sin leer' : 'todo leído';
     if (label) label.style.color = unread > 0 ? 'var(--admin-danger)' : 'var(--admin-green)';
   });
 
@@ -1312,7 +1322,7 @@ async function populateDashboard() {
   if (breakdownEl) {
     const sorted = Object.entries(pageBreakdown).sort((a, b) => b[1] - a[1]);
     if (sorted.length === 0) {
-      breakdownEl.innerHTML = '<p style="color:var(--admin-muted)">A\u00fan no hay datos de visitas.</p>';
+      breakdownEl.innerHTML = '<p style="color:var(--admin-muted)">Aún no hay datos de visitas.</p>';
     } else {
       const max = sorted[0][1];
       breakdownEl.innerHTML = sorted.map(([page, count]) => {
@@ -1335,7 +1345,7 @@ async function populateDashboard() {
         <p style="font-size:0.82rem;color:var(--admin-muted);margin-top:8px">Para ver el dashboard completo, visita <a href="https://analytics.google.com" target="_blank" style="color:var(--admin-primary)">analytics.google.com</a></p>`;
     } else {
       gaStatus.innerHTML = `<p style="color:var(--admin-muted)"><i class="fa-solid fa-exclamation-circle"></i> Google Analytics no configurado.</p>
-        <p style="font-size:0.82rem;color:var(--admin-muted);margin-top:8px">Configura tu ID de medici\u00f3n en <strong>Configuraci\u00f3n Global &gt; Google Analytics</strong> para obtener datos reales de visitas.</p>`;
+        <p style="font-size:0.82rem;color:var(--admin-muted);margin-top:8px">Configura tu ID de medición en <strong>Configuración Global &gt; Google Analytics</strong> para obtener datos reales de visitas.</p>`;
     }
   }
 }
@@ -1356,9 +1366,7 @@ function savePageVisibility() {
 }
 
 // ---- Publish ----
-// Auth hashes stored in memory from login session (not hardcoded tokens)
-let authUserHash = '';
-let authPassHash = '';
+// Cookie auth via /api/admin/login. No more in-memory hashes.
 
 async function publishContent() {
   if (!siteData) {
@@ -1375,53 +1383,70 @@ async function publishContent() {
   const sizeMB = (json.length / 1024 / 1024).toFixed(2);
 
   if (json.length > 10 * 1024 * 1024) {
-    showAdminToast('Contenido muy grande (' + sizeMB + 'MB). Reduce im\u00e1genes.');
+    showAdminToast('Contenido muy grande (' + sizeMB + 'MB). Reduce imágenes.');
     return;
   }
 
   showAdminToast('Publicando...');
 
   try {
-    const formData = new FormData();
-    formData.append('u', authUserHash);
-    formData.append('p', authPassHash);
-    formData.append('c', json);
-
-    const res = await fetch('api/save.php', {
+    // 1. Save the full content payload
+    const saveRes = await fetch(`${API_BASE}/save`, {
       method: 'POST',
-      body: formData
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: json
     });
 
-    const result = await res.json();
+    let saveResult = {};
+    try { saveResult = await saveRes.json(); } catch(_) {}
+    if (!saveRes.ok || saveResult.ok === false || saveResult.success === false) {
+      showAdminToast('Error al guardar: ' + (saveResult.error || saveRes.status));
+      return;
+    }
 
-    if (res.ok && (result.success || result.ok)) {
+    // 2. Trigger publish to KV / Pages
+    const pubRes = await fetch(`${API_BASE}/publish`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+    let pubResult = {};
+    try { pubResult = await pubRes.json(); } catch(_) {}
+
+    if (pubRes.ok && pubResult.ok !== false && pubResult.success !== false) {
       showAdminToast('Publicado en mentisviva.cl (' + sizeMB + 'MB)');
     } else {
-      // Fallback: download file manually
-      showAdminToast('Error del servidor: ' + (result.error || 'desconocido') + '. Descargando archivo...');
+      showAdminToast('Error al publicar: ' + (pubResult.error || pubRes.status) + '. Descargando archivo...');
       downloadContentJson(json);
       showPublishInstructions();
     }
   } catch (e) {
-    // Server not available (local dev without PHP)
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:') {
-      showAdminToast('Publicaci\u00f3n autom\u00e1tica solo funciona en el hosting (mentisviva.cl). Descargando archivo...');
+      showAdminToast('Publicación automática solo funciona en el hosting (mentisviva.cl). Descargando archivo...');
       downloadContentJson(json);
       showPublishInstructions();
     } else {
-      showAdminToast('Error de conexi\u00f3n. Reintentando...');
-      // Retry once
+      showAdminToast('Error de conexión. Reintentando...');
       try {
-        const fd2 = new FormData(); fd2.append('u', authUserHash); fd2.append('p', authPassHash); fd2.append('c', json);
-        const res2 = await fetch('api/save.php', { method: 'POST', body: fd2 });
-        const result2 = await res2.json();
-        if (res2.ok && (result2.success || result2.ok)) {
+        const saveRes2 = await fetch(`${API_BASE}/save`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: json
+        });
+        const pubRes2 = await fetch(`${API_BASE}/publish`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (saveRes2.ok && pubRes2.ok) {
           showAdminToast('Publicado en mentisviva.cl (' + sizeMB + 'MB)');
         } else {
-          showAdminToast('Error: ' + (result2.error || 'desconocido'));
+          showAdminToast('Error al publicar tras reintento');
+          downloadContentJson(json);
         }
       } catch (e2) {
-        showAdminToast('No se pudo publicar. Verifica que api/publish.php est\u00e9 en el hosting.');
+        showAdminToast('No se pudo publicar. Verifica el backend en api.mentisviva.cl');
         downloadContentJson(json);
       }
     }
@@ -1449,7 +1474,7 @@ function showPublishInstructions() {
     </div>
     <div class="modal-field">
       <div class="modal-field-label">Paso 1</div>
-      <div class="modal-field-value">El archivo <strong>content.json</strong> se descarg\u00f3 autom\u00e1ticamente.</div>
+      <div class="modal-field-value">El archivo <strong>content.json</strong> se descargó automáticamente.</div>
     </div>
     <div class="modal-field">
       <div class="modal-field-label">Paso 2</div>
@@ -1465,10 +1490,10 @@ function showPublishInstructions() {
     </div>
     <div class="modal-field">
       <div class="modal-field-label">Paso 5</div>
-      <div class="modal-field-value">Listo. Los cambios estar\u00e1n visibles en <a href="https://mentisviva.cl" target="_blank" style="color:var(--admin-primary)">mentisviva.cl</a> inmediatamente.</div>
+      <div class="modal-field-value">Listo. Los cambios estarán visibles en <a href="https://mentisviva.cl" target="_blank" style="color:var(--admin-primary)">mentisviva.cl</a> inmediatamente.</div>
     </div>
     <div style="margin-top:16px;padding:12px;background:#FFF8E1;border-radius:8px;font-size:0.85rem">
-      <strong><i class="fa-solid fa-lightbulb" style="color:#E6A817"></i> Importante:</strong> Las im\u00e1genes subidas desde el CMS se guardan dentro del content.json. Si el archivo es muy pesado (>5MB), considera usar URLs externas para las im\u00e1genes.
+      <strong><i class="fa-solid fa-lightbulb" style="color:#E6A817"></i> Importante:</strong> Las imágenes subidas desde el CMS se guardan dentro del content.json. Si el archivo es muy pesado (>5MB), considera usar URLs externas para las imágenes.
     </div>
   `;
 
@@ -1483,27 +1508,25 @@ async function checkPlanConsistency() {
   const el = document.getElementById('planConsistencyResult');
   el.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
   try {
-    const fd = new FormData();
-    fd.append('action', 'check_plans');
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    const res = await fetch('api/subscribers.php', { method: 'POST', body: fd });
+    const res = await fetch(`${API_BASE}/subscribers?action=check_plans`, {
+      credentials: 'include'
+    });
     const d = await res.json();
     if (d.ok) {
       if (d.issues_found === 0) {
         el.innerHTML = '<div style="padding:16px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><i class="fa-solid fa-circle-check" style="margin-right:8px"></i><strong>Todo correcto.</strong> ' + d.total_active + ' suscriptores activos de ' + d.total_users + ' usuarios totales. No se encontraron inconsistencias.</div>';
       } else {
-        let html = '<div style="padding:16px;background:#FFF3E0;border-radius:8px;color:#E65100;margin-bottom:12px"><i class="fa-solid fa-exclamation-triangle" style="margin-right:8px"></i><strong>' + d.issues_found + ' problemas encontrados.</strong> ' + d.auto_fixed + ' corregidos autom\u00e1ticamente.</div>';
+        let html = '<div style="padding:16px;background:#FFF3E0;border-radius:8px;color:#E65100;margin-bottom:12px"><i class="fa-solid fa-exclamation-triangle" style="margin-right:8px"></i><strong>' + d.issues_found + ' problemas encontrados.</strong> ' + d.auto_fixed + ' corregidos automáticamente.</div>';
         if (d.missing_plan && d.missing_plan.length > 0) {
           html += '<p style="font-weight:600;margin:12px 0 8px;font-size:0.85rem">Usuarios con cobros activos pero sin plan (corregidos):</p>';
           d.missing_plan.forEach(u => {
-            html += '<div style="padding:8px 12px;background:var(--admin-bg);border-radius:6px;margin-bottom:4px;font-size:0.85rem"><strong>' + esc(u.nombre) + ' ' + esc(u.apellido) + '</strong> (' + esc(u.email) + ') \u2192 Plan restaurado a: ' + esc(u.order_plan) + '</div>';
+            html += '<div style="padding:8px 12px;background:var(--admin-bg);border-radius:6px;margin-bottom:4px;font-size:0.85rem"><strong>' + esc(u.nombre) + ' ' + esc(u.apellido) + '</strong> (' + esc(u.email) + ') → Plan restaurado a: ' + esc(u.order_plan) + '</div>';
           });
         }
         if (d.missing_orders && d.missing_orders.length > 0) {
-          html += '<p style="font-weight:600;margin:12px 0 8px;font-size:0.85rem;color:#E65100">Usuarios con plan activo pero sin cobros (requiere revisi\u00f3n manual):</p>';
+          html += '<p style="font-weight:600;margin:12px 0 8px;font-size:0.85rem;color:#E65100">Usuarios con plan activo pero sin cobros (requiere revisión manual):</p>';
           d.missing_orders.forEach(u => {
-            html += '<div style="padding:8px 12px;background:#FFF8E1;border-radius:6px;margin-bottom:4px;font-size:0.85rem"><strong>' + esc(u.nombre) + ' ' + esc(u.apellido) + '</strong> (' + esc(u.email) + ') \u2014 Plan: ' + esc(u.plan_nombre || 'NULL') + '</div>';
+            html += '<div style="padding:8px 12px;background:#FFF8E1;border-radius:6px;margin-bottom:4px;font-size:0.85rem"><strong>' + esc(u.nombre) + ' ' + esc(u.apellido) + '</strong> (' + esc(u.email) + ') — Plan: ' + esc(u.plan_nombre || 'NULL') + '</div>';
           });
         }
         html += '<p style="font-size:0.8rem;color:var(--admin-muted);margin-top:12px">' + d.total_active + ' activos de ' + d.total_users + ' totales</p>';
@@ -1513,7 +1536,7 @@ async function checkPlanConsistency() {
       el.innerHTML = '<span style="color:#E74C3C">Error: ' + (d.error || '') + '</span>';
     }
   } catch(e) {
-    el.innerHTML = '<span style="color:#E74C3C">Error de conexi\u00f3n</span>';
+    el.innerHTML = '<span style="color:#E74C3C">Error de conexión</span>';
   }
 }
 
@@ -1525,16 +1548,15 @@ function loadSubscribers(filter) {
     el.style.borderColor = el.id === 'sub-filter-' + currentSubFilter ? 'var(--admin-primary)' : 'var(--admin-border)';
   });
 
-  const fd = new FormData();
-  fd.append('action', 'list');
-  fd.append('filter', currentSubFilter);
-  fd.append('u', authUserHash);
-  fd.append('p', authPassHash);
-
-  fetch('api/subscribers.php', { method: 'POST', body: fd })
+  const url = `${API_BASE}/subscribers?filter=${encodeURIComponent(currentSubFilter)}`;
+  fetch(url, { credentials: 'include' })
     .then(r => r.json())
     .then(d => {
-      if (!d.ok) { document.getElementById('subscribersTable').innerHTML = '<p style="color:var(--admin-danger)">Error: ' + (d.error||'') + '</p>'; return; }
+      // Some Workers return { ok: true, users, counts }; others return arrays directly.
+      if (d && d.ok === false) {
+        document.getElementById('subscribersTable').innerHTML = '<p style="color:var(--admin-danger)">Error: ' + (d.error||'') + '</p>';
+        return;
+      }
 
       // Update counts
       if (d.counts) {
@@ -1545,7 +1567,7 @@ function loadSubscribers(filter) {
         document.getElementById('sub-count-none').textContent = d.counts.none || 0;
       }
 
-      const users = d.users || [];
+      const users = d.users || d.subscribers || (Array.isArray(d) ? d : []);
       if (users.length === 0) {
         document.getElementById('subscribersTable').innerHTML = '<p style="color:var(--admin-muted);text-align:center;padding:30px">No hay suscriptores con este filtro</p>';
         return;
@@ -1558,13 +1580,13 @@ function loadSubscribers(filter) {
       html += '<thead><tr style="background:var(--admin-bg);text-align:left">';
       html += '<th style="padding:10px 12px">Nombre</th>';
       html += '<th style="padding:10px 12px">Email</th>';
-      html += '<th style="padding:10px 12px">Tel\u00e9fono</th>';
-      html += '<th style="padding:10px 12px">Direcci\u00f3n</th>';
+      html += '<th style="padding:10px 12px">Teléfono</th>';
+      html += '<th style="padding:10px 12px">Dirección</th>';
       html += '<th style="padding:10px 12px">Comuna</th>';
       html += '<th style="padding:10px 12px">Plan</th>';
-      html += '<th style="padding:10px 12px">Env\u00edo</th>';
+      html += '<th style="padding:10px 12px">Envío</th>';
       html += '<th style="padding:10px 12px">Cobro del mes</th>';
-      html += '<th style="padding:10px 12px">Suscripci\u00f3n</th>';
+      html += '<th style="padding:10px 12px">Suscripción</th>';
       html += '<th style="padding:10px 12px">Registro</th>';
       html += '</tr></thead><tbody>';
 
@@ -1596,319 +1618,155 @@ function loadSubscribers(filter) {
       document.getElementById('subscribersTable').innerHTML = html;
     })
     .catch(() => {
-      document.getElementById('subscribersTable').innerHTML = '<p style="color:var(--admin-danger)">Error de conexi\u00f3n</p>';
+      document.getElementById('subscribersTable').innerHTML = '<p style="color:var(--admin-danger)">Error de conexión</p>';
     });
 }
 
 function exportSubscribers() {
-  const url = 'api/subscribers.php?action=export&filter=' + currentSubFilter + '&u=' + encodeURIComponent(authUserHash) + '&p=' + encodeURIComponent(authPassHash);
-  window.open(url, '_blank');
+  // The export endpoint is a GET that streams a CSV. The Worker validates the
+  // session cookie, so this opens a same-cookie browser context.
+  window.open(`${API_BASE}/subscribers/export.csv`, '_blank');
 }
 
 // ---- Shipping/Roster Management ----
+// NOTE: The Cloudflare Worker backend does not yet expose shipping endpoints.
+// Every operation below stubs out with a "pending implementation" toast until
+// /api/admin/shipping/* (or equivalent) is added on the Worker.
 
 async function loadRoster() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) return;
-
-    const fd = new FormData();
-    fd.append('action', 'roster');
-    fd.append('month', month);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-
-        if (data.ok) {
-            renderRoster(data.roster, data.counts);
-        } else {
-            showAdminToast(data.error || 'Error cargando n\u00f3mina');
-        }
-    } catch (e) {
-        showAdminToast('Error de conexi\u00f3n');
-    }
+  // No backend endpoint yet - clear the table and inform the user.
+  const tbody = document.getElementById('rosterTableBody');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">Funcionalidad pendiente de implementación en backend.</td></tr>';
+  }
+  ['rosterTotal', 'rosterQueued', 'rosterShipped', 'rosterDelivered'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '-';
+  });
 }
 
 function renderRoster(roster, counts) {
-    // Update summary cards
-    document.getElementById('rosterTotal').textContent = counts?.total || roster.length;
-    document.getElementById('rosterQueued').textContent = counts?.queued || 0;
-    document.getElementById('rosterShipped').textContent = counts?.shipped || 0;
-    document.getElementById('rosterDelivered').textContent = counts?.delivered || 0;
-
-    const tbody = document.getElementById('rosterTableBody');
-    if (!roster || roster.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">No hay env\u00edos para este mes. Genera la n\u00f3mina primero.</td></tr>';
-        return;
-    }
-
-    const statusColors = {
-        queued: '#F4B942', notified: '#FF9800', confirmed: '#2196F3',
-        shipped: '#2196F3', delivered: '#4CAF50', skipped: '#9E9E9E'
-    };
-    const statusLabels = {
-        queued: 'En cola', notified: 'Notificado', confirmed: 'Confirmado',
-        shipped: 'Despachado', delivered: 'Entregado', skipped: 'Omitido'
-    };
-
-    tbody.innerHTML = roster.map(r => {
-        const addr = r.direccion ? (r.direccion + ' ' + (r.numero || '')) : '-';
-        const statusColor = statusColors[r.status] || '#999';
-        const statusLabel = statusLabels[r.status] || r.status;
-        const tracking = r.tracking_code
-            ? `<a href="tracking.html?code=${r.tracking_code}&courier=${encodeURIComponent(r.shipping_method || '')}" target="_blank" style="color:var(--teal);font-size:0.85rem">${r.tracking_code}</a>`
-            : '-';
-
-        return `<tr style="border-bottom:1px solid var(--gray-100)">
-            <td style="padding:10px 8px"><strong>${esc(r.nombre || '')} ${esc(r.apellido || '')}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${esc(r.email || '')}</span></td>
-            <td style="padding:10px 8px;font-size:0.85rem">${esc(addr)}</td>
-            <td style="padding:10px 8px">${esc(r.comuna || '-')}</td>
-            <td style="padding:10px 8px">${esc(r.plan_nombre || '-')}</td>
-            <td style="padding:10px 8px;font-size:0.85rem">${esc(r.shipping_method || '-')}</td>
-            <td style="padding:10px 8px">$${(r.shipping_cost || 0).toLocaleString('es-CL')}</td>
-            <td style="padding:10px 8px"><span style="background:${statusColor};color:white;padding:3px 10px;border-radius:12px;font-size:0.8rem">${statusLabel}</span></td>
-            <td style="padding:10px 8px">${tracking}</td>
-            <td style="padding:10px 8px"><button onclick="deleteRosterEntry(${r.id})" style="background:none;border:none;color:#E74C3C;cursor:pointer;font-size:0.85rem" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td>
-        </tr>`;
-    }).join('');
+  // Kept for compatibility; not invoked while the backend is missing.
+  const tbody = document.getElementById('rosterTableBody');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text-muted)">Funcionalidad pendiente de implementación en backend.</td></tr>';
+  }
 }
 
 async function generateRoster() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) { showAdminToast('Selecciona un mes'); return; }
-    if (!confirm('Se generar\u00e1 la n\u00f3mina solo con suscriptores cuyo pago fue verificado. Los suscriptores con pago pendiente ser\u00e1n excluidos.\n\n\u00bfGenerar la n\u00f3mina de env\u00edo para ' + month + '?')) return;
-
-    const fd = new FormData();
-    fd.append('action', 'generate_roster');
-    fd.append('month', month);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.ok) {
-          let msg = data.message || 'N\u00f3mina generada';
-          if (data.excluded > 0) {
-            msg += '\n\u26a0\ufe0f ' + data.excluded + ' suscriptor(es) excluido(s) por pago no verificado';
-          }
-          showAdminToast(msg);
-          loadRoster();
-        } else {
-          showAdminToast(data.error || 'Error al generar n\u00f3mina');
-        }
-    } catch (e) {
-        showAdminToast('Error de conexi\u00f3n');
-    }
+  shippingNotImplemented();
 }
 
 async function createShipitShipments() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) { showAdminToast('Selecciona un mes'); return; }
-    if (!confirm('\u00bfCrear todos los env\u00edos en Shipit para ' + month + '? Esto generar\u00e1 etiquetas para cada caja.')) return;
-
-    const fd = new FormData();
-    fd.append('action', 'create_shipments');
-    fd.append('month', month);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        showAdminToast(data.message || (data.ok ? 'Env\u00edos creados en Shipit' : 'Error'));
-        if (data.ok) loadRoster();
-    } catch (e) {
-        showAdminToast('Error de conexi\u00f3n');
-    }
+  shippingNotImplemented();
 }
 
 async function updateShipitTracking() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) { showAdminToast('Selecciona un mes'); return; }
-
-    const fd = new FormData();
-    fd.append('action', 'update_tracking');
-    fd.append('month', month);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        showAdminToast(data.message || 'Tracking actualizado');
-        if (data.ok) loadRoster();
-    } catch (e) {
-        showAdminToast('Error de conexi\u00f3n');
-    }
+  shippingNotImplemented();
 }
 
 function exportRoster() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) { showAdminToast('Selecciona un mes'); return; }
-    window.open('api/subscribers.php?action=export_roster&month=' + month + '&u=' + authUserHash + '&p=' + authPassHash);
+  shippingNotImplemented();
 }
 
 async function deleteRosterEntry(id) {
-    if (!confirm('\u00bfEliminar esta entrada de la n\u00f3mina?')) return;
-    const fd = new FormData();
-    fd.append('action', 'delete_roster_entry');
-    fd.append('id', id);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.ok) { showAdminToast('Entrada eliminada'); loadRoster(); }
-        else showAdminToast(data.error || 'Error');
-    } catch(e) { showAdminToast('Error de conexi\u00f3n'); }
+  shippingNotImplemented();
 }
 
 async function clearRoster() {
-    const month = document.getElementById('rosterMonth').value;
-    if (!month) { showAdminToast('Selecciona un mes'); return; }
-    if (!confirm('\u00bfEliminar TODA la n\u00f3mina de ' + month + '? Esta acci\u00f3n no se puede deshacer.')) return;
-    const fd = new FormData();
-    fd.append('action', 'clear_roster');
-    fd.append('month', month);
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        showAdminToast(data.message || 'N\u00f3mina eliminada');
-        if (data.ok) loadRoster();
-    } catch(e) { showAdminToast('Error de conexi\u00f3n'); }
+  shippingNotImplemented();
 }
 
 async function loadShippingConfig() {
-    const fd = new FormData();
-    fd.append('action', 'get_config');
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.ok && data.config) {
-            document.getElementById('cfgWidth').value = data.config.package_width || '';
-            document.getElementById('cfgHeight').value = data.config.package_height || '';
-            document.getElementById('cfgLength').value = data.config.package_length || '';
-            document.getElementById('cfgWeight').value = data.config.package_weight || '';
-            document.getElementById('cfgOrigin').value = data.config.origin_commune || '';
-            document.getElementById('cfgShipDay').value = data.config.shipping_day || '';
-            document.getElementById('cfgCutoffDays').value = data.config.cutoff_business_days || '';
-            document.getElementById('cfgNotifyDays').value = data.config.notification_days_before || '';
-            document.getElementById('cfgMinShipping').value = data.config.min_shipping_display || '';
-        }
-    } catch (e) {}
+  // Silent stub: clear any pre-existing form values without shouting at the user
+  // every time they navigate to the shipping page.
+  ['cfgWidth','cfgHeight','cfgLength','cfgWeight','cfgOrigin','cfgShipDay','cfgCutoffDays','cfgNotifyDays','cfgMinShipping'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
 }
 
 async function saveShippingConfig() {
-    const fd = new FormData();
-    fd.append('action', 'save_config');
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    fd.append('package_width', document.getElementById('cfgWidth').value);
-    fd.append('package_height', document.getElementById('cfgHeight').value);
-    fd.append('package_length', document.getElementById('cfgLength').value);
-    fd.append('package_weight', document.getElementById('cfgWeight').value);
-    fd.append('origin_commune', document.getElementById('cfgOrigin').value);
-    fd.append('shipping_day', document.getElementById('cfgShipDay').value);
-    fd.append('cutoff_business_days', document.getElementById('cfgCutoffDays').value);
-    fd.append('notification_days_before', document.getElementById('cfgNotifyDays').value);
-    fd.append('min_shipping_display', document.getElementById('cfgMinShipping').value);
-
-    try {
-        const res = await fetch('api/shipping.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        showAdminToast(data.ok ? 'Configuraci\u00f3n guardada' : (data.error || 'Error'));
-    } catch (e) {
-        showAdminToast('Error de conexi\u00f3n');
-    }
+  shippingNotImplemented();
 }
 
 // ---- Survey/CSAT Management ----
 
 async function loadSurveyResults(month) {
-    if (!month) month = document.getElementById('surveyMonth').value;
-    const fd = new FormData();
-    fd.append('action', 'results');
-    fd.append('u', authUserHash);
-    fd.append('p', authPassHash);
-    if (month && month !== 'all') fd.append('month', month);
-    try {
-        const res = await fetch('api/surveys.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.ok) renderSurveyResults(data);
-    } catch (e) { showAdminToast('Error cargando encuestas'); }
+  if (!month) month = document.getElementById('surveyMonth').value;
+  const params = new URLSearchParams();
+  if (month && month !== 'all') params.append('month', month);
+  const url = `${API_BASE}/surveys${params.toString() ? '?' + params.toString() : ''}`;
+  try {
+    const res = await fetch(url, { credentials: 'include' });
+    const data = await res.json();
+    if (data && data.ok !== false) renderSurveyResults(data);
+  } catch (e) { showAdminToast('Error cargando encuestas'); }
 }
 
 function loadSurveyResultsAll() {
-    document.getElementById('surveyMonth').value = '';
-    loadSurveyResults('all');
+  document.getElementById('surveyMonth').value = '';
+  loadSurveyResults('all');
 }
 
 function renderSurveyResults(data) {
-    const delivery = data.by_type?.delivery || {};
-    const content = data.by_type?.content || {};
+  const delivery = data.by_type?.delivery || {};
+  const content = data.by_type?.content || {};
 
-    document.getElementById('csatDeliveryAvg').textContent = delivery.average ? parseFloat(delivery.average).toFixed(1) + '/5' : '-';
-    document.getElementById('csatDeliveryCount').textContent = (delivery.responded || 0) + ' respuestas';
-    document.getElementById('csatContentAvg').textContent = content.average ? parseFloat(content.average).toFixed(1) + '/5' : '-';
-    document.getElementById('csatContentCount').textContent = (content.responded || 0) + ' respuestas';
+  document.getElementById('csatDeliveryAvg').textContent = delivery.average ? parseFloat(delivery.average).toFixed(1) + '/5' : '-';
+  document.getElementById('csatDeliveryCount').textContent = (delivery.responded || 0) + ' respuestas';
+  document.getElementById('csatContentAvg').textContent = content.average ? parseFloat(content.average).toFixed(1) + '/5' : '-';
+  document.getElementById('csatContentCount').textContent = (content.responded || 0) + ' respuestas';
 
-    const totalSent = (delivery.sent || 0) + (content.sent || 0);
-    const totalResp = (delivery.responded || 0) + (content.responded || 0);
-    const rate = totalSent > 0 ? Math.round((totalResp / totalSent) * 100) : 0;
-    document.getElementById('csatResponseRate').textContent = rate + '%';
-    document.getElementById('csatResponseDetail').textContent = totalResp + '/' + totalSent + ' encuestas';
+  const totalSent = (delivery.sent || 0) + (content.sent || 0);
+  const totalResp = (delivery.responded || 0) + (content.responded || 0);
+  const rate = totalSent > 0 ? Math.round((totalResp / totalSent) * 100) : 0;
+  document.getElementById('csatResponseRate').textContent = rate + '%';
+  document.getElementById('csatResponseDetail').textContent = totalResp + '/' + totalSent + ' encuestas';
 
-    renderDistBars('csatDeliveryBars', delivery.distribution || {}, '#2B8A9E');
-    renderDistBars('csatContentBars', content.distribution || {}, '#7AC94F');
-    renderCsatComments(data.responses || []);
+  renderDistBars('csatDeliveryBars', delivery.distribution || {}, '#2B8A9E');
+  renderDistBars('csatContentBars', content.distribution || {}, '#7AC94F');
+  renderCsatComments(data.responses || []);
 }
 
 function renderDistBars(id, dist, color) {
-    const el = document.getElementById(id);
-    const total = Object.values(dist).reduce((a, b) => a + b, 0) || 1;
-    const emojis = {5:'\u{1F929}', 4:'\u{1F60A}', 3:'\u{1F610}', 2:'\u{1F615}', 1:'\u{1F61F}'};
-    let html = '';
-    for (let i = 5; i >= 1; i--) {
-        const cnt = dist[i] || 0;
-        const pct = Math.round((cnt / total) * 100);
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-            + '<span style="width:28px;text-align:center;font-size:1.2rem">' + emojis[i] + '</span>'
-            + '<div style="flex:1;background:var(--gray-100);border-radius:4px;height:24px;overflow:hidden">'
-            + '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px;transition:width 0.5s"></div>'
-            + '</div>'
-            + '<span style="width:75px;font-size:0.8rem;color:var(--text-muted);text-align:right">' + cnt + ' (' + pct + '%)</span>'
-            + '</div>';
-    }
-    el.innerHTML = html || '<p style="color:var(--text-muted);text-align:center;padding:12px">Sin datos</p>';
+  const el = document.getElementById(id);
+  const total = Object.values(dist).reduce((a, b) => a + b, 0) || 1;
+  const emojis = {5:'\u{1F929}', 4:'\u{1F60A}', 3:'\u{1F610}', 2:'\u{1F615}', 1:'\u{1F61F}'};
+  let html = '';
+  for (let i = 5; i >= 1; i--) {
+    const cnt = dist[i] || 0;
+    const pct = Math.round((cnt / total) * 100);
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<span style="width:28px;text-align:center;font-size:1.2rem">' + emojis[i] + '</span>'
+      + '<div style="flex:1;background:var(--gray-100);border-radius:4px;height:24px;overflow:hidden">'
+      + '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px;transition:width 0.5s"></div>'
+      + '</div>'
+      + '<span style="width:75px;font-size:0.8rem;color:var(--text-muted);text-align:right">' + cnt + ' (' + pct + '%)</span>'
+      + '</div>';
+  }
+  el.innerHTML = html || '<p style="color:var(--text-muted);text-align:center;padding:12px">Sin datos</p>';
 }
 
 function renderCsatComments(responses) {
-    const el = document.getElementById('csatComments');
-    const withComments = responses.filter(r => r.comment && r.comment.trim());
-    if (!withComments.length) {
-        el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">No hay comentarios</p>';
-        return;
-    }
-    const emojis = {5:'\u{1F929}', 4:'\u{1F60A}', 3:'\u{1F610}', 2:'\u{1F615}', 1:'\u{1F61F}'};
-    const typeLabels = {delivery:'Entrega', content:'Contenido'};
-    el.innerHTML = withComments.slice(0, 50).map(r => {
-        const date = r.responded_at ? new Date(r.responded_at).toLocaleDateString('es-CL') : '';
-        return '<div style="padding:16px;border-bottom:1px solid var(--gray-100)">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-            + '<strong>' + esc((r.nombre||'') + ' ' + (r.apellido||'')) + '</strong>'
-            + '<div><span style="font-size:0.8rem;color:var(--text-muted)">' + (typeLabels[r.survey_type]||'') + '</span>'
-            + ' <span>' + (emojis[r.score]||'') + ' ' + r.score + '/5</span></div></div>'
-            + '<p style="font-size:0.95rem;color:var(--text-secondary);line-height:1.6;margin:0">\u201C' + esc(r.comment) + '\u201D</p>'
-            + '<span style="font-size:0.75rem;color:var(--text-muted)">' + date + ' \u00B7 ' + (r.shipment_month||'') + '</span></div>';
-    }).join('');
+  const el = document.getElementById('csatComments');
+  const withComments = responses.filter(r => r.comment && r.comment.trim());
+  if (!withComments.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">No hay comentarios</p>';
+    return;
+  }
+  const emojis = {5:'\u{1F929}', 4:'\u{1F60A}', 3:'\u{1F610}', 2:'\u{1F615}', 1:'\u{1F61F}'};
+  const typeLabels = {delivery:'Entrega', content:'Contenido'};
+  el.innerHTML = withComments.slice(0, 50).map(r => {
+    const date = r.responded_at ? new Date(r.responded_at).toLocaleDateString('es-CL') : '';
+    return '<div style="padding:16px;border-bottom:1px solid var(--gray-100)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      + '<strong>' + esc((r.nombre||'') + ' ' + (r.apellido||'')) + '</strong>'
+      + '<div><span style="font-size:0.8rem;color:var(--text-muted)">' + (typeLabels[r.survey_type]||'') + '</span>'
+      + ' <span>' + (emojis[r.score]||'') + ' ' + r.score + '/5</span></div></div>'
+      + '<p style="font-size:0.95rem;color:var(--text-secondary);line-height:1.6;margin:0">“' + esc(r.comment) + '”</p>'
+      + '<span style="font-size:0.75rem;color:var(--text-muted)">' + date + ' · ' + (r.shipment_month||'') + '</span></div>';
+  }).join('');
 }
 
 function showAdminToast(msg) {
