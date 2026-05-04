@@ -287,7 +287,9 @@ async function handleUpload(req: Request, env: Env, adminId: number): Promise<Re
 
   await auditLog(env, { event_type: 'admin.upload', actor_type: 'admin', actor_id: adminId, request: req, details: { key, size: file.size, type: file.type } });
   return jsonOk({
-    url: `${env.SITE_URL}/r2/${key}`,
+    // /r2/* handler vive en api.mentisviva.cl (router.ts), no en mentisviva.cl (Pages
+    // devolvería el SPA fallback como text/html y la imagen se vería rota).
+    url: `${env.API_URL}/r2/${key}`,
     key,
     size: file.size,
     type: file.type,

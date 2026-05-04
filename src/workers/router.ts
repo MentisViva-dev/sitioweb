@@ -36,6 +36,34 @@ export default {
       );
     }
 
+    // R2 static asset serving — sirve uploads del CMS desde el bucket R2
+    // Patrón: GET /r2/<key> → env.R2.get(key) con cache-control inmutable.
+    // Sólo GET/HEAD; resto retorna 405. Sin auth (uploads son públicos por diseño).
+    if (url.pathname.startsWith('/r2/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+      }
+      const key = decodeURIComponent(url.pathname.slice('/r2/'.length));
+      if (!key || key.includes('..')) {
+        return new Response('Not Found', { status: 404 });
+      }
+      const obj = await env.R2.get(key);
+      if (!obj) {
+        return new Response('Not Found', { status: 404 });
+      }
+      const headers = new Headers();
+      // Workers R2 .writeHttpMetadata espera el tipo Headers de @cloudflare/workers-types,
+      // que difiere del DOM Headers. Cast a unknown para puentear ambos.
+      obj.writeHttpMetadata(headers as unknown as Parameters<typeof obj.writeHttpMetadata>[0]);
+      headers.set('etag', obj.httpEtag);
+      if (!headers.has('cache-control')) {
+        headers.set('cache-control', 'public, max-age=31536000, immutable');
+      }
+      headers.set('access-control-allow-origin', '*');
+      const body = request.method === 'HEAD' ? null : (obj.body as unknown as BodyInit);
+      return new Response(body, { headers });
+    }
+
     // Routing por prefijo de path
     let response: Response;
     try {
