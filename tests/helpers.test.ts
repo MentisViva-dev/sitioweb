@@ -46,7 +46,9 @@ describe('crypto', () => {
   });
 
   it('hashPassword and verify', async () => {
-    const hash = await hashPassword('myPassword12345', 1000); // iter bajo para test
+    // verifyPassword enforces a minimum of 50000 iterations (security floor),
+    // so the test must use at least that. Workers cap PBKDF2 at 100000.
+    const hash = await hashPassword('myPassword12345', 50000);
     expect(hash.startsWith('pbkdf2$sha256$')).toBe(true);
     expect(await verifyPassword('myPassword12345', hash)).toBe(true);
     expect(await verifyPassword('wrongPassword', hash)).toBe(false);
