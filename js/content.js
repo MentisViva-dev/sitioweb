@@ -231,9 +231,45 @@ const ContentManager = {
     return global[key] || global.isotipo;
   },
 
+  /**
+   * Si el admin marca una página como oculta en el CMS (pageVisibility[X]=false),
+   * inyectamos <meta name="robots" content="noindex,nofollow"> en el <head> ANTES
+   * de que Google la pueda indexar. Esto se ejecuta al cargar la página, así
+   * que cuando el bot la procesa, ya tiene la directiva noindex.
+   *
+   * También sobrescribimos cualquier <meta robots> existente que diga "index".
+   *
+   * Llamar al inicio del DOMContentLoaded handler de cada página, después de
+   * ContentManager.init(). Pasa el filename de la página actual (ej: 'centro.html').
+   */
+  applyPageRobots(currentPage) {
+    const global = this.get('global');
+    if (!global) return;
+    const visibility = global.pageVisibility || {};
+    const isHidden = visibility[currentPage] === false;
+    if (!isHidden) return; // página visible: dejar el meta robots como está
+
+    // Eliminar cualquier meta robots existente
+    document.querySelectorAll('meta[name="robots" i]').forEach(el => el.remove());
+    // Inyectar el noindex
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+
+    // Quitar también el canonical de Google (no queremos que la indexe ni siquiera
+    // como referencia desde otra página)
+    document.querySelectorAll('link[rel="canonical" i]').forEach(el => el.remove());
+  },
+
   renderNavbar(currentPage) {
     const global = this.get('global');
     if (!global) return;
+
+    // Auto-aplica noindex si la página fue ocultada desde el CMS.
+    // Se hace ANTES de renderizar el resto para que Google bot lo procese si está
+    // crawleando — meta robots tiene efecto inmediato cuando aparece en <head>.
+    this.applyPageRobots(currentPage);
 
     const nav = document.getElementById('navbar');
     if (!nav) return;
