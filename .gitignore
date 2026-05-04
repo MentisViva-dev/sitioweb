@@ -131,6 +131,9 @@ assets/uploads/
 
 # Excepción: mantener un .gitkeep para que la carpeta exista
 !assets/uploads/.gitkeep
+# Excepción: portadas de libros del catálogo (necesarias para Pages)
+!assets/uploads/portadas/
+!assets/uploads/portadas/**
 
 # --------- RUN INSTALL / DEBUG TEMPORARIES ---------
 run_install.html

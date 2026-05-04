@@ -166,16 +166,25 @@ const ContentManager = {
   },
 
   async init() {
-    const stored = localStorage.getItem('mentisviva_content');
-    if (stored) {
-      this.data = JSON.parse(stored);
-    } else {
-      try {
-        const response = await fetch('data/content.json');
-        this.data = await response.json();
-      } catch (e) {
-        console.error('Error loading content:', e);
-        // Use fallback so all pages render even via file:// protocol
+    // ALWAYS prefer fresh network content (con cache-buster) — localStorage es
+    // SOLO fallback offline. Si confiáramos en localStorage cualquier cambio
+    // que hagamos en data/content.json no llegaría a usuarios que ya hayan
+    // visitado el sitio (lo guardado se mostraría para siempre).
+    try {
+      const response = await fetch('data/content.json?v=' + Date.now(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      this.data = await response.json();
+      // Guardamos como respaldo offline (no como fuente de verdad)
+      try { localStorage.setItem('mentisviva_content', JSON.stringify(this.data)); } catch(_){}
+    } catch (e) {
+      console.warn('content.json fetch failed, using cache or fallback:', e);
+      const stored = localStorage.getItem('mentisviva_content');
+      if (stored) {
+        try { this.data = JSON.parse(stored); }
+        catch(_) { this.data = null; }
+      }
+      if (!this.data) {
+        // Fallback final (file:// o sin red ni cache)
         this.data = { global: this.fallbackGlobal, landing: this.fallbackLanding, clinica: this.fallbackClinica, editorial: this.fallbackEditorial, fundacion: this.fallbackFundacion };
       }
     }
