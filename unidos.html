@@ -315,6 +315,76 @@
             <button class="add-item-btn" onclick="addPlan()"><i class="fa-solid fa-plus"></i> Agregar Plan</button>
           </div>
 
+          <div class="admin-card" data-module="editorial.catalogo">
+            <div class="admin-card-header">
+              <h3><i class="fa-solid fa-book"></i> Cat&aacute;logo de libros <span class="module-badge">Editorial &gt; Cat&aacute;logo</span></h3>
+              <label class="toggle-switch"><input type="checkbox" checked data-visibility="editorial.catalogo._visible"><span class="toggle-slider"></span></label>
+            </div>
+            <p style="font-size:0.82rem;color:var(--admin-muted);margin:-4px 0 14px"><i class="fa-solid fa-info-circle"></i> Agrega, edita, oculta o elimina libros del cat&aacute;logo. Los libros ocultos no aparecen en la web.</p>
+            <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+              <button class="btn-admin btn-admin-primary" onclick="openLibroEditor(null)"><i class="fa-solid fa-plus"></i> Agregar libro</button>
+            </div>
+            <div id="editorial-catalogo-grid" class="catalogo-admin-grid"></div>
+          </div>
+
+          <!-- Libro Editor Modal (catalogo) -->
+          <div id="libroModal" class="libro-modal-backdrop" style="display:none" onclick="if(event.target===this)closeLibroEditor()">
+            <div class="libro-modal" role="dialog" aria-modal="true" aria-labelledby="libroModalTitle">
+              <div class="libro-modal-header">
+                <h3 id="libroModalTitle" style="margin:0"><i class="fa-solid fa-book"></i> Editar libro</h3>
+                <button class="libro-modal-close" onclick="closeLibroEditor()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="libro-modal-body">
+                <input type="hidden" id="libroEditId">
+                <div class="admin-field-row">
+                  <div class="admin-field"><label>T&iacute;tulo *</label><input id="libroTitulo" placeholder="T&iacute;tulo del libro"></div>
+                  <div class="admin-field"><label>Autor</label><input id="libroAutor" placeholder="Nombre del autor o autora"></div>
+                </div>
+                <div class="admin-field-row">
+                  <div class="admin-field"><label>Categor&iacute;a</label><select id="libroCategoria"></select></div>
+                  <div class="admin-field"><label>Idioma</label><input id="libroIdioma" placeholder="Espa&ntilde;ol"></div>
+                </div>
+                <div class="admin-field-row">
+                  <div class="admin-field"><label>P&aacute;ginas (opcional)</label><input type="number" id="libroPaginas" min="0" placeholder="0"></div>
+                  <div class="admin-field"><label>A&ntilde;o (opcional)</label><input type="number" id="libroAnio" min="0" max="9999" placeholder="2024"></div>
+                </div>
+                <div class="admin-field">
+                  <label>Portada (subir o URL)</label>
+                  <div class="image-upload-tabs">
+                    <button type="button" class="image-upload-tab active" data-libro-tab="file" onclick="switchLibroPortadaTab(this,'file')"><i class="fa-solid fa-upload"></i> Subir archivo</button>
+                    <button type="button" class="image-upload-tab" data-libro-tab="url" onclick="switchLibroPortadaTab(this,'url')"><i class="fa-solid fa-link"></i> URL externa</button>
+                  </div>
+                  <div class="image-upload-body">
+                    <div id="libroPortadaModeFile">
+                      <input type="file" accept="image/*" onchange="handleLibroPortadaUpload(this)">
+                    </div>
+                    <div id="libroPortadaModeUrl" style="display:none">
+                      <input type="text" id="libroPortadaUrlInput" placeholder="https://ejemplo.com/portada.jpg" oninput="document.getElementById('libroPortadaUrl').value=this.value;updateLibroPortadaPreview(this.value)">
+                    </div>
+                  </div>
+                  <input type="hidden" id="libroPortadaUrl">
+                  <div id="libroPortadaPreview" style="margin-top:10px;text-align:center;padding:10px;background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:8px;min-height:60px;display:flex;align-items:center;justify-content:center;color:var(--admin-muted)">Sin portada</div>
+                </div>
+                <div class="admin-field"><label>Resumen corto (1-2 l&iacute;neas)</label><textarea id="libroResumenCorto" rows="2" placeholder="Frase breve que describe el libro"></textarea></div>
+                <div class="admin-field"><label>Descripci&oacute;n larga</label><textarea id="libroDescripcionLarga" rows="8" placeholder="Descripci&oacute;n completa que se muestra al abrir el libro"></textarea></div>
+                <div class="admin-field-row">
+                  <div class="admin-field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="libroDestacado"> <i class="fa-solid fa-star" style="color:#F6C046"></i> Destacado</label></div>
+                  <div class="admin-field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="libroOculto"> <i class="fa-solid fa-eye-slash"></i> Oculto en la web</label></div>
+                </div>
+                <div class="admin-field">
+                  <label style="display:flex;align-items:center;justify-content:space-between"><span><i class="fa-solid fa-store"></i> Tiendas donde comprar</span>
+                    <button type="button" class="btn-admin btn-admin-sm btn-admin-outline" onclick="addLibroTienda()"><i class="fa-solid fa-plus"></i> Agregar tienda</button>
+                  </label>
+                  <div id="libroTiendas"></div>
+                </div>
+              </div>
+              <div class="libro-modal-footer">
+                <button class="btn-admin btn-admin-outline" onclick="closeLibroEditor()">Cancelar</button>
+                <button class="btn-admin btn-admin-green" onclick="saveLibroFromModal()"><i class="fa-solid fa-save"></i> Guardar libro</button>
+              </div>
+            </div>
+          </div>
+
           <div class="admin-card" data-module="editorial.testimonios">
             <div class="admin-card-header">
               <h3><i class="fa-solid fa-quote-left"></i> Testimonios <span class="module-badge">Editorial &gt; Testimonios de Lectores</span></h3>

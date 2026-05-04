@@ -350,6 +350,7 @@ function populateEditorial() {
   if (e.calugas) renderRepeater('editorial-calugas', e.calugas, renderCaluga);
   if (e.planes) renderRepeater('editorial-planes', e.planes, renderPlan);
   if (e.testimonios) renderRepeater('editorial-testimonios', e.testimonios, renderTestimonio);
+  renderCatalogoLibros();
 }
 
 function populateFundacion() {
@@ -2005,4 +2006,285 @@ function showAdminToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show', 'success');
   setTimeout(() => toast.classList.remove('show', 'success'), 3000);
+}
+
+// =====================================================================
+// EDITORIAL > CATÁLOGO DE LIBROS — Editor (agregar / editar / ocultar / eliminar)
+// =====================================================================
+
+function getCatalogo() {
+  if (!siteData.editorial) siteData.editorial = {};
+  if (!siteData.editorial.catalogo) siteData.editorial.catalogo = { titulo: 'Nuestro Catálogo', subtitulo: '', categorias: [], libros: [] };
+  if (!Array.isArray(siteData.editorial.catalogo.libros)) siteData.editorial.catalogo.libros = [];
+  if (!Array.isArray(siteData.editorial.catalogo.categorias)) siteData.editorial.catalogo.categorias = [];
+  return siteData.editorial.catalogo;
+}
+
+function slugifyLibro(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 80);
+}
+
+function uniqueLibroSlug(base, excludeId) {
+  const cat = getCatalogo();
+  const ids = new Set(cat.libros.filter(l => l.id !== excludeId).map(l => l.id));
+  let slug = base || 'libro';
+  if (!ids.has(slug)) return slug;
+  let n = 2;
+  while (ids.has(slug + '-' + n)) n++;
+  return slug + '-' + n;
+}
+
+function renderCatalogoLibros() {
+  const grid = document.getElementById('editorial-catalogo-grid');
+  if (!grid) return;
+  const cat = getCatalogo();
+  const libros = cat.libros;
+  const catMap = {};
+  (cat.categorias || []).forEach(c => { catMap[c.id] = c.nombre; });
+
+  if (!libros.length) {
+    grid.innerHTML = '<div class="catalogo-admin-empty"><i class="fa-solid fa-book"></i><p style="margin:8px 0 0">A&uacute;n no hay libros. Haz clic en "Agregar libro".</p></div>';
+    return;
+  }
+
+  grid.innerHTML = libros.map((l, idx) => {
+    const oculto = !!l.oculto;
+    const destacado = !!l.destacado;
+    const portada = l.portada ? `<img src="${esc(l.portada)}" alt="${esc(l.titulo)}" onerror="this.style.display='none'">` : '<i class="fa-solid fa-book" style="font-size:2rem"></i>';
+    const catNombre = catMap[l.categoriaId] || l.categoriaId || '';
+    return `<div class="libro-admin-card${oculto ? ' is-oculto' : ''}" data-libro-id="${esc(l.id)}">
+      <div class="libro-admin-thumb">
+        ${portada}
+        <div class="libro-admin-badges">
+          <span>${destacado ? '<span class="libro-admin-badge destacado"><i class="fa-solid fa-star"></i> Destacado</span>' : ''}</span>
+          <span>${oculto ? '<span class="libro-admin-badge oculto"><i class="fa-solid fa-eye-slash"></i> Oculto</span>' : ''}</span>
+        </div>
+      </div>
+      <div class="libro-admin-info">
+        <h4>${esc(l.titulo || 'Sin título')}</h4>
+        <p class="libro-autor">${esc(l.autor || '')}</p>
+        ${catNombre ? `<span class="libro-cat">${esc(catNombre)}</span>` : ''}
+      </div>
+      <div class="libro-admin-actions">
+        <button class="btn-edit" onclick="openLibroEditor('${esc(l.id)}')" title="Editar"><i class="fa-solid fa-pen"></i> Editar</button>
+        <button class="btn-hide" onclick="toggleLibroOculto('${esc(l.id)}')" title="${oculto ? 'Mostrar' : 'Ocultar'}"><i class="fa-solid fa-${oculto ? 'eye' : 'eye-slash'}"></i> ${oculto ? 'Mostrar' : 'Ocultar'}</button>
+        <button class="btn-delete" onclick="deleteLibro('${esc(l.id)}')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleLibroOculto(libroId) {
+  const cat = getCatalogo();
+  const libro = cat.libros.find(l => l.id === libroId);
+  if (!libro) return;
+  libro.oculto = !libro.oculto;
+  renderCatalogoLibros();
+  saveData();
+  showAdminToast(libro.oculto ? `Libro oculto: "${libro.titulo}"` : `Libro visible: "${libro.titulo}"`);
+}
+
+function deleteLibro(libroId) {
+  const cat = getCatalogo();
+  const libro = cat.libros.find(l => l.id === libroId);
+  if (!libro) return;
+  if (!confirm(`¿Eliminar definitivamente "${libro.titulo}"?\n\nEsta acción no se puede deshacer (hasta volver a publicar).`)) return;
+  cat.libros = cat.libros.filter(l => l.id !== libroId);
+  renderCatalogoLibros();
+  saveData();
+  showAdminToast(`Libro eliminado: "${libro.titulo}"`);
+}
+
+// ---- Modal: open / close ----
+
+function openLibroEditor(libroId) {
+  const cat = getCatalogo();
+  const isNew = !libroId;
+  const libro = isNew
+    ? { id: '', titulo: '', autor: '', categoriaId: (cat.categorias.find(c => c.id !== 'todos')?.id || ''), portada: '', resumenCorto: '', descripcionLarga: '', idioma: 'Español', destacado: false, oculto: false, tiendas: [] }
+    : cat.libros.find(l => l.id === libroId);
+  if (!libro) { showAdminToast('Libro no encontrado'); return; }
+
+  // Populate categoria dropdown (skip "todos" pseudo-category)
+  const sel = document.getElementById('libroCategoria');
+  const realCats = cat.categorias.filter(c => c.id && c.id !== 'todos');
+  sel.innerHTML = realCats.map(c => `<option value="${esc(c.id)}">${esc(c.nombre || c.id)}</option>`).join('') || '<option value="">(sin categorías)</option>';
+  if (libro.categoriaId) sel.value = libro.categoriaId;
+
+  document.getElementById('libroModalTitle').innerHTML = isNew
+    ? '<i class="fa-solid fa-plus"></i> Nuevo libro'
+    : '<i class="fa-solid fa-pen"></i> Editar libro';
+
+  setVal('libroEditId', isNew ? '' : libro.id);
+  setVal('libroTitulo', libro.titulo);
+  setVal('libroAutor', libro.autor);
+  setVal('libroIdioma', libro.idioma || 'Español');
+  setVal('libroPaginas', libro.paginas || '');
+  setVal('libroAnio', libro.anio || '');
+  setVal('libroPortadaUrl', libro.portada || '');
+  setVal('libroPortadaUrlInput', libro.portada || '');
+  setVal('libroResumenCorto', libro.resumenCorto || '');
+  setVal('libroDescripcionLarga', libro.descripcionLarga || '');
+  document.getElementById('libroDestacado').checked = !!libro.destacado;
+  document.getElementById('libroOculto').checked = !!libro.oculto;
+
+  // Reset portada tabs to "file" mode
+  document.querySelectorAll('[data-libro-tab]').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-libro-tab="file"]')?.classList.add('active');
+  document.getElementById('libroPortadaModeFile').style.display = '';
+  document.getElementById('libroPortadaModeUrl').style.display = 'none';
+
+  updateLibroPortadaPreview(libro.portada || '');
+  renderLibroTiendas(libro.tiendas || []);
+
+  const modal = document.getElementById('libroModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Esc to close
+  document.addEventListener('keydown', _libroEscHandler);
+  setTimeout(() => document.getElementById('libroTitulo').focus(), 50);
+}
+
+function _libroEscHandler(ev) {
+  if (ev.key === 'Escape') closeLibroEditor();
+}
+
+function closeLibroEditor() {
+  const modal = document.getElementById('libroModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', _libroEscHandler);
+}
+
+function switchLibroPortadaTab(btn, mode) {
+  document.querySelectorAll('[data-libro-tab]').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('libroPortadaModeFile').style.display = mode === 'file' ? '' : 'none';
+  document.getElementById('libroPortadaModeUrl').style.display = mode === 'url' ? '' : 'none';
+}
+
+function updateLibroPortadaPreview(src) {
+  const prev = document.getElementById('libroPortadaPreview');
+  if (!prev) return;
+  if (src) {
+    prev.innerHTML = `<img src="${esc(src)}" alt="Vista previa" onerror="this.parentElement.innerHTML='<span style=&quot;color:var(--admin-danger)&quot;>No se pudo cargar la imagen</span>'">`;
+  } else {
+    prev.innerHTML = 'Sin portada';
+  }
+}
+
+function handleLibroPortadaUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (typeof MAX_IMAGE_SIZE !== 'undefined' && file.size > MAX_IMAGE_SIZE) {
+    showAdminToast('La imagen excede el límite de 6MB');
+    input.value = '';
+    return;
+  }
+  // Use the same uploader used elsewhere; it sets the value of #libroPortadaUrl + (best-effort) the preview.
+  uploadToServer(file, 'libroPortadaUrl');
+  // Poll briefly for the URL to land in the hidden input, then refresh preview.
+  // (uploadToServer is async via fetch; updateImagePreview won't fire because we don't have a [data-preview-for] element with that target — so we run our own preview refresher.)
+  let attempts = 0;
+  const iv = setInterval(() => {
+    const v = getVal('libroPortadaUrl');
+    if (v || attempts > 60) {
+      clearInterval(iv);
+      if (v) {
+        updateLibroPortadaPreview(v);
+        const urlInput = document.getElementById('libroPortadaUrlInput');
+        if (urlInput) urlInput.value = v;
+      }
+    }
+    attempts++;
+  }, 250);
+}
+
+// ---- Tiendas (repeatable rows inside the modal) ----
+
+function renderLibroTiendas(tiendas) {
+  const cont = document.getElementById('libroTiendas');
+  if (!cont) return;
+  cont.innerHTML = '';
+  (tiendas || []).forEach(t => addLibroTienda(t));
+}
+
+function addLibroTienda(data) {
+  const cont = document.getElementById('libroTiendas');
+  if (!cont) return;
+  const t = data || { nombre: '', url: '', color: '2B8A9E' };
+  const row = document.createElement('div');
+  row.className = 'tienda-row';
+  row.innerHTML = `
+    <input class="tienda-nombre" type="text" placeholder="Amazon" value="${esc(t.nombre || '')}">
+    <input class="tienda-url" type="text" placeholder="https://..." value="${esc(t.url || '')}">
+    <input class="tienda-color" type="text" placeholder="2B8A9E" maxlength="7" value="${esc(t.color || '2B8A9E')}">
+    <button type="button" class="tienda-remove" onclick="this.parentElement.remove()" title="Eliminar tienda"><i class="fa-solid fa-xmark"></i></button>
+  `;
+  cont.appendChild(row);
+}
+
+function collectLibroTiendas() {
+  const cont = document.getElementById('libroTiendas');
+  if (!cont) return [];
+  return Array.from(cont.querySelectorAll('.tienda-row')).map(row => {
+    return {
+      nombre: row.querySelector('.tienda-nombre').value.trim(),
+      url: row.querySelector('.tienda-url').value.trim(),
+      color: (row.querySelector('.tienda-color').value || '2B8A9E').replace(/^#/, '').trim()
+    };
+  }).filter(t => t.nombre || t.url);
+}
+
+// ---- Save from modal ----
+
+function saveLibroFromModal() {
+  const titulo = getVal('libroTitulo').trim();
+  if (!titulo) { showAdminToast('El título es obligatorio'); document.getElementById('libroTitulo').focus(); return; }
+
+  const cat = getCatalogo();
+  const editingId = getVal('libroEditId');
+  const isNew = !editingId;
+
+  const proposedSlug = isNew
+    ? uniqueLibroSlug(slugifyLibro(titulo), null)
+    : editingId; // keep original id on edit so external links don't break
+
+  const paginas = parseInt(getVal('libroPaginas'), 10);
+  const anio = parseInt(getVal('libroAnio'), 10);
+
+  const libro = {
+    id: proposedSlug,
+    titulo: titulo,
+    autor: getVal('libroAutor').trim(),
+    categoriaId: getVal('libroCategoria') || '',
+    portada: getVal('libroPortadaUrl').trim(),
+    resumenCorto: getVal('libroResumenCorto').trim(),
+    descripcionLarga: getVal('libroDescripcionLarga').trim(),
+    idioma: getVal('libroIdioma').trim() || 'Español',
+    destacado: document.getElementById('libroDestacado').checked,
+    oculto: document.getElementById('libroOculto').checked,
+    tiendas: collectLibroTiendas()
+  };
+  if (!isNaN(paginas) && paginas > 0) libro.paginas = paginas;
+  if (!isNaN(anio) && anio > 0) libro.anio = anio;
+
+  if (isNew) {
+    cat.libros.push(libro);
+  } else {
+    const idx = cat.libros.findIndex(l => l.id === editingId);
+    if (idx >= 0) cat.libros[idx] = libro;
+    else cat.libros.push(libro);
+  }
+
+  renderCatalogoLibros();
+  saveData();
+  closeLibroEditor();
+  showAdminToast(isNew ? `Libro agregado: "${libro.titulo}"` : `Libro actualizado: "${libro.titulo}"`);
 }

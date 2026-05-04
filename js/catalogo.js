@@ -69,7 +69,13 @@
     if (!_categorias.find(c => c.id === 'todos')) {
       _categorias.unshift({ id: 'todos', nombre: 'Todos' });
     }
-    _libros = cat.libros.slice();
+    _libros = cat.libros.filter(l => !l.oculto).slice();
+
+    // Si todos los libros están ocultos, no tiene sentido mostrar la sección
+    if (_libros.length === 0) {
+      seccion.style.display = 'none';
+      return;
+    }
 
     renderFiltros();
     renderCards();
