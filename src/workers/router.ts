@@ -13,6 +13,7 @@ import * as payWorker from './pay';
 import * as shippingWorker from './shipping';
 import * as profileWorker from './profile';
 import * as adminWorker from './admin';
+import * as adminShippingWorker from './admin-shipping';
 import * as formsWorker from './forms';
 import * as cronWorker from './cron';
 
@@ -46,6 +47,8 @@ export default {
         response = await shippingWorker.handle(request, env, ctx);
       } else if (url.pathname.startsWith('/api/profile/')) {
         response = await profileWorker.handle(request, env, ctx);
+      } else if (url.pathname.startsWith('/api/admin/shipping/')) {
+        response = await adminShippingWorker.handle(request, env, ctx);
       } else if (url.pathname.startsWith('/api/admin/')) {
         response = await adminWorker.handle(request, env, ctx);
       } else if (url.pathname.startsWith('/api/forms/')) {
