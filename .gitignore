@@ -127,11 +127,14 @@ api/migrate_shipping.php
 api/migrate_surveys.php
 
 # --------- UPLOADS (gestionado en R2 / hosting, no en repo) ---------
-assets/uploads/
+# Excluimos archivos directamente en assets/uploads/ (con * para permitir
+# excepciones en subdirectorios; si excluyéramos la carpeta entera Git no
+# recurriría dentro y las negaciones de abajo no funcionarían).
+assets/uploads/*
 
-# Excepción: mantener un .gitkeep para que la carpeta exista
+# Excepciones permitidas:
 !assets/uploads/.gitkeep
-# Excepción: portadas de libros del catálogo (necesarias para Pages)
+# Portadas de libros del catálogo (necesarias para Pages):
 !assets/uploads/portadas/
 !assets/uploads/portadas/**
 
