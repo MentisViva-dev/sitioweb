@@ -232,6 +232,23 @@ const ContentManager = {
   },
 
   /**
+   * Formatea el texto del navbar para que "X Mentis Viva" quede en 2 líneas:
+   *   X
+   *   Mentis Viva
+   * Si el texto es solo "Mentis Viva", lo deja en una línea.
+   */
+  _formatBrandText(text) {
+    if (!text) return '';
+    // Sanitiza primero (textContent escape pattern)
+    const tmp = document.createElement('div');
+    tmp.textContent = text;
+    const safe = tmp.innerHTML;
+    const m = safe.match(/^(.+?)\s+(Mentis\s+Viva)$/i);
+    if (!m) return safe;
+    return `<span class="brand-line-1">${m[1]}</span><span class="brand-line-2">${m[2]}</span>`;
+  },
+
+  /**
    * Si el admin marca una página como oculta en el CMS (pageVisibility[X]=false),
    * inyectamos <meta name="robots" content="noindex,nofollow"> en el <head> ANTES
    * de que Google la pueda indexar. Esto se ejecuta al cargar la página, así
@@ -287,7 +304,7 @@ const ContentManager = {
       <div class="container">
         <a href="index.html" class="navbar-brand" aria-label="${global.siteName} - Inicio">
           <img src="${isotipo}" alt="${global.siteName} - Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n" class="navbar-logo" loading="eager" fetchpriority="high" decoding="sync">
-          <span class="navbar-brand-text">${brandText}</span>
+          <span class="navbar-brand-text">${this._formatBrandText(brandText)}</span>
         </a>
         <nav class="navbar-links" id="navLinks" aria-label="Navegaci\u00f3n principal">
           ${linksHtml}
