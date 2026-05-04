@@ -1,0 +1,60 @@
+# ============================================================================
+# MentisViva — Cloudflare Pages headers
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+# ============================================================================
+
+# --- Security headers (apply to ALL responses) ---
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  X-XSS-Protection: 1; mode=block
+
+# --- Static assets (logos, uploaded portadas, fonts, etc.) ---
+# Inmutables y de larga duración — nunca cambian, los hash-bust en su URL.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- CSS files ---
+# Tienen el mismo nombre fijo (styles.css, etc.) — usamos un cache largo
+# pero NO immutable, para permitir invalidación por purge en CF cuando
+# se haga deploy de cambios visuales.
+/css/*
+  Cache-Control: public, max-age=2592000, must-revalidate
+
+# --- JavaScript ---
+# 1 día — cambia con frecuencia (CMS, lógica) pero el navegador puede
+# revalidar contra ETag de Pages.
+/js/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# --- HTML pages ---
+# Cache corto: el contenido se renderiza vía CMS (D1+KV), así que
+# revalidar cada 5 minutos balancea velocidad y frescura.
+/*.html
+  Cache-Control: public, max-age=300, must-revalidate
+
+# --- Manifest, robots, sitemap ---
+/manifest.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+/robots.txt
+  Cache-Control: public, max-age=86400
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml; charset=utf-8
+
+# --- Admin / private pages: no cache, no index ---
+/unidos.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex, nofollow
+/cuenta.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex
+/tracking.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex
+/encuesta.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex

@@ -358,7 +358,7 @@
     function setToken(_t) { /* no-op */ }
     function clearToken() { /* no-op */ }
 
-    // Helpers REST: TODO fetch necesita credentials:'include' (cookies cross-domain)
+    // Helpers REST: fetch siempre con credentials:'include' (cookies cross-domain HttpOnly)
     async function apiGet(path) {
       return fetch(API_BASE + path, { method: 'GET', credentials: 'include' });
     }

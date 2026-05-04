@@ -1,8 +1,20 @@
 User-agent: *
 Allow: /
+
+# Páginas privadas / panel administrativo
 Disallow: /unidos.html
+Disallow: /unidos
+Disallow: /cuenta.html
+Disallow: /cuenta
+Disallow: /tracking.html
+Disallow: /tracking
+Disallow: /encuesta.html
+Disallow: /encuesta
+
+# Endpoints internos (no servidos por Pages, pero por si acaso)
 Disallow: /api/
 Disallow: /data/
 Disallow: /.claude/
+Disallow: /.github/
 
 Sitemap: https://mentisviva.cl/sitemap.xml
