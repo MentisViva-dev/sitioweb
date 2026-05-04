@@ -36,6 +36,8 @@
 
 .landing-hero .hero-logo {
   height: 80px;
+  width: auto;            /* ← respeta aspect ratio del PNG (1096x914) */
+  max-width: 90%;
   margin: 0 auto 40px;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
 }

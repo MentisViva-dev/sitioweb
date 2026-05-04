@@ -1048,8 +1048,9 @@ html, body {
   z-index: 10000;
 }
 
-/* Al recibir focus por teclado, sale a la vista en la esquina superior */
-.skip-link:focus,
+/* Al recibir focus POR TECLADO (Tab) sale a la vista. NO usamos :focus
+   solo porque iOS Safari aplica auto-focus al primer link al cargar la
+   página, y eso hacía visible el skip-link sobre el banner del home. */
 .skip-link:focus-visible {
   position: fixed;
   top: 16px;
@@ -1061,6 +1062,8 @@ html, body {
   overflow: visible;
   clip: auto;
   clip-path: none;
+  background: var(--teal);
+  color: var(--white);
   border-radius: var(--radius-sm);
   outline: 2px solid var(--white);
   outline-offset: 2px;
