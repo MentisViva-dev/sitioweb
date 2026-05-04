@@ -1,0 +1,16 @@
+name: Debug Admin Hash (one-shot)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show full admin row including hash
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute mentisviva --remote --json --command "SELECT id, username, password_hash, length(password_hash) AS hash_len FROM mv_admins"
