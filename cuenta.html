@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/styles.css?v=20260504g">
-  <link rel="stylesheet" href="css/cuenta.css?v=20260504g">
+  <link rel="stylesheet" href="css/styles.css?v=20260504h">
+  <link rel="stylesheet" href="css/cuenta.css?v=20260504h">
   <script src="https://www.google.com/recaptcha/api.js?render=6LemE68sAAAAAGellDaWBKrXxYKJ1mu30SK8V1r0"></script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-LW9MH65Z3N"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LW9MH65Z3N');</script>
@@ -145,12 +145,12 @@
         <!-- Login form -->
         <form id="loginForm" onsubmit="submitLogin(event)">
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" required placeholder="tu@email.com">
+            <label for="cuenta-login-email">Email</label>
+            <input id="cuenta-login-email" type="email" name="email" required placeholder="tu@email.com" autocomplete="email">
           </div>
           <div class="form-group">
-            <label>Contrase&ntilde;a</label>
-            <input type="password" name="password" required placeholder="Tu contrase&ntilde;a" minlength="8">
+            <label for="cuenta-login-password">Contrase&ntilde;a</label>
+            <input id="cuenta-login-password" type="password" name="password" required placeholder="Tu contrase&ntilde;a" minlength="8" autocomplete="current-password">
           </div>
           <button type="submit" class="auth-submit"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesi&oacute;n</button>
           <p style="text-align:center;margin-top:12px">
@@ -162,32 +162,32 @@
         <form id="registerForm" style="display:none" onsubmit="submitRegister(event)">
           <div class="form-row">
             <div class="form-group">
-              <label>Nombre *</label>
-              <input type="text" name="nombre" required placeholder="Tu nombre">
+              <label for="cuenta-register-nombre">Nombre *</label>
+              <input id="cuenta-register-nombre" type="text" name="nombre" required placeholder="Tu nombre" autocomplete="given-name">
             </div>
             <div class="form-group">
-              <label>Apellido *</label>
-              <input type="text" name="apellido" required placeholder="Tu apellido">
+              <label for="cuenta-register-apellido">Apellido *</label>
+              <input id="cuenta-register-apellido" type="text" name="apellido" required placeholder="Tu apellido" autocomplete="family-name">
             </div>
           </div>
           <div class="form-group">
-            <label>Email *</label>
-            <input type="email" name="email" required placeholder="tu@email.com">
+            <label for="cuenta-register-email">Email *</label>
+            <input id="cuenta-register-email" type="email" name="email" required placeholder="tu@email.com" autocomplete="email">
           </div>
           <div class="form-group">
-            <label>Contrase&ntilde;a * (m&iacute;nimo 8 caracteres)</label>
-            <input type="password" name="password" required placeholder="Crea una contrase&ntilde;a segura" minlength="8">
+            <label for="cuenta-register-password">Contrase&ntilde;a * (m&iacute;nimo 8 caracteres)</label>
+            <input id="cuenta-register-password" type="password" name="password" required placeholder="Crea una contrase&ntilde;a segura" minlength="8" autocomplete="new-password">
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>RUT (opcional)</label>
+              <label for="regRut">RUT (opcional)</label>
               <input type="text" name="rut" id="regRut" placeholder="12.345.678-9" maxlength="12">
             </div>
             <div class="form-group">
-              <label>Tel&eacute;fono</label>
+              <label for="regTelNum">Tel&eacute;fono</label>
               <div style="display:flex;align-items:center;gap:0">
                 <span style="background:var(--gray-50);border:1px solid var(--gray-200);border-right:none;padding:14px 12px;border-radius:var(--radius-sm) 0 0 var(--radius-sm);font-size:0.95rem;color:var(--text-secondary);white-space:nowrap">+56</span>
-                <input type="tel" name="telefono_num" id="regTelNum" placeholder="9 1234 5678" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+                <input type="tel" name="telefono_num" id="regTelNum" placeholder="9 1234 5678" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0" autocomplete="tel-national">
                 <input type="hidden" name="telefono" id="regTelFull">
               </div>
             </div>
@@ -196,33 +196,33 @@
           <div class="address-section">
             <h3><i class="fa-solid fa-truck"></i> Direcci&oacute;n de env&iacute;o</h3>
             <div class="form-group">
-              <label>Direcci&oacute;n (calle) — escribe y selecciona del listado</label>
+              <label for="regDireccion">Direcci&oacute;n (calle) — escribe y selecciona del listado</label>
               <input type="text" name="direccion" id="regDireccion" placeholder="Escribe tu direcci&oacute;n..." autocomplete="off">
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>N&uacute;mero</label>
-                <input type="text" name="numero" placeholder="1234">
+                <label for="cuenta-register-numero">N&uacute;mero</label>
+                <input id="cuenta-register-numero" type="text" name="numero" placeholder="1234">
               </div>
               <div class="form-group">
-                <label>Depto/Oficina</label>
-                <input type="text" name="depto" placeholder="Opcional">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Comuna</label>
-                <input type="text" name="comuna" placeholder="Providencia">
-              </div>
-              <div class="form-group">
-                <label>Ciudad</label>
-                <input type="text" name="ciudad" placeholder="Santiago">
+                <label for="cuenta-register-depto">Depto/Oficina</label>
+                <input id="cuenta-register-depto" type="text" name="depto" placeholder="Opcional">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Regi&oacute;n</label>
-                <select name="region">
+                <label for="cuenta-register-comuna">Comuna</label>
+                <input id="cuenta-register-comuna" type="text" name="comuna" placeholder="Providencia">
+              </div>
+              <div class="form-group">
+                <label for="cuenta-register-ciudad">Ciudad</label>
+                <input id="cuenta-register-ciudad" type="text" name="ciudad" placeholder="Santiago">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cuenta-register-region">Regi&oacute;n</label>
+                <select id="cuenta-register-region" name="region">
                   <option value="">Selecciona</option>
                   <option>Arica y Parinacota</option>
                   <option>Tarapac&aacute;</option>
@@ -243,8 +243,8 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>C&oacute;digo Postal</label>
-                <input type="text" name="codigo_postal" placeholder="Opcional">
+                <label for="cuenta-register-codigo-postal">C&oacute;digo Postal</label>
+                <input id="cuenta-register-codigo-postal" type="text" name="codigo_postal" placeholder="Opcional" autocomplete="postal-code">
               </div>
             </div>
             <input type="hidden" name="lat" id="regLat">
@@ -253,8 +253,8 @@
           </div>
 
           <div class="form-group" style="margin-top:8px">
-            <label>Pregunta de seguridad *</label>
-            <select name="security_question" required class="form-control">
+            <label for="cuenta-register-security-question">Pregunta de seguridad *</label>
+            <select id="cuenta-register-security-question" name="security_question" required class="form-control">
               <option value="">Selecciona una pregunta</option>
               <option>&iquest;Cu&aacute;l es el nombre de tu primera mascota?</option>
               <option>&iquest;En qu&eacute; ciudad naciste?</option>
@@ -264,8 +264,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Respuesta *</label>
-            <input type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control">
+            <label for="cuenta-register-security-answer">Respuesta *</label>
+            <input id="cuenta-register-security-answer" type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control">
           </div>
 
           <button type="submit" class="auth-submit"><i class="fa-solid fa-user-plus"></i> Crear Cuenta</button>
@@ -276,8 +276,8 @@
         <form id="forgotForm" style="display:none" onsubmit="submitForgotPassword(event)">
           <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.9rem">Ingresa tu email y te enviaremos un enlace para restablecer tu contrase&ntilde;a.</p>
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" required placeholder="tu@email.com">
+            <label for="cuenta-forgot-email">Email</label>
+            <input id="cuenta-forgot-email" type="email" name="email" required placeholder="tu@email.com" autocomplete="email">
           </div>
           <button type="submit" class="auth-submit"><i class="fa-solid fa-paper-plane"></i> Enviar enlace</button>
           <p style="text-align:center;margin-top:12px">
@@ -345,8 +345,8 @@
 
   <footer class="footer" id="footer"></footer>
 
-  <script src="js/content.js?v=20260504g"></script>
-  <script src="js/main.js?v=20260504g"></script>
+  <script src="js/content.js?v=20260504h"></script>
+  <script src="js/main.js?v=20260504h"></script>
   <script>
     // === API Cloudflare Workers ===
     const API_BASE = 'https://api.mentisviva.cl/api';
@@ -422,7 +422,7 @@
               <i class="fa-solid fa-lock" style="font-size:3rem;color:var(--teal);margin-bottom:16px"></i>
               <h2 style="margin-bottom:12px">Área de cuenta en preparación</h2>
               <p style="color:var(--text-muted);margin-bottom:24px">Estamos afinando los últimos detalles de la suscripción y el inicio de sesión. Muy pronto podrás crear tu cuenta y suscribirte a la editorial.</p>
-              <a href="editorial.html" class="btn btn-green btn-lg"><i class="fa-solid fa-arrow-left"></i> Volver a la editorial</a>
+              <a href="editorial" class="btn btn-green btn-lg"><i class="fa-solid fa-arrow-left"></i> Volver a la editorial</a>
             </div>`;
         }
         return;
@@ -485,14 +485,14 @@
         }
         let changePlanBtn = '';
         if (user.plan_status === 'active') {
-          changePlanBtn = '<a href="editorial.html" class="btn-edit" style="display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>';
+          changePlanBtn = '<a href="editorial" class="btn-edit" style="display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>';
         }
         planEl.innerHTML = `<p style="font-size:1.2rem;font-weight:700;margin-bottom:8px">${userPlan}</p><span class="plan-badge ${statusClass}">${statusText}</span>${payBtn}${changePlanBtn}`;
         if (user.plan_status === 'active') {
           document.getElementById('cancelSection').style.display = '';
         }
       } else {
-        planEl.innerHTML = `<span class="plan-badge none">Sin plan</span><p style="margin-top:8px"><a href="editorial.html" style="color:var(--green);font-weight:600">Ver planes disponibles</a></p>`;
+        planEl.innerHTML = `<span class="plan-badge none">Sin plan</span><p style="margin-top:8px"><a href="editorial" style="color:var(--green);font-weight:600">Ver planes disponibles</a></p>`;
       }
 
       // Info
@@ -518,7 +518,7 @@
               const planEl = document.getElementById('userPlan');
               const statusClass = u.plan_status === 'active' ? 'active' : 'pending';
               const statusText = u.plan_status === 'active' ? 'Activo' : 'Pendiente de pago';
-              let cpBtn = u.plan_status === 'active' ? '<a href="editorial.html" class="btn-edit" style="margin-top:12px;display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>' : '';
+              let cpBtn = u.plan_status === 'active' ? '<a href="editorial" class="btn-edit" style="margin-top:12px;display:inline-block"><i class="fa-solid fa-arrows-rotate"></i> Cambiar plan</a>' : '';
               planEl.innerHTML = `<p style="font-size:1.2rem;font-weight:700;margin-bottom:8px">${u.plan_nombre}</p><span class="plan-badge ${statusClass}">${statusText}</span>${cpBtn}`;
               if (u.plan_status === 'active') document.getElementById('cancelSection').style.display = '';
             }
@@ -638,17 +638,23 @@
     }
 
     // Auth modal
+    let _authTrapRelease = null;
     function openAuthModal(tab) {
       const ov = document.getElementById('authOverlay');
       ov.classList.add('active');
       ov.setAttribute('aria-hidden', 'false');
       switchAuthTab(tab || 'login');
       if (tab === 'register') loadGoogleMaps();
+      if (typeof trapFocus === 'function') {
+        if (_authTrapRelease) _authTrapRelease();
+        _authTrapRelease = trapFocus(ov);
+      }
     }
     function closeAuthModal() {
       const ov = document.getElementById('authOverlay');
       ov.classList.remove('active');
       ov.setAttribute('aria-hidden', 'true');
+      if (_authTrapRelease) { _authTrapRelease(); _authTrapRelease = null; }
       // Hide map when closing auth modal
       var mapDiv = document.getElementById('regMap');
       if (mapDiv) mapDiv.style.display = 'none';
@@ -704,7 +710,7 @@
           closeAuthModal();
           document.getElementById('notLoggedIn').style.display = 'none';
           document.getElementById('loadingState').style.display = '';
-          window.history.replaceState({}, '', 'cuenta.html');
+          window.history.replaceState({}, '', 'cuenta');
           checkSession();
         } else {
           btn.disabled = false;
@@ -829,7 +835,7 @@
         const d = await r.json();
         if (!d.ok) {
           document.getElementById('notLoggedIn').style.display = '';
-          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Enlace inv\u00e1lido</h2><p style="color:var(--text-muted)">' + (d.error || 'El enlace ha expirado o es inv\u00e1lido.') + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Enlace inv\u00e1lido</h2><p style="color:var(--text-muted)">' + (d.error || 'El enlace ha expirado o es inv\u00e1lido.') + '</p><a href="cuenta" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
           return;
         }
         document.getElementById('notLoggedIn').style.display = '';
@@ -840,9 +846,9 @@
             '<p style="color:var(--text-muted);font-size:0.9rem">Responde tu pregunta de seguridad y elige una nueva contrase\u00f1a.</p>' +
           '</div>' +
           '<form id="resetPasswordForm" onsubmit="submitResetPassword(event, \'' + token + '\')">' +
-            '<div class="form-group"><label style="font-weight:600">' + d.question + '</label><input type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control"></div>' +
-            '<div class="form-group"><label>Nueva contrase\u00f1a (m\u00ednimo 8 caracteres)</label><input type="password" name="new_password" required minlength="8" placeholder="Nueva contrase\u00f1a" class="form-control"></div>' +
-            '<div class="form-group"><label>Confirmar nueva contrase\u00f1a</label><input type="password" name="confirm_password" required minlength="8" placeholder="Confirma tu contrase\u00f1a" class="form-control"></div>' +
+            '<div class="form-group"><label for="cuenta-reset-security-answer" style="font-weight:600">' + d.question + '</label><input id="cuenta-reset-security-answer" type="text" name="security_answer" required placeholder="Tu respuesta" class="form-control"></div>' +
+            '<div class="form-group"><label for="cuenta-reset-new-password">Nueva contrase\u00f1a (m\u00ednimo 8 caracteres)</label><input id="cuenta-reset-new-password" type="password" name="new_password" required minlength="8" placeholder="Nueva contrase\u00f1a" class="form-control" autocomplete="new-password"></div>' +
+            '<div class="form-group"><label for="cuenta-reset-confirm-password">Confirmar nueva contrase\u00f1a</label><input id="cuenta-reset-confirm-password" type="password" name="confirm_password" required minlength="8" placeholder="Confirma tu contrase\u00f1a" class="form-control" autocomplete="new-password"></div>' +
             '<p class="auth-error" id="resetError" style="display:none"></p>' +
             '<button type="submit" class="btn btn-primary" style="width:100%"><i class="fa-solid fa-key"></i> Cambiar Contrase\u00f1a</button>' +
           '</form>' +
@@ -866,7 +872,7 @@
         const r = await apiPost('/auth/reset-password', fd);
         const d = await r.json();
         if (d.ok) {
-          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a actualizada</h2><p style="color:var(--text-muted);margin-top:8px">Tu contrase\u00f1a ha sido cambiada exitosamente. Revisa tu email para m\u00e1s detalles.</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a actualizada</h2><p style="color:var(--text-muted);margin-top:8px">Tu contrase\u00f1a ha sido cambiada exitosamente. Revisa tu email para m\u00e1s detalles.</p><a href="cuenta" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
         } else {
           document.getElementById('resetError').style.display = 'block';
           document.getElementById('resetError').textContent = d.error || 'Error al restablecer.';
@@ -886,9 +892,9 @@
         const d = r;
         document.getElementById('notLoggedIn').style.display = '';
         if (d.ok) {
-          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a revertida</h2><p style="color:var(--text-muted);margin-top:8px">' + d.message + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--green);margin-bottom:16px"></i><h2>Contrase\u00f1a revertida</h2><p style="color:var(--text-muted);margin-top:8px">' + d.message + '</p><a href="cuenta" class="btn btn-primary" style="margin-top:20px">Iniciar Sesi\u00f3n</a></div>';
         } else {
-          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Error</h2><p style="color:var(--text-muted);margin-top:8px">' + (d.error || 'No se pudo revertir.') + '</p><a href="cuenta.html" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
+          document.getElementById('notLoggedIn').innerHTML = '<div style="max-width:400px;margin:0 auto;text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center"><i class="fa-solid fa-exclamation-triangle" style="font-size:3rem;color:#E74C3C;margin-bottom:16px"></i><h2>Error</h2><p style="color:var(--text-muted);margin-top:8px">' + (d.error || 'No se pudo revertir.') + '</p><a href="cuenta" class="btn btn-primary" style="margin-top:20px">Volver</a></div>';
         }
       } catch(e) {
         document.getElementById('notLoggedIn').style.display = '';
@@ -938,6 +944,7 @@
     let selectedShippingOption = null;
     let shippingOptions = [];
 
+    let _shippingTrapRelease = null;
     function openShippingModal(planName) {
         selectedShippingPlan = planName;
         selectedShippingOption = null;
@@ -949,12 +956,17 @@
         document.getElementById('shippingOptions').style.display = 'none';
         document.getElementById('shippingError').style.display = 'none';
         fetchShippingQuotes();
+        if (typeof trapFocus === 'function') {
+            if (_shippingTrapRelease) _shippingTrapRelease();
+            _shippingTrapRelease = trapFocus(ov);
+        }
     }
 
     function closeShippingModal() {
         var ov = document.getElementById('shippingOverlay');
         ov.classList.remove('active');
         ov.setAttribute('aria-hidden', 'true');
+        if (_shippingTrapRelease) { _shippingTrapRelease(); _shippingTrapRelease = null; }
     }
 
     async function fetchShippingQuotes() {
@@ -1086,14 +1098,14 @@
                 <h2 style="margin-bottom:12px">Cuenta verificada</h2>
                 <p style="color:var(--text-muted);margin-bottom:8px">Bienvenido/a a Editorial Mentis Viva</p>
                 <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:24px">Ser\u00e1s redirigido a los planes en <span id="countdown">5</span> segundos...</p>
-                <a href="editorial.html#planes" class="btn btn-green btn-lg"><i class="fa-solid fa-book-open"></i> Ver planes ahora</a>
+                <a href="editorial#planes" class="btn btn-green btn-lg"><i class="fa-solid fa-book-open"></i> Ver planes ahora</a>
               </div>`;
             let sec = 5;
             const timer = setInterval(() => {
               sec--;
               const el = document.getElementById('countdown');
               if (el) el.textContent = sec;
-              if (sec <= 0) { clearInterval(timer); window.location.href = 'editorial.html#planes'; }
+              if (sec <= 0) { clearInterval(timer); window.location.href = 'editorial#planes'; }
             }, 1000);
           } else {
             document.getElementById('notLoggedIn').style.display = '';
@@ -1123,7 +1135,7 @@
             const pp = getCMSPlanPrices();
             const planAmount = pp[plan] || 0;
             alert('\u00a1Suscripci\u00f3n activada! Se cobrar\u00e1 $' + formatCLP(planAmount) + ' + env\u00edo mensualmente.');
-            window.history.replaceState({}, '', 'cuenta.html');
+            window.history.replaceState({}, '', 'cuenta');
             location.reload();
           } else {
             alert('Error al activar suscripci\u00f3n: ' + (d.error || 'Intenta de nuevo'));
@@ -1160,7 +1172,7 @@
     if (urlParams.get('card_changed') === '1') {
       setTimeout(() => {
         alert('Tarjeta actualizada correctamente.');
-        window.history.replaceState({}, '', 'cuenta.html');
+        window.history.replaceState({}, '', 'cuenta');
       }, 500);
     }
 
@@ -1205,20 +1217,20 @@
         body.innerHTML = `
           <form id="editInfoForm" style="display:flex;flex-direction:column;gap:14px">
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nombre</label>
-              <input type="text" name="nombre" value="${safe(userData.nombre)}" class="auth-input" required>
+              <label for="cuenta-editinfo-nombre" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nombre</label>
+              <input id="cuenta-editinfo-nombre" type="text" name="nombre" value="${safe(userData.nombre)}" class="auth-input" required autocomplete="given-name">
             </div>
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Apellido</label>
-              <input type="text" name="apellido" value="${safe(userData.apellido)}" class="auth-input">
+              <label for="cuenta-editinfo-apellido" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Apellido</label>
+              <input id="cuenta-editinfo-apellido" type="text" name="apellido" value="${safe(userData.apellido)}" class="auth-input" autocomplete="family-name">
             </div>
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">RUT</label>
-              <input type="text" name="rut" value="${safe(userData.rut)}" class="auth-input" placeholder="12.345.678-9">
+              <label for="cuenta-editinfo-rut" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">RUT</label>
+              <input id="cuenta-editinfo-rut" type="text" name="rut" value="${safe(userData.rut)}" class="auth-input" placeholder="12.345.678-9">
             </div>
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Tel&eacute;fono</label>
-              <input type="text" name="telefono" value="${safe(userData.telefono)}" class="auth-input" placeholder="+56 9 1234 5678">
+              <label for="cuenta-editinfo-telefono" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Tel&eacute;fono</label>
+              <input id="cuenta-editinfo-telefono" type="text" name="telefono" value="${safe(userData.telefono)}" class="auth-input" placeholder="+56 9 1234 5678" autocomplete="tel">
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
               <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
@@ -1253,37 +1265,37 @@
         body.innerHTML = `
           <form id="editAddressForm" style="display:flex;flex-direction:column;gap:14px">
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Direcci&oacute;n</label>
-              <input type="text" name="direccion" value="${safe(userData.direccion)}" class="auth-input" placeholder="Calle o avenida">
+              <label for="cuenta-editaddress-direccion" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Direcci&oacute;n</label>
+              <input id="cuenta-editaddress-direccion" type="text" name="direccion" value="${safe(userData.direccion)}" class="auth-input" placeholder="Calle o avenida" autocomplete="address-line1">
             </div>
             <div style="display:flex;gap:10px">
               <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">N&uacute;mero</label>
-                <input type="text" name="numero" value="${safe(userData.numero)}" class="auth-input">
+                <label for="cuenta-editaddress-numero" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">N&uacute;mero</label>
+                <input id="cuenta-editaddress-numero" type="text" name="numero" value="${safe(userData.numero)}" class="auth-input">
               </div>
               <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Depto / Oficina</label>
-                <input type="text" name="depto" value="${safe(userData.depto)}" class="auth-input">
-              </div>
-            </div>
-            <div style="display:flex;gap:10px">
-              <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Comuna</label>
-                <input type="text" name="comuna" value="${safe(userData.comuna)}" class="auth-input">
-              </div>
-              <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Ciudad</label>
-                <input type="text" name="ciudad" value="${safe(userData.ciudad)}" class="auth-input">
+                <label for="cuenta-editaddress-depto" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Depto / Oficina</label>
+                <input id="cuenta-editaddress-depto" type="text" name="depto" value="${safe(userData.depto)}" class="auth-input">
               </div>
             </div>
             <div style="display:flex;gap:10px">
               <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Regi&oacute;n</label>
-                <input type="text" name="region" value="${safe(userData.region)}" class="auth-input">
+                <label for="cuenta-editaddress-comuna" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Comuna</label>
+                <input id="cuenta-editaddress-comuna" type="text" name="comuna" value="${safe(userData.comuna)}" class="auth-input">
               </div>
               <div style="flex:1">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">C&oacute;digo Postal</label>
-                <input type="text" name="codigo_postal" value="${safe(userData.codigo_postal)}" class="auth-input">
+                <label for="cuenta-editaddress-ciudad" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Ciudad</label>
+                <input id="cuenta-editaddress-ciudad" type="text" name="ciudad" value="${safe(userData.ciudad)}" class="auth-input" autocomplete="address-level2">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1">
+                <label for="cuenta-editaddress-region" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Regi&oacute;n</label>
+                <input id="cuenta-editaddress-region" type="text" name="region" value="${safe(userData.region)}" class="auth-input" autocomplete="address-level1">
+              </div>
+              <div style="flex:1">
+                <label for="cuenta-editaddress-codigo-postal" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">C&oacute;digo Postal</label>
+                <input id="cuenta-editaddress-codigo-postal" type="text" name="codigo_postal" value="${safe(userData.codigo_postal)}" class="auth-input" autocomplete="postal-code">
               </div>
             </div>
             <input type="hidden" name="lat" value="${safe(userData.lat)}">
@@ -1370,20 +1382,20 @@
         body.innerHTML = `
           <form id="editPasswordForm" style="display:flex;flex-direction:column;gap:14px">
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Contrase&ntilde;a actual</label>
-              <input type="password" name="current_password" class="auth-input" required>
+              <label for="cuenta-editpassword-current" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Contrase&ntilde;a actual</label>
+              <input id="cuenta-editpassword-current" type="password" name="current_password" class="auth-input" required autocomplete="current-password">
             </div>
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nueva contrase&ntilde;a (m&iacute;nimo 8 caracteres)</label>
-              <input type="password" name="new_password" class="auth-input" required minlength="8">
+              <label for="cuenta-editpassword-new" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Nueva contrase&ntilde;a (m&iacute;nimo 8 caracteres)</label>
+              <input id="cuenta-editpassword-new" type="password" name="new_password" class="auth-input" required minlength="8" autocomplete="new-password">
             </div>
             <div>
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Confirmar nueva contrase&ntilde;a</label>
-              <input type="password" name="confirm_password" class="auth-input" required minlength="8">
+              <label for="cuenta-editpassword-confirm" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block">Confirmar nueva contrase&ntilde;a</label>
+              <input id="cuenta-editpassword-confirm" type="password" name="confirm_password" class="auth-input" required minlength="8" autocomplete="new-password">
             </div>
             <div style="padding:16px;background:var(--gray-50);border-radius:var(--radius-md);border:1px solid var(--gray-200)">
-              <label style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block"><i class="fa-solid fa-shield-halved" style="color:var(--teal);margin-right:4px"></i> ${secQ}</label>
-              <input type="text" name="security_answer" class="auth-input" required placeholder="Tu respuesta">
+              <label for="cuenta-editpassword-security-answer" style="font-size:0.85rem;font-weight:600;margin-bottom:4px;display:block"><i class="fa-solid fa-shield-halved" style="color:var(--teal);margin-right:4px"></i> ${secQ}</label>
+              <input id="cuenta-editpassword-security-answer" type="text" name="security_answer" class="auth-input" required placeholder="Tu respuesta">
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
               <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
@@ -1495,6 +1507,10 @@
 
       overlay.classList.add('active');
       overlay.setAttribute('aria-hidden', 'false');
+      if (typeof trapFocus === 'function') {
+        if (_editTrapRelease) _editTrapRelease();
+        _editTrapRelease = trapFocus(overlay);
+      }
     }
 
     function selectEditShipping(index) {
@@ -1541,10 +1557,12 @@
       }
     }
 
+    let _editTrapRelease = null;
     function closeEditModal() {
       const ov = document.getElementById('editOverlay');
       ov.classList.remove('active');
       ov.setAttribute('aria-hidden', 'true');
+      if (_editTrapRelease) { _editTrapRelease(); _editTrapRelease = null; }
     }
 
     // Google Maps Autocomplete

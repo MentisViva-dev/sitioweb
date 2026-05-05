@@ -187,6 +187,76 @@ function initGA4() {
 }
 
 
+/**
+ * Accessible focus trap for modals/dialogs.
+ * Restricts Tab navigation to the focusable elements inside the modal,
+ * focuses the first one on open, and restores focus to the previously
+ * focused element on cleanup.
+ *
+ * Usage:
+ *   const release = trapFocus(modalEl);
+ *   // ...later, when closing the modal:
+ *   release();
+ *
+ * The returned cleanup function detaches the keydown handler and returns
+ * focus to whichever element was focused before the trap was installed.
+ */
+function trapFocus(modalElement) {
+  if (!modalElement) return () => {};
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  const previouslyFocused = document.activeElement;
+
+  function getFocusable() {
+    return Array.from(modalElement.querySelectorAll(FOCUSABLE))
+      .filter(el => el.offsetParent !== null || el === document.activeElement);
+  }
+
+  // Initial focus on the first focusable element
+  const initial = getFocusable();
+  if (initial.length > 0) {
+    // Defer to next frame so the modal is fully visible
+    requestAnimationFrame(() => {
+      try { initial[0].focus(); } catch (e) {}
+    });
+  }
+
+  function onKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = getFocusable();
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (e.shiftKey) {
+      // Shift+Tab on first → wrap to last
+      if (active === first || !modalElement.contains(active)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      // Tab on last → wrap to first
+      if (active === last || !modalElement.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  modalElement.addEventListener('keydown', onKeydown);
+
+  return function cleanup() {
+    modalElement.removeEventListener('keydown', onKeydown);
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      try { previouslyFocused.focus(); } catch (e) {}
+    }
+  };
+}
+
 function showToast(message, type = '') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();

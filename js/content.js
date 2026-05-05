@@ -279,6 +279,31 @@ const ContentManager = {
     document.querySelectorAll('link[rel="canonical" i]').forEach(el => el.remove());
   },
 
+  // Strip ".html" from internal page URLs so emitted links match the canonical
+  // clean-URL convention served by Cloudflare Pages (/centro instead of
+  // /centro.html). Cloudflare 308-redirects the .html form to clean URLs, so
+  // emitting clean from the start avoids that hop and keeps SEO consistent.
+  // index.html becomes "/" (root). Anchors and querystrings are preserved.
+  // Internal lookup keys (isotipoMap, brandTextMap, pageVisibility) keep their
+  // .html form because they are identifiers, not URLs the browser follows.
+  _cleanUrl(url) {
+    if (!url) return url;
+    // Don't touch absolute / external / mailto / tel URLs
+    if (/^(https?:|mailto:|tel:|\/\/|#)/i.test(url)) return url;
+    // Split off any query/fragment so we only strip from the path
+    const m = url.match(/^([^?#]*)([?#].*)?$/);
+    let path = m[1] || '';
+    const tail = m[2] || '';
+    if (/(^|\/)index\.html$/i.test(path)) {
+      // index.html → "" (anchor stays, e.g. "#hero")
+      path = path.replace(/(^|\/)index\.html$/i, (_, p) => p ? p : '');
+      if (path === '') path = tail.startsWith('#') ? '' : '/';
+    } else if (/\.html$/i.test(path)) {
+      path = path.replace(/\.html$/i, '');
+    }
+    return path + tail;
+  },
+
   renderNavbar(currentPage) {
     const global = this.get('global');
     if (!global) return;
@@ -297,12 +322,13 @@ const ContentManager = {
     const items = global.nav.items.filter(item => pageVis[item.url] !== false);
     const linksHtml = items.map(item => {
       const isActive = item.url === currentPage ? 'active' : '';
-      return `<a href="${item.url}" class="${isActive}">${item.label}</a>`;
+      const href = this._cleanUrl(item.url);
+      return `<a href="${href}" class="${isActive}">${item.label}</a>`;
     }).join('');
 
     nav.innerHTML = `
       <div class="container">
-        <a href="index.html" class="navbar-brand" aria-label="${global.siteName} - Inicio">
+        <a href="/" class="navbar-brand" aria-label="${global.siteName} - Inicio">
           <img src="${isotipo}" alt="${global.siteName} - Centro Psicol\u00f3gico, Editorial y Fundaci\u00f3n" class="navbar-logo" loading="eager" fetchpriority="high" decoding="sync">
           <span class="navbar-brand-text">${this._formatBrandText(brandText)}</span>
         </a>
@@ -366,7 +392,7 @@ const ContentManager = {
           <div>
             <h4>Navegaci\u00f3n</h4>
             <div class="footer-links">
-              ${global.nav.items.filter(i => (global.pageVisibility || {})[i.url] !== false).map(i => `<a href="${i.url}">${i.label}</a>`).join('')}
+              ${global.nav.items.filter(i => (global.pageVisibility || {})[i.url] !== false).map(i => `<a href="${this._cleanUrl(i.url)}">${i.label}</a>`).join('')}
             </div>
           </div>
           <div>
@@ -387,7 +413,7 @@ const ContentManager = {
         </div>
         <div class="footer-bottom">
           <p>${f.copyright}</p>
-          <p style="margin-top:8px"><a href="terminos.html" style="color:rgba(255,255,255,0.5);font-size:0.82rem;text-decoration:underline">T\u00e9rminos y Condiciones</a></p>
+          <p style="margin-top:8px"><a href="terminos" style="color:rgba(255,255,255,0.5);font-size:0.82rem;text-decoration:underline">T\u00e9rminos y Condiciones</a></p>
           <p class="footer-credit">P\u00e1gina desarrollada por <a href="https://synapsisux.cl" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.4);text-decoration:underline">SynapsisUX</a></p>
         </div>
       </div>

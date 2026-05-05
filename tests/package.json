@@ -1,0 +1,17 @@
+{
+  "name": "mentisviva-e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright smoke tests for https://mentisviva.cl (production).",
+  "scripts": {
+    "install-browsers": "playwright install --with-deps chromium",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:chromium": "playwright test --project=chromium",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

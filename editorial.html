@@ -8,11 +8,11 @@
   <meta name="keywords" content="editorial psicológica, caja literaria Chile, suscripción libros, libros bienestar emocional, biblioterapia, lectura terapéutica, Mentis Viva">
   <meta name="author" content="Mentis Viva">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://mentisviva.cl/editorial.html">
+  <link rel="canonical" href="https://mentisviva.cl/editorial">
   <meta property="og:title" content="Editorial Mentis Viva - Libros de Psicolog&iacute;a y Bienestar">
   <meta property="og:description" content="Editorial psicol&oacute;gica con caja literaria mensual. Libros de bienestar emocional curados por psic&oacute;logos para tu salud mental. Planes desde $12.990 en Chile.">
   <meta property="og:image" content="https://mentisviva.cl/assets/logos/isotipo-color.png">
-  <meta property="og:url" content="https://mentisviva.cl/editorial.html">
+  <meta property="og:url" content="https://mentisviva.cl/editorial">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Mentis Viva">
   <meta property="og:locale" content="es_CL">
@@ -32,9 +32,9 @@
   <link rel="dns-prefetch" href="https://api.mentisviva.cl">
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/styles.css?v=20260504g">
-  <link rel="stylesheet" href="css/editorial.css?v=20260504g">
-  <link rel="stylesheet" href="css/catalogo.css?v=20260504g">
+  <link rel="stylesheet" href="css/styles.css?v=20260504h">
+  <link rel="stylesheet" href="css/editorial.css?v=20260504h">
+  <link rel="stylesheet" href="css/catalogo.css?v=20260504h">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -44,9 +44,9 @@
     "category": "Caja literaria",
     "brand": {"@type": "Brand", "name": "Mentis Viva"},
     "offers": [
-      {"@type": "Offer", "name": "Lector Curioso", "price": "12990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial.html"},
-      {"@type": "Offer", "name": "Explorador Mental", "price": "19990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial.html"},
-      {"@type": "Offer", "name": "Mente Plena", "price": "29990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial.html"}
+      {"@type": "Offer", "name": "Lector Curioso", "price": "12990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial"},
+      {"@type": "Offer", "name": "Explorador Mental", "price": "19990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial"},
+      {"@type": "Offer", "name": "Mente Plena", "price": "29990", "priceCurrency": "CLP", "availability": "https://schema.org/InStock", "url": "https://mentisviva.cl/editorial"}
     ]
   }
   </script>
@@ -69,8 +69,8 @@
       <h1 id="bannerTitle">Editorial Mentis Viva</h1>
       <p id="bannerSubtitle">Donde la psicolog&iacute;a y la literatura se encuentran</p>
       <div style="margin-top:28px;text-align:center;display:none" id="editorialAuthBtns">
-        <a href="cuenta.html" class="btn btn-green btn-lg" id="editorialMainBtn"><i class="fa-solid fa-right-to-bracket"></i> Inicia Sesi&oacute;n</a>
-        <p style="margin-top:12px"><a href="cuenta.html" style="color:rgba(255,255,255,0.7);font-size:0.9rem;text-decoration:underline">&iquest;No tienes cuenta? Reg&iacute;strate</a></p>
+        <a href="cuenta" class="btn btn-green btn-lg" id="editorialMainBtn"><i class="fa-solid fa-right-to-bracket"></i> Inicia Sesi&oacute;n</a>
+        <p style="margin-top:12px"><a href="cuenta" style="color:rgba(255,255,255,0.7);font-size:0.9rem;text-decoration:underline">&iquest;No tienes cuenta? Reg&iacute;strate</a></p>
       </div>
     </div>
   </section>
@@ -248,11 +248,11 @@
   <!-- Footer -->
   <footer class="footer" id="footer"></footer>
 
-  <script src="js/content.js?v=20260504g"></script>
-  <script src="js/main.js?v=20260504g"></script>
-  <script src="js/forms.js?v=20260504g"></script>
-  <script src="js/catalogo.js?v=20260504g" defer></script>
-  <script src="js/countdown.js?v=20260504g"></script>
+  <script src="js/content.js?v=20260504h"></script>
+  <script src="js/main.js?v=20260504h"></script>
+  <script src="js/forms.js?v=20260504h"></script>
+  <script src="js/catalogo.js?v=20260504h" defer></script>
+  <script src="js/countdown.js?v=20260504h"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       await ContentManager.init();
@@ -340,10 +340,10 @@
             } else if (userSession.plan_status === 'active') {
               btnHtml = `<span class="btn btn-secondary" style="pointer-events:none;opacity:0.5">Ya tienes un plan activo</span>`;
             } else {
-              btnHtml = `<a href="cuenta.html?plan=${encodeURIComponent(p.nombre)}" class="btn ${p.destacado ? 'btn-primary' : 'btn-green'}"><i class="fa-solid fa-credit-card"></i> Suscribirme</a>`;
+              btnHtml = `<a href="cuenta?plan=${encodeURIComponent(p.nombre)}" class="btn ${p.destacado ? 'btn-primary' : 'btn-green'}"><i class="fa-solid fa-credit-card"></i> Suscribirme</a>`;
             }
           } else {
-            btnHtml = `<a href="cuenta.html?plan=${encodeURIComponent(p.nombre)}" class="btn ${p.destacado ? 'btn-primary' : 'btn-secondary'}">${p.ctaTexto}</a>`;
+            btnHtml = `<a href="cuenta?plan=${encodeURIComponent(p.nombre)}" class="btn ${p.destacado ? 'btn-primary' : 'btn-secondary'}">${p.ctaTexto}</a>`;
           }
           return `
           <div class="plan-card ${p.destacado ? 'destacado' : ''}">
@@ -368,15 +368,15 @@
           btnsDiv.style.flexWrap = 'wrap';
           if (userSession.plan_status === 'active') {
             btnsDiv.innerHTML = `
-              <a href="cuenta.html" class="btn btn-green btn-lg"><i class="fa-solid fa-user"></i> Mi Perfil</a>
+              <a href="cuenta" class="btn btn-green btn-lg"><i class="fa-solid fa-user"></i> Mi Perfil</a>
               <a href="#" onclick="logoutEditorial();return false" class="btn btn-secondary btn-lg" style="border-color:rgba(255,255,255,0.4);color:#fff"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesi&oacute;n</a>`;
           } else if (planesVisible) {
             btnsDiv.innerHTML = `
               <a href="#planes" class="btn btn-green btn-lg"><i class="fa-solid fa-book-open"></i> Elige tu plan</a>
-              <a href="cuenta.html" class="btn btn-secondary btn-lg" style="border-color:rgba(255,255,255,0.4);color:#fff"><i class="fa-solid fa-user"></i> Mi Perfil</a>`;
+              <a href="cuenta" class="btn btn-secondary btn-lg" style="border-color:rgba(255,255,255,0.4);color:#fff"><i class="fa-solid fa-user"></i> Mi Perfil</a>`;
           } else {
             btnsDiv.innerHTML = `
-              <a href="cuenta.html" class="btn btn-green btn-lg"><i class="fa-solid fa-user"></i> Mi Perfil</a>`;
+              <a href="cuenta" class="btn btn-green btn-lg"><i class="fa-solid fa-user"></i> Mi Perfil</a>`;
           }
         }
 
@@ -395,9 +395,9 @@
                         <h3 style="color:#E65100;margin-bottom:12px"><i class="fa-solid fa-bell"></i> Aviso de cambio de precio</h3>
                         <p style="margin-bottom:16px">El precio de tu plan <strong>${pcData.plan}</strong> cambiar\u00e1 de <strong style="text-decoration:line-through">${pcData.old_price_formatted}</strong> a <strong style="color:#E65100">${pcData.new_price_formatted}/mes</strong> a partir del <strong>${pcData.effective_date}</strong>.</p>
                         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-                            <a href="cuenta.html" class="btn btn-primary">Confirmar nuevo precio</a>
+                            <a href="cuenta" class="btn btn-primary">Confirmar nuevo precio</a>
                             <a href="#planes" class="btn btn-secondary">Ver otros planes</a>
-                            <a href="cuenta.html" style="color:#999;font-size:0.85rem;align-self:center;text-decoration:underline">Cancelar suscripci\u00f3n</a>
+                            <a href="cuenta" style="color:#999;font-size:0.85rem;align-self:center;text-decoration:underline">Cancelar suscripci\u00f3n</a>
                         </div>
                     `;
                     const planesSection = document.querySelector('.planes-section');
