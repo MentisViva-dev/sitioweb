@@ -74,19 +74,27 @@ async function issueToken(env: Env, id: number, type: 'user' | 'admin'): Promise
 // Session generation — revocación masiva sin listar KV
 // =====================================================================
 
-/** Lee session_generation actual de la BD (defecto 1 si NULL). */
+/** Lee session_generation actual de la BD (defecto 1 si NULL o columna no existe).
+ *  Backward-compatible: si la migration 0003 no se aplicó todavía, SQLite
+ *  tira "no such column: session_generation" y devolvemos 1. Esto evita romper
+ *  los logins en deploys donde el código va antes que la migración. */
 export async function getCurrentSessionGeneration(
   env: Env,
   id: number,
   type: 'user' | 'admin',
 ): Promise<number> {
   const table = type === 'admin' ? 'mv_admins' : 'mv_users';
-  const row = await dbFetch<{ session_generation: number | null }>(
-    env.DB,
-    `SELECT session_generation FROM ${table} WHERE id = ?`,
-    [id],
-  );
-  return row?.session_generation ?? 1;
+  try {
+    const row = await dbFetch<{ session_generation: number | null }>(
+      env.DB,
+      `SELECT session_generation FROM ${table} WHERE id = ?`,
+      [id],
+    );
+    return row?.session_generation ?? 1;
+  } catch (e) {
+    // Migration 0003 no aplicada todavía: tratar como gen=1 universal.
+    return 1;
+  }
 }
 
 /**
@@ -144,11 +152,15 @@ export async function verifyToken(env: Env, token: string): Promise<VerifyResult
   const session = await env.KV.get(`session:${tokenHash}`);
   if (!session) return { valid: false };
 
-  // 4. Verificar generation — debe coincidir con la BD
-  // Tokens viejos (sin `gen`) fallan: forzamos re-login post-deploy de migration 0003.
-  if (typeof payload.gen !== 'number') return { valid: false };
-  const dbGen = await getCurrentSessionGeneration(env, payload.uid, payload.typ);
-  if (payload.gen !== dbGen) return { valid: false };
+  // 4. Verificar generation — debe coincidir con la BD.
+  // Backward-compatible: tokens emitidos antes del feature de session_generation
+  // no tienen `gen`. Para no invalidar miles de sesiones activas en el deploy
+  // de upgrade, los aceptamos siempre que el KV los confirme. Tokens nuevos
+  // (con gen) sí se validan estricto contra la columna.
+  if (typeof payload.gen === 'number') {
+    const dbGen = await getCurrentSessionGeneration(env, payload.uid, payload.typ);
+    if (payload.gen !== dbGen) return { valid: false };
+  }
 
   return { valid: true, user_id: payload.uid, type: payload.typ, jti: payload.jti };
 }
