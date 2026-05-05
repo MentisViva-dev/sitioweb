@@ -16,11 +16,16 @@ import * as adminWorker from './admin';
 import * as adminShippingWorker from './admin-shipping';
 import * as formsWorker from './forms';
 import * as cronWorker from './cron';
+import { incrementUsageCounter, monthlyRequestsKey } from './monitoring';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const origin = request.headers.get('origin');
+
+    // Increment monthly request counter (best-effort, no bloqueante).
+    // KV counter no es atómico — race condition documentada en monitoring.ts.
+    ctx.waitUntil(incrementUsageCounter(env, monthlyRequestsKey()));
 
     // Preflight CORS
     if (request.method === 'OPTIONS') {

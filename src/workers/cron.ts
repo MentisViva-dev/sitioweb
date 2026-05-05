@@ -18,6 +18,7 @@ import {
   determineNextShipmentDate, calculateCutoffDate,
   shipmentMonthStr, formatISODate, nowISO,
 } from '../lib/dates';
+import { checkUsageLimits } from './monitoring';
 
 // =====================================================================
 // SCHEDULED — entrypoint para cron triggers
@@ -352,6 +353,67 @@ async function dailyTasks(env: Env, now: Date): Promise<void> {
 
   // 5. Verificar si HOY es día del cutoff y disparar el flujo
   await maybeMonthlyCutoff(env, now);
+
+  // 6. Audit log TTL — purgar > 90 días.
+  try {
+    const before = await dbFetch<{ count: number }>(
+      env.DB,
+      `SELECT COUNT(*) as count FROM mv_audit_log WHERE created_at < datetime('now', '-90 days')`,
+    );
+    const toDelete = before?.count ?? 0;
+    if (toDelete > 0) {
+      await dbExec(env.DB, `DELETE FROM mv_audit_log WHERE created_at < datetime('now', '-90 days')`);
+      await auditLog(env, {
+        event_type: 'cron.audit_log_purged',
+        actor_type: 'cron',
+        details: { deleted: toDelete, retention_days: 90 },
+      });
+    }
+  } catch (err) {
+    console.error('[cron daily] audit_log purge failed', err);
+  }
+
+  // 7. Email queue monitoring — alerta si hay correos failed > 24h.
+  try {
+    const failedRows = await dbFetchAll<{ id: number; to_email: string; subject: string; attempts: number }>(
+      env.DB,
+      `SELECT id, to_email, subject, attempts FROM mv_email_queue
+       WHERE status = 'failed' AND attempts >= max_attempts
+         AND created_at < datetime('now', '-1 day')
+       ORDER BY id DESC LIMIT 50`,
+    );
+    if (failedRows.length > 0) {
+      await auditLog(env, {
+        event_type: 'cron.email_queue_failed',
+        actor_type: 'cron',
+        details: { count: failedRows.length, sample_ids: failedRows.slice(0, 5).map(r => r.id) },
+      });
+      const list = failedRows
+        .slice(0, 20)
+        .map(r => `<li>#${r.id} → ${escapeHtmlSimple(r.to_email)} — "${escapeHtmlSimple(r.subject)}" (${r.attempts} intentos)</li>`)
+        .join('');
+      await sendAdminNotification(
+        env,
+        `${failedRows.length} email(s) fallidos en cola`,
+        `<p>Hay <strong>${failedRows.length}</strong> emails que agotaron sus intentos hace más de 24h.</p>
+         <ul>${list}</ul>`,
+        '📧',
+      );
+    }
+  } catch (err) {
+    console.error('[cron daily] email queue monitor failed', err);
+  }
+
+  // 8. Usage limits — Cloudflare free tier (Workers/D1/KV) + email queue stuck.
+  try {
+    await checkUsageLimits(env);
+  } catch (err) {
+    console.error('[cron daily] checkUsageLimits failed', err);
+  }
+}
+
+function escapeHtmlSimple(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 async function weeklyTasks(env: Env): Promise<void> {

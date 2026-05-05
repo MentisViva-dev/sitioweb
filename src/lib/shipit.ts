@@ -130,19 +130,34 @@ function getFallbackQuotes(): ShipitQuote[] {
 }
 
 /**
- * Crea un despacho en Shipit.
+ * Crea un despacho en Shipit (POST /packages).
+ *
+ * Shipit v4 espera el shipment bajo `package.{...}` con courier embebido y
+ * datos de destino bajo `destiny.{...}`. Si tu cuenta usa el endpoint legacy
+ * `/shipments`, ajusta `path` a continuación.
+ *
+ * Devuelve { ok: false, error: ... } si la API no responde o no trae id.
  */
 export async function shipitCreateShipment(
   env: Env,
   destinationAddress: ShipitAddress,
   courier: string,
   packageInfo: { weight: number; height: number; length: number; width: number; reference: string },
+  originCommune?: string,
 ): Promise<{ shipit_id?: string; tracking_code?: string; ok: boolean; error?: string }> {
   const body = {
     package: {
-      ...packageInfo,
+      reference: packageInfo.reference,
+      weight: packageInfo.weight,
+      width: packageInfo.width,
+      length: packageInfo.length,
+      height: packageInfo.height,
       packing: 'caja',
+      // Both field names — Shipit's docs are inconsistent across versions.
+      courier,
       client: courier,
+      commune: destinationAddress.commune,
+      ...(originCommune ? { commune_origin: originCommune } : {}),
     },
     destiny: {
       full_name: destinationAddress.full_name,
@@ -155,12 +170,19 @@ export async function shipitCreateShipment(
     },
   };
 
-  const data = await shipitFetch(env, '/shipments', 'POST', body);
+  const data = await shipitFetch(env, '/packages', 'POST', body);
   if (!data) return { ok: false, error: 'shipit_unreachable' };
 
-  // Adaptar según respuesta real Shipit (forma puede variar)
-  const shipmentId = data['id'] ? String(data['id']) : undefined;
-  const tracking = data['tracking_number'] ? String(data['tracking_number']) : undefined;
+  // Shipit v4 wraps shipment under `.package` in some shapes; older shapes return
+  // it at root. Try both.
+  const root = (data['package'] as Record<string, unknown> | undefined) ?? data;
+  const shipmentId = root['id'] != null ? String(root['id']) : undefined;
+  const tracking =
+    root['tracking_number'] != null
+      ? String(root['tracking_number'])
+      : root['reference'] != null
+      ? String(root['reference'])
+      : undefined;
   if (!shipmentId) return { ok: false, error: 'no_shipment_id' };
   return {
     ok: true,
@@ -170,27 +192,29 @@ export async function shipitCreateShipment(
 }
 
 /**
- * Consulta estado de un despacho por tracking code.
+ * Consulta estado de un despacho. Acepta `idOrTracking`: si es numérico,
+ * usa /packages/:id (preferido); si no, /tracking/:code?client=...
  */
-export async function shipitTrack(env: Env, trackingCode: string, courier: string): Promise<{
+export async function shipitTrack(env: Env, idOrTracking: string, courier: string): Promise<{
   status: string;
   detail?: string;
   estimated_delivery?: string;
   events?: Array<{ date: string; description: string }>;
 } | null> {
-  const cleaned = trackingCode.replace(/[^A-Za-z0-9\-]/g, '');
-  if (!cleaned || cleaned.length < 5) return null;
-  const data = await shipitFetch(
-    env,
-    `/tracking/${encodeURIComponent(cleaned)}?client=${encodeURIComponent(courier)}`,
-    'GET',
-  );
+  const cleaned = idOrTracking.replace(/[^A-Za-z0-9\-]/g, '');
+  if (!cleaned || cleaned.length < 3) return null;
+  const isNumeric = /^\d+$/.test(cleaned);
+  const path = isNumeric
+    ? `/packages/${encodeURIComponent(cleaned)}`
+    : `/tracking/${encodeURIComponent(cleaned)}?client=${encodeURIComponent(courier)}`;
+  const data = await shipitFetch(env, path, 'GET');
   if (!data) return null;
+  const root = (data['package'] as Record<string, unknown> | undefined) ?? data;
   return {
-    status: String(data['status'] ?? 'unknown'),
-    ...(data['detail'] != null ? { detail: String(data['detail']) } : {}),
-    ...(data['estimated_delivery'] != null ? { estimated_delivery: String(data['estimated_delivery']) } : {}),
-    ...(Array.isArray(data['events']) ? { events: data['events'] as Array<{ date: string; description: string }> } : {}),
+    status: String(root['status'] ?? data['status'] ?? 'unknown'),
+    ...(root['detail'] != null ? { detail: String(root['detail']) } : {}),
+    ...(root['estimated_delivery'] != null ? { estimated_delivery: String(root['estimated_delivery']) } : {}),
+    ...(Array.isArray(root['events']) ? { events: root['events'] as Array<{ date: string; description: string }> } : {}),
   };
 }
 

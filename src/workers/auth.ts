@@ -37,8 +37,9 @@ import {
 import { rateLimitByIp, rateLimitByEmail, rateLimitLogin, RATE_LIMITS, rateLimitByUser } from '../lib/rate-limit';
 import {
   issueUserToken, makeAuthCookie, makeLogoutCookie, readCookie,
-  verifyToken, revokeToken, revokeAllUserSessions, getSession, getClientIp,
+  verifyToken, revokeToken, revokeAllUserSessions, revokeAllSessions, getSession, getClientIp,
 } from '../lib/auth';
+import { flowApiCall } from '../lib/flow';
 import { auditLog, AuditEvents } from '../lib/audit';
 import { verifyRecaptcha } from '../lib/recaptcha';
 import { sendVerificationEmail, sendPasswordResetEmail, queueEmail, buildEmailLayout, sendAdminNotification } from '../lib/email';
@@ -60,6 +61,7 @@ export async function handle(req: Request, env: Env, ctx: ExecutionContext): Pro
     case '/api/auth/login':                   return handleLogin(req, env, ctx);
     case '/api/auth/logout':                  return handleLogout(req, env);
     case '/api/auth/logout-all':              return handleLogoutAll(req, env);
+    case '/api/auth/revoke-all':              return handleRevokeAll(req, env);
     case '/api/auth/verify':                  return handleVerify(req, env, ctx);
     case '/api/auth/resend-verification':     return handleResendVerification(req, env, ctx);
     case '/api/auth/forgot-password':         return handleForgotPassword(req, env, ctx);
@@ -298,7 +300,35 @@ async function handleLogoutAll(req: Request, env: Env): Promise<Response> {
   if (!session) return Errors.unauthorized();
   await revokeAllUserSessions(env, session.user_id, session.is_admin ? 'admin' : 'user');
   await auditLog(env, { event_type: AuditEvents.LOGOUT_ALL, actor_type: 'user', actor_id: session.user_id, request: req });
-  return jsonOk({ message: 'Todas las sesiones fueron cerradas' }, 200, { 'Set-Cookie': makeLogoutCookie(env) });
+  return jsonOk({ message: 'Todas las sesiones fueron cerradas' }, 200, { 'Set-Cookie': makeLogoutCookie(env, session.is_admin) });
+}
+
+/**
+ * POST /api/auth/revoke-all — auto-revocación de TODAS las sesiones del
+ * usuario/admin actual. Mecanismo session_generation (migration 0003):
+ * basta con bump del contador y todos los tokens emitidos antes fallan.
+ *
+ * Diferencia con /logout-all: éste es semánticamente "panic button" — pensado
+ * para uso en pantallas de seguridad ("cerrar todas las sesiones, incluida la
+ * mía"). Logout-all en cambio se piensa más como flujo de logout normal +
+ * limpieza. Ambos comparten implementación.
+ */
+async function handleRevokeAll(req: Request, env: Env): Promise<Response> {
+  const session = await getSession(req, env);
+  if (!session) return Errors.unauthorized();
+  await revokeAllSessions(env, session.user_id, session.is_admin);
+  await auditLog(env, {
+    event_type: AuditEvents.LOGOUT_ALL,
+    actor_type: session.is_admin ? 'admin' : 'user',
+    actor_id: session.user_id,
+    request: req,
+    details: { source: 'revoke-all' },
+  });
+  return jsonOk(
+    { message: 'Todas tus sesiones fueron cerradas' },
+    200,
+    { 'Set-Cookie': makeLogoutCookie(env, session.is_admin) },
+  );
 }
 
 // =====================================================================
@@ -633,7 +663,31 @@ async function handleChangeEmailConfirm(req: Request, env: Env, _ctx: ExecutionC
   // Invalidar todas las sesiones (forzar re-login)
   await revokeAllUserSessions(env, user.id, 'user');
 
-  // TODO: sincronizar con Flow customer (en fase de pago)
+  // Sincronizar con Flow customer (best-effort — no bloquear el cambio si Flow falla)
+  if (user.flow_customer_id) {
+    try {
+      const flowResp = await flowApiCall(env, '/customer/edit', {
+        customerId: user.flow_customer_id,
+        email: newEmail,
+      });
+      if (typeof flowResp.status === 'number' && flowResp.status >= 400) {
+        await auditLog(env, {
+          event_type: 'auth.email_change.flow_sync_failed',
+          actor_type: 'system',
+          target_user_id: user.id,
+          details: { flow_customer_id: user.flow_customer_id, status: flowResp.status, message: flowResp.message },
+        });
+      }
+    } catch (err) {
+      await auditLog(env, {
+        event_type: 'auth.email_change.flow_sync_failed',
+        actor_type: 'system',
+        target_user_id: user.id,
+        details: { flow_customer_id: user.flow_customer_id, error: (err as Error).message },
+      });
+    }
+  }
+
   await auditLog(env, { event_type: AuditEvents.EMAIL_CHANGE_DONE, actor_type: 'user', actor_id: user.id, request: req, details: { new_email: newEmail } });
   return jsonOk(
     { message: 'Email actualizado. Inicia sesión con el nuevo email.', email: newEmail },

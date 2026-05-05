@@ -342,7 +342,7 @@ async function handleShipitCreate(req: Request, env: Env, adminId: number): Prom
   if (!env.MV_SHIPIT_TOKEN || !env.MV_SHIPIT_EMAIL) {
     return jsonOk({
       ok: false,
-      error: 'Integración Shipit pendiente: configurar MV_SHIPIT_TOKEN y MV_SHIPIT_EMAIL como secrets en wrangler',
+      error: 'Shipit no configurado: agregar MV_SHIPIT_EMAIL y MV_SHIPIT_TOKEN como secrets en Cloudflare',
       month,
       created: 0,
       failed: 0,
@@ -365,7 +365,7 @@ async function handleShipitCreate(req: Request, env: Env, adminId: number): Prom
     [month],
   );
 
-  // Cargar configuración de paquete
+  // Cargar configuración de paquete + comuna de origen
   const cfgRows = await dbFetchAll<DbShippingConfig>(env.DB, 'SELECT config_key, config_value FROM mv_shipping_config');
   const cfg: Record<string, string> = {};
   for (const r of cfgRows) cfg[r.config_key] = r.config_value;
@@ -375,39 +375,69 @@ async function handleShipitCreate(req: Request, env: Env, adminId: number): Prom
     length: parseInt(cfg['package_length'] ?? '25', 10) || 25,
     weight: parseFloat(cfg['package_weight'] ?? '1.5') || 1.5,
   };
+  const originCommune = (cfg['origin_commune'] ?? '').trim() || undefined;
 
   let created = 0;
   let failed = 0;
-  const errors: Array<{ id: number; error: string }> = [];
+  const errors: Array<{ user_id: number; id: number; error: string }> = [];
 
   for (const e of entries) {
-    if (!e.email || !e.comuna || !e.direccion) {
+    // Preferir snapshot del roster (shipping_address JSON); fallback al user actual.
+    let snap: Partial<{
+      direccion: string; numero: string; depto: string;
+      comuna: string; region: string; telefono: string;
+    }> = {};
+    if (e.shipping_address) {
+      try { snap = JSON.parse(e.shipping_address); } catch { /* ignore */ }
+    }
+    const direccion = snap.direccion ?? e.direccion ?? '';
+    const numero    = snap.numero    ?? e.numero    ?? 'S/N';
+    const depto     = snap.depto     ?? e.depto     ?? '';
+    const comuna    = snap.comuna    ?? e.comuna    ?? '';
+    const region    = snap.region    ?? e.region    ?? '';
+    const telefono  = snap.telefono  ?? e.telefono  ?? '';
+
+    if (!e.email || !comuna || !direccion) {
       failed++;
-      errors.push({ id: e.id, error: 'Datos de dirección incompletos' });
+      errors.push({ user_id: e.user_id, id: e.id, error: 'Datos de dirección incompletos' });
       continue;
     }
     const fullName = [e.nombre, e.apellido].filter(Boolean).join(' ').trim() || (e.email ?? 'Cliente');
-    const result = await shipitCreateShipment(
-      env,
-      {
-        full_name: fullName,
-        email: e.email ?? '',
-        phone: e.telefono ?? '',
-        street: e.direccion ?? '',
-        number: e.numero ?? 'S/N',
-        complement: e.depto ?? '',
-        commune: e.comuna ?? '',
-        region: e.region ?? '',
-      },
-      e.shipping_method ?? 'starken',
-      {
-        weight: pkg.weight,
-        height: pkg.height,
-        length: pkg.length,
-        width: pkg.width,
-        reference: `MV-${e.id}`,
-      },
-    );
+
+    let result;
+    try {
+      result = await shipitCreateShipment(
+        env,
+        {
+          full_name: fullName,
+          email: e.email ?? '',
+          phone: telefono,
+          street: direccion,
+          number: numero,
+          complement: depto,
+          commune: comuna,
+          region: region,
+        },
+        e.shipping_method ?? 'starken',
+        {
+          weight: pkg.weight,
+          height: pkg.height,
+          length: pkg.length,
+          width: pkg.width,
+          reference: `MV-${e.id}`,
+        },
+        originCommune,
+      );
+    } catch (err) {
+      // Defensivo: una excepción por envío individual no debe romper el batch.
+      failed++;
+      errors.push({
+        user_id: e.user_id,
+        id: e.id,
+        error: err instanceof Error ? err.message : 'unknown_error',
+      });
+      continue;
+    }
 
     if (result.ok && result.shipit_id) {
       await dbExec(
@@ -421,7 +451,7 @@ async function handleShipitCreate(req: Request, env: Env, adminId: number): Prom
       created++;
     } else {
       failed++;
-      errors.push({ id: e.id, error: result.error ?? 'shipit_error' });
+      errors.push({ user_id: e.user_id, id: e.id, error: result.error ?? 'shipit_error' });
     }
   }
 
@@ -433,7 +463,7 @@ async function handleShipitCreate(req: Request, env: Env, adminId: number): Prom
     details: { month, created, failed, total: entries.length },
   });
 
-  return jsonOk({ month, created, failed, total: entries.length, errors });
+  return jsonOk({ ok: true, month, created, failed, total: entries.length, errors });
 }
 
 // =====================================================================

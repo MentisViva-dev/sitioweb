@@ -16,6 +16,57 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': '600',
 };
 
+/**
+ * Security headers — CSP, HSTS, Permissions-Policy.
+ *
+ * CSP allowlist:
+ *   - script-src: self + GTM/Google + gstatic + 'unsafe-inline'/'unsafe-eval'
+ *     (necesario por GTM y por scripts inline que aún quedan en cuenta.html y otros).
+ *   - style-src: self + Google Fonts + cdnjs (FontAwesome) + 'unsafe-inline'.
+ *   - img-src: self + data + https + blob (R2 + payloads embebidos).
+ *   - connect-src: self + Flow + Google (recaptcha + maps).
+ *   - frame-src: Google (recaptcha widget).
+ *   - form-action: self + Flow (Flow.cl recibe POST de forms de pago).
+ *
+ * HSTS sólo en producción para no romper desarrollo local.
+ * Permissions-Policy: bloquea sensores no usados; payment=(self) para Payment Request si se usa.
+ */
+const CSP_VALUE =
+  "default-src 'self'; " +
+  "script-src 'self' https://www.googletagmanager.com https://www.google.com https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; " +
+  "style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; " +
+  "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
+  "img-src 'self' data: https: blob:; " +
+  "connect-src 'self' https://api.mentisviva.cl https://www.google.com https://www.flow.cl; " +
+  "frame-src https://www.google.com; " +
+  "object-src 'none'; " +
+  "base-uri 'self'; " +
+  "form-action 'self' https://www.flow.cl;";
+
+const PERMISSIONS_POLICY_VALUE = 'geolocation=(), microphone=(), camera=(), payment=(self)';
+const HSTS_VALUE = 'max-age=31536000; includeSubDomains; preload';
+
+/** Aplica headers de seguridad a un Headers existente. */
+function applySecurityHeaders(headers: Headers, env: { ENVIRONMENT?: string }): void {
+  // No sobrescribir si quien llamó ya seteó CSP por alguna razón.
+  if (!headers.has('Content-Security-Policy')) {
+    headers.set('Content-Security-Policy', CSP_VALUE);
+  }
+  if (!headers.has('Permissions-Policy')) {
+    headers.set('Permissions-Policy', PERMISSIONS_POLICY_VALUE);
+  }
+  // Referrer y X-Frame-Options son baratos y consistentes con el CSP frame-ancestors implícito.
+  if (!headers.has('Referrer-Policy')) {
+    headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  }
+  if (!headers.has('X-Frame-Options')) {
+    headers.set('X-Frame-Options', 'DENY');
+  }
+  if (env.ENVIRONMENT === 'production' && !headers.has('Strict-Transport-Security')) {
+    headers.set('Strict-Transport-Security', HSTS_VALUE);
+  }
+}
+
 export interface SuccessBody {
   ok: true;
   [key: string]: unknown;
@@ -78,7 +129,7 @@ export function jsonError(
   });
 }
 
-/** Envuelve cualquier Response con headers CORS */
+/** Envuelve cualquier Response con headers CORS + security headers */
 export function withCors(
   response: Response,
   env: { SITE_URL?: string; ENVIRONMENT?: string },
@@ -89,6 +140,7 @@ export function withCors(
   for (const [k, v] of Object.entries(CORS_HEADERS)) {
     headers.set(k, v);
   }
+  applySecurityHeaders(headers, env);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -101,13 +153,12 @@ export function corsPreflightResponse(
   env: { SITE_URL?: string; ENVIRONMENT?: string },
   requestOrigin: string | null,
 ): Response {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': corsOrigin(env, requestOrigin),
-      ...CORS_HEADERS,
-    },
+  const headers = new Headers({
+    'Access-Control-Allow-Origin': corsOrigin(env, requestOrigin),
+    ...CORS_HEADERS,
   });
+  applySecurityHeaders(headers, env);
+  return new Response(null, { status: 204, headers });
 }
 
 /** Errores comunes con códigos predefinidos */

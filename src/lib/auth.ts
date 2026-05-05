@@ -24,6 +24,7 @@ interface TokenPayload {
   typ: 'user' | 'admin';
   iat: number;          // issued at (unix seconds)
   jti: string;          // unique token id (random)
+  gen: number;          // session_generation snapshot — must match DB at verify time
   v: 1;                 // version
 }
 
@@ -44,11 +45,13 @@ export async function issueAdminToken(env: Env, adminId: number): Promise<string
 }
 
 async function issueToken(env: Env, id: number, type: 'user' | 'admin'): Promise<string> {
+  const gen = await getCurrentSessionGeneration(env, id, type);
   const payload: TokenPayload = {
     uid: id,
     typ: type,
     iat: Math.floor(Date.now() / 1000),
     jti: randomToken(8),
+    gen,
     v: 1,
   };
   const payloadStr = JSON.stringify(payload);
@@ -56,15 +59,54 @@ async function issueToken(env: Env, id: number, type: 'user' | 'admin'): Promise
   const sig = await hmacSha256(env.MV_TOKEN_SECRET, payloadB64);
   const token = `${payloadB64}.${sig}`;
 
-  // Guardar en KV: hash(token) → { uid, typ, iat }
+  // Guardar en KV: hash(token) → { uid, typ, iat, gen }
   const tokenHash = await sha256(token);
   await env.KV.put(
     `session:${tokenHash}`,
-    JSON.stringify({ uid: id, typ: type, iat: payload.iat, jti: payload.jti }),
+    JSON.stringify({ uid: id, typ: type, iat: payload.iat, jti: payload.jti, gen }),
     { expirationTtl: SESSION_TTL_SECONDS },
   );
 
   return token;
+}
+
+// =====================================================================
+// Session generation — revocación masiva sin listar KV
+// =====================================================================
+
+/** Lee session_generation actual de la BD (defecto 1 si NULL). */
+export async function getCurrentSessionGeneration(
+  env: Env,
+  id: number,
+  type: 'user' | 'admin',
+): Promise<number> {
+  const table = type === 'admin' ? 'mv_admins' : 'mv_users';
+  const row = await dbFetch<{ session_generation: number | null }>(
+    env.DB,
+    `SELECT session_generation FROM ${table} WHERE id = ?`,
+    [id],
+  );
+  return row?.session_generation ?? 1;
+}
+
+/**
+ * Revoca todas las sesiones activas de un usuario/admin incrementando
+ * session_generation. Cualquier token emitido antes (con gen menor) fallará
+ * la verificación en el próximo request. Inmediato y barato (1 UPDATE).
+ */
+export async function revokeAllSessions(env: Env, userId: number, isAdmin: boolean): Promise<void> {
+  const table = isAdmin ? 'mv_admins' : 'mv_users';
+  // Usar dbExec en vez de import circular — construir queries simples.
+  await env.DB.prepare(
+    `UPDATE ${table} SET session_generation = COALESCE(session_generation, 1) + 1 WHERE id = ?`,
+  ).bind(userId).run();
+  // Mantener compat: marcar también el blacklist key para tokens v1 viejos
+  // (legacy revokeAllUserSessions mecanismo) por si quedaron emitidos.
+  await env.KV.put(
+    `user_revoked_at:${isAdmin ? 'admin' : 'user'}:${userId}`,
+    String(Math.floor(Date.now() / 1000)),
+    { expirationTtl: SESSION_TTL_SECONDS },
+  );
 }
 
 // =====================================================================
@@ -101,6 +143,12 @@ export async function verifyToken(env: Env, token: string): Promise<VerifyResult
   const tokenHash = await sha256(token);
   const session = await env.KV.get(`session:${tokenHash}`);
   if (!session) return { valid: false };
+
+  // 4. Verificar generation — debe coincidir con la BD
+  // Tokens viejos (sin `gen`) fallan: forzamos re-login post-deploy de migration 0003.
+  if (typeof payload.gen !== 'number') return { valid: false };
+  const dbGen = await getCurrentSessionGeneration(env, payload.uid, payload.typ);
+  if (payload.gen !== dbGen) return { valid: false };
 
   return { valid: true, user_id: payload.uid, type: payload.typ, jti: payload.jti };
 }
@@ -219,23 +267,15 @@ export async function revokeToken(env: Env, token: string): Promise<void> {
   await env.KV.delete(`session:${tokenHash}`);
 }
 
-/** Revoca todas las sesiones de un usuario. Útil al cambiar password. */
+/**
+ * Revoca todas las sesiones de un usuario. Implementación basada en
+ * session_generation (migration 0003): incrementa el contador, los tokens
+ * viejos fallan en `verifyToken` automáticamente.
+ *
+ * Wrapper de compatibilidad: redirige a `revokeAllSessions(env, userId, isAdmin)`.
+ */
 export async function revokeAllUserSessions(env: Env, userId: number, type: 'user' | 'admin' = 'user'): Promise<void> {
-  // KV no tiene query por valor, así que listamos por prefix y filtramos.
-  // En producción real, se mantiene un índice user→[tokens] aparte.
-  // Por ahora, marcamos al usuario y todos los tokens viejos quedan inválidos
-  // porque cambiamos un campo que el verify chequea.
-
-  // Solución pragmática: cambiar el password_hash invalida indirectamente
-  // (porque el cliente debe re-loguear). Para invalidar inmediatamente:
-  // Mantener un contador de "session_generation" en mv_users y validarlo.
-  // Por simplicidad inicial, dejamos el campo `data_version` como gating.
-  // En revisión futura: agregar `session_generation INTEGER` a mv_users.
-
-  // Como mínimo, marcamos en KV un "blacklist:user:<id>" con timestamp.
-  await env.KV.put(`user_revoked_at:${type}:${userId}`, String(Math.floor(Date.now() / 1000)), {
-    expirationTtl: SESSION_TTL_SECONDS,
-  });
+  await revokeAllSessions(env, userId, type === 'admin');
 }
 
 /** Verifica si el usuario tuvo "logout all" después de la emisión del token. */

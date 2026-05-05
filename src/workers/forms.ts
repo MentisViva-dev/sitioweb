@@ -8,19 +8,25 @@
  */
 
 import type { Env, ExecutionContext } from '../types/env';
-import { jsonOk, Errors, readBody } from '../lib/responses';
-import { dbInsert } from '../lib/db';
+import { jsonOk, jsonError, Errors, readBody } from '../lib/responses';
+import { dbInsert, dbFetch, dbExec } from '../lib/db';
 import { rateLimitByIp, rateLimitByEmail, RATE_LIMITS } from '../lib/rate-limit';
 import { auditLog } from '../lib/audit';
 import { verifyRecaptcha } from '../lib/recaptcha';
 import { validateEmail, validateName, sanitizeText, validatePhoneCL } from '../lib/validators';
 import { getClientIp, getUserAgent } from '../lib/auth';
-import { sendAdminNotification } from '../lib/email';
+import { sendAdminNotification, queueEmail, buildEmailLayout } from '../lib/email';
 import { randomToken } from '../lib/crypto';
 
 export async function handle(req: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
-  if (req.method !== 'POST') return Errors.methodNotAllowed();
   const url = new URL(req.url);
+
+  // Confirmación double opt-in — GET con token
+  if (url.pathname === '/api/forms/newsletter/confirm' && req.method === 'GET') {
+    return handleNewsletterConfirm(req, env);
+  }
+
+  if (req.method !== 'POST') return Errors.methodNotAllowed();
   switch (url.pathname) {
     case '/api/forms/contact':    return handleContact(req, env);
     case '/api/forms/survey':     return handleSurvey(req, env);
@@ -108,18 +114,105 @@ async function handleNewsletter(req: Request, env: Env): Promise<Response> {
   const nameV = body['nombre'] ? validateName(body['nombre']) : { ok: true as const, value: null };
   if (!nameV.ok) return Errors.validation(nameV.error);
 
+  const source = String(body['source'] ?? 'footer').slice(0, 50);
+
+  // Si ya existe el email pero no está confirmado, regenerar token y reenviar.
+  // INSERT OR IGNORE no actualiza tokens; necesitamos UPSERT lógico.
+  const existing = await dbFetch<{ id: number; confirmed: number }>(
+    env.DB,
+    'SELECT id, confirmed FROM mv_subscribers_newsletter WHERE email = ?',
+    [emailV.value],
+  );
+
   const confirmToken = randomToken(32);
   const unsubToken = randomToken(32);
-  const source = String(body['source'] ?? 'footer').slice(0, 50);
-  await dbInsert(
-    env.DB,
-    `INSERT OR IGNORE INTO mv_subscribers_newsletter
-       (email, nombre, source, confirm_token, unsubscribe_token, ip_address)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [emailV.value, nameV.value, source, confirmToken, unsubToken, getClientIp(req)],
-  );
-  // TODO: enviar email de confirmación double opt-in
+
+  if (existing) {
+    if (existing.confirmed === 1) {
+      // Ya confirmado — no hacer nada, mismo mensaje genérico.
+      return jsonOk({ message: 'Revisa tu email para confirmar la suscripción.' });
+    }
+    // Refrescar tokens para reenvío de double opt-in
+    await dbExec(
+      env.DB,
+      `UPDATE mv_subscribers_newsletter
+         SET confirm_token = ?, unsubscribe_token = ?, source = ?, ip_address = ?
+       WHERE id = ?`,
+      [confirmToken, unsubToken, source, getClientIp(req), existing.id],
+    );
+  } else {
+    await dbInsert(
+      env.DB,
+      `INSERT INTO mv_subscribers_newsletter
+         (email, nombre, source, confirmed, confirm_token, unsubscribe_token, ip_address)
+       VALUES (?, ?, ?, 0, ?, ?, ?)`,
+      [emailV.value, nameV.value, source, confirmToken, unsubToken, getClientIp(req)],
+    );
+  }
+
+  // Email de double opt-in
+  const confirmUrl = `${env.SITE_URL}/confirmar-newsletter?token=${encodeURIComponent(confirmToken)}`;
+  await queueEmail(env, {
+    to: emailV.value,
+    subject: 'Confirma tu suscripción - Mentis Viva',
+    html: buildEmailLayout(
+      'Confirma tu suscripción',
+      `<p>Hola${nameV.value ? ' ' + escapeHtml(nameV.value) : ''},</p>
+       <p>Para terminar tu suscripción al boletín de Mentis Viva, confirma tu email.</p>
+       <p style="color:#6c757d;font-size:0.85rem">Si no fuiste tú, ignora este mensaje.</p>`,
+      { label: 'Confirmar suscripción', url: confirmUrl },
+    ),
+    idempotency_key: `newsletter_confirm:${confirmToken}`,
+  });
+
   return jsonOk({ message: 'Revisa tu email para confirmar la suscripción.' });
+}
+
+/**
+ * GET /api/forms/newsletter/confirm?token=X
+ *
+ * Confirma double opt-in. Devuelve JSON `{ ok, confirmed: true|false }` —
+ * el frontend lee el resultado y muestra una página de éxito o error.
+ *
+ * Como es un enlace que el usuario abre directamente en el navegador, también
+ * aceptamos respuesta HTML mínima si se pide con `Accept: text/html` o si la
+ * URL contiene `redirect=1`. Por simplicidad mantenemos JSON; la página estática
+ * en `/confirmar-newsletter` puede leer el query param `result=ok|error`.
+ */
+async function handleNewsletterConfirm(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const token = url.searchParams.get('token') ?? '';
+  if (!token) return jsonError('Token requerido', 400, { code: 'MISSING_TOKEN' });
+
+  const sub = await dbFetch<{ id: number; email: string; confirmed: number }>(
+    env.DB,
+    'SELECT id, email, confirmed FROM mv_subscribers_newsletter WHERE confirm_token = ?',
+    [token],
+  );
+  if (!sub) {
+    return jsonError('Enlace inválido o ya usado.', 400, { code: 'INVALID_TOKEN' });
+  }
+
+  if (sub.confirmed === 1) {
+    return jsonOk({ message: 'Tu suscripción ya estaba confirmada.', confirmed: true, already: true });
+  }
+
+  await dbExec(
+    env.DB,
+    `UPDATE mv_subscribers_newsletter
+       SET confirmed = 1, confirm_token = NULL
+     WHERE id = ?`,
+    [sub.id],
+  );
+
+  await auditLog(env, {
+    event_type: 'newsletter.confirmed',
+    actor_type: 'user',
+    request: req,
+    details: { email: sub.email },
+  });
+
+  return jsonOk({ message: '¡Suscripción confirmada!', confirmed: true });
 }
 
 function escapeHtml(s: string): string {
